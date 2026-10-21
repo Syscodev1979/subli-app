@@ -17,8 +17,13 @@ void main() {
 
     expect(find.text('Gastroyal Karate SE'), findsOneWidget);
     expect(find.byTooltip('Menü'), findsOneWidget);
-    expect(find.text('Még nincs bejegyzés.'), findsOneWidget);
-    expect(find.byTooltip('Új bejegyzés'), findsNothing);
+    expect(find.text('Hírfolyam'), findsOneWidget);
+    expect(
+      find.text('Még nincs bejegyzés. Hamarosan itt lesznek a klub hírei!'),
+      findsOneWidget,
+    );
+    expect(find.text('Mire gondolsz?'), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
 
     final appBarTheme = Theme.of(tester.element(find.byType(AppBar)))
         .appBarTheme;
@@ -27,11 +32,13 @@ void main() {
     expect(appBarTheme.elevation, 0);
   });
 
-  testWidgets('Edzőnek megjelenik az új bejegyzés gomb', (tester) async {
+  testWidgets('Edző a Mire gondolsz sávból ír bejegyzést', (tester) async {
     await _pumpApp(tester, AuthSignedIn(_activeUser(role: UserRole.coach)));
 
-    expect(find.byTooltip('Új bejegyzés'), findsOneWidget);
-    await tester.tap(find.byTooltip('Új bejegyzés'));
+    expect(find.text('Hírfolyam'), findsOneWidget);
+    expect(find.text('Mire gondolsz?'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
+    await tester.tap(find.text('Mire gondolsz?'));
     await tester.pumpAndSettle();
 
     expect(find.text('Kitűzés'), findsOneWidget);

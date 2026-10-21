@@ -5,12 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_drawer.dart';
 import '../../auth/data/auth_providers.dart';
+import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
-import '../../auth/presentation/auth_error_message.dart';
+import 'author_avatar.dart';
 import 'feed_controller.dart';
+import 'feed_error_message.dart';
+import 'feed_palette.dart';
+import 'feed_skeleton.dart';
 import 'post_card.dart';
 
-/// Hírfolyam: kitűzött bejegyzések felül, alatta a legújabbak.
+/// A klub kezdőoldala: a hírfolyam.
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
 
@@ -48,8 +52,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       await ref.read(feedControllerProvider.notifier).loadMore();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(feedErrorMessage(error, saving: false))),
+        );
       }
     }
   }
@@ -59,8 +64,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       await ref.read(feedControllerProvider.notifier).refresh();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(feedErrorMessage(error, saving: false))),
+        );
       }
     }
   }
@@ -70,9 +76,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final session = ref.watch(authGateProvider).asData?.value;
     final user = session is AuthSignedIn ? session.user : null;
     final feed = ref.watch(feedControllerProvider);
-    final canWrite = user?.role.canWritePosts ?? false;
 
     return Scaffold(
+      backgroundColor: FeedPalette.background(context),
       endDrawer: const ClubDrawer(),
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -102,74 +108,213 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
         ],
       ),
-      floatingActionButton: canWrite
-          ? FloatingActionButton(
-              tooltip: 'Új bejegyzés',
-              onPressed: () => context.push(AppRoutes.newPost),
-              child: const Icon(Icons.add),
-            )
-          : null,
       body: feed.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => RefreshIndicator(
+        loading: () => _FeedFrame(
+          controller: _scrollController,
           onRefresh: _refresh,
-          child: _MessageList(
-            message: authErrorMessage(error),
-            onRetry: () => ref.invalidate(feedControllerProvider),
-          ),
+          user: user,
+          slivers: const [SliverToBoxAdapter(child: FeedSkeleton())],
         ),
-        data: (view) => RefreshIndicator(
+        error: (error, _) => _FeedFrame(
+          controller: _scrollController,
           onRefresh: _refresh,
-          child: view.posts.isEmpty
-              ? const _MessageList(message: 'Még nincs bejegyzés.')
-              : ListView.builder(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.only(top: 6, bottom: canWrite ? 88 : 24),
-                  itemCount: view.posts.length + (view.loadingMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index >= view.posts.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    final currentUser = user;
-                    if (currentUser == null) return const SizedBox.shrink();
-                    return PostTile(post: view.posts[index], user: currentUser);
-                  },
-                ),
+          user: user,
+          slivers: [
+            SliverToBoxAdapter(
+              child: _FeedMessage(
+                message: feedErrorMessage(error, saving: false),
+                onRetry: () => ref.invalidate(feedControllerProvider),
+              ),
+            ),
+          ],
+        ),
+        data: (view) => _FeedFrame(
+          controller: _scrollController,
+          onRefresh: _refresh,
+          user: user,
+          slivers: [
+            if (view.posts.isEmpty)
+              const SliverToBoxAdapter(child: _EmptyFeed())
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final currentUser = user;
+                  if (currentUser == null) return const SizedBox.shrink();
+                  if (index >= view.posts.length) {
+                    return const FeedSkeleton(cards: 1);
+                  }
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom:
+                          index == view.posts.length - 1 && !view.loadingMore
+                          ? 24
+                          : 8,
+                    ),
+                    child: PostTile(post: view.posts[index], user: currentUser),
+                  );
+                }, childCount: view.posts.length + (view.loadingMore ? 1 : 0)),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _MessageList extends StatelessWidget {
-  const _MessageList({required this.message, this.onRetry});
+class _FeedFrame extends StatelessWidget {
+  const _FeedFrame({
+    required this.controller,
+    required this.onRefresh,
+    required this.user,
+    required this.slivers,
+  });
 
-  final String message;
-  final VoidCallback? onRetry;
+  final ScrollController controller;
+  final Future<void> Function() onRefresh;
+  final AppUser? user;
+  final List<Widget> slivers;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        const SizedBox(height: 120),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge,
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: CustomScrollView(
+        controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          const SliverToBoxAdapter(child: _FeedTitle()),
+          if (user case final current? when current.role.canWritePosts)
+            SliverToBoxAdapter(child: _ComposerBar(user: current)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          ...slivers,
+        ],
+      ),
+    );
+  }
+}
+
+class _FeedTitle extends StatelessWidget {
+  const _FeedTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Text(
+        'Hírfolyam',
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: FeedPalette.title(context),
+        ),
+      ),
+    );
+  }
+}
+
+class _ComposerBar extends StatelessWidget {
+  const _ComposerBar({required this.user});
+
+  final AppUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: FeedPalette.card(context),
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.newPost),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              AuthorAvatar(
+                name: user.name,
+                photoUrl: user.photoUrl,
+                radius: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: FeedPalette.field(context),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    'Mire gondolsz?',
+                    style: TextStyle(
+                      color: FeedPalette.muted(context),
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        if (onRetry != null)
-          Center(
-            child: TextButton(onPressed: onRetry, child: const Text('Újra')),
+      ),
+    );
+  }
+}
+
+class _EmptyFeed extends StatelessWidget {
+  const _EmptyFeed();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.sports_martial_arts,
+            size: 56,
+            color: AppColors.burgundy,
           ),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            'Még nincs bejegyzés. Hamarosan itt lesznek a klub hírei!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: FeedPalette.title(context),
+              fontSize: 16,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeedMessage extends StatelessWidget {
+  const _FeedMessage({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
+      child: Column(
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: FeedPalette.title(context),
+              fontSize: 16,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(onPressed: onRetry, child: const Text('Újra')),
+        ],
+      ),
     );
   }
 }

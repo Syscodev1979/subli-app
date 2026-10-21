@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-/// Rövid magyar idő a hírfolyamhoz: „5 perce”, „tegnap 18:30”.
+/// Rövid magyar idő a hírfolyamhoz: „5 perce”, „tegnap 18:30”, „okt. 12.”.
 ///
 /// A `hu` lokalizációs adatot az app induláskor tölti be.
 String hungarianRelativeTime(DateTime time, DateTime now) {
@@ -26,9 +26,9 @@ String hungarianRelativeTime(DateTime time, DateTime now) {
   }
 
   if (localTime.year == localNow.year) {
-    return DateFormat('MMM d. HH:mm', 'hu').format(localTime);
+    return DateFormat('MMM d.', 'hu').format(localTime);
   }
-  return DateFormat('y. MMM d. HH:mm', 'hu').format(localTime);
+  return DateFormat('y. MMM d.', 'hu').format(localTime);
 }
 
 bool _isSameDay(DateTime a, DateTime b) {

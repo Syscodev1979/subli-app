@@ -134,6 +134,24 @@ class FirestorePostRepository implements PostRepository {
   }
 
   @override
+  Future<List<PostComment>> fetchRecentComments(
+    String postId, {
+    int limit = 2,
+  }) async {
+    final snapshot = await _posts
+        .doc(postId)
+        .collection('comments')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs
+        .map(PostMapper.commentFromDoc)
+        .toList()
+        .reversed
+        .toList();
+  }
+
+  @override
   Stream<List<PostComment>> watchComments(String postId) {
     return _posts
         .doc(postId)

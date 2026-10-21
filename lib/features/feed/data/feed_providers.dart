@@ -37,6 +37,12 @@ final postCommentCountProvider = FutureProvider.family<int, String>((
   return ref.watch(postRepositoryProvider).countComments(postId);
 });
 
+final recentCommentsProvider = FutureProvider.family<List<PostComment>, String>(
+  (ref, postId) {
+    return ref.watch(postRepositoryProvider).fetchRecentComments(postId);
+  },
+);
+
 final myCheckProvider = StreamProvider.family<bool, String>((ref, postId) {
   final session = ref.watch(authGateProvider).asData?.value;
   if (session is! AuthSignedIn) return Stream<bool>.value(false);

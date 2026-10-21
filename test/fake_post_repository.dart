@@ -69,6 +69,12 @@ class FakePostRepository implements PostRepository {
   Future<List<PostCheck>> fetchChecks(String postId) async => const [];
 
   @override
+  Future<List<PostComment>> fetchRecentComments(
+    String postId, {
+    int limit = 2,
+  }) async => const [];
+
+  @override
   Stream<List<PostComment>> watchComments(String postId) {
     return Stream<List<PostComment>>.value(const []);
   }

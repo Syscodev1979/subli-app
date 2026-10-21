@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/constants.dart';
 import '../../../core/utils/hungarian_relative_time.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
-import '../../auth/presentation/auth_error_message.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
 import 'author_avatar.dart';
+import 'feed_error_message.dart';
+import 'feed_palette.dart';
+import 'feed_skeleton.dart';
+import 'link_text.dart';
 import 'post_card.dart';
 
 /// Egy bejegyzés teljes szövege és a hozzászólásai.
@@ -26,11 +27,22 @@ class PostDetailScreen extends ConsumerStatefulWidget {
 
 class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   final _commentController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _commentFocus = FocusNode();
   var _sending = false;
+  var _scrollAfterSend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _commentController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
     _commentController.dispose();
+    _scrollController.dispose();
+    _commentFocus.dispose();
     super.dispose();
   }
 
@@ -40,43 +52,28 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final user = session is AuthSignedIn ? session.user : null;
     final post = ref.watch(postProvider(widget.postId));
     final comments = ref.watch(postCommentsProvider(widget.postId));
+    final canSend = _commentController.text.trim().isNotEmpty && !_sending;
+
+    ref.listen(postCommentsProvider(widget.postId), (previous, next) {
+      if (!_scrollAfterSend) return;
+      final before = previous?.asData?.value.length ?? 0;
+      final after = next.asData?.value.length ?? 0;
+      if (after > before) {
+        _scrollAfterSend = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+      }
+    });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bejegyzés'),
-        actions: [
-          post.maybeWhen(
-            data: (value) {
-              if (user == null ||
-                  value == null ||
-                  !canManagePost(user, value)) {
-                return const SizedBox.shrink();
-              }
-              return PopupMenuButton<String>(
-                tooltip: 'Műveletek',
-                onSelected: (action) {
-                  if (action == 'edit') {
-                    context.push(AppRoutes.editPost(value.id));
-                  } else if (action == 'delete') {
-                    _delete(value.id);
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Szerkesztés')),
-                  PopupMenuItem(value: 'delete', child: Text('Törlés')),
-                ],
-              );
-            },
-            orElse: () => const SizedBox.shrink(),
-          ),
-        ],
-      ),
+      backgroundColor: FeedPalette.background(context),
+      appBar: AppBar(title: const Text('Bejegyzés')),
       body: Column(
         children: [
           Expanded(
             child: post.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text(authErrorMessage(error))),
+              loading: () => const FeedSkeleton(),
+              error: (error, _) =>
+                  Center(child: Text(feedErrorMessage(error, saving: false))),
               data: (value) {
                 if (value == null) {
                   return const Center(
@@ -84,34 +81,35 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   );
                 }
                 return comments.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) =>
-                      Center(child: Text(authErrorMessage(error))),
+                  loading: () => const FeedSkeleton(cards: 1),
+                  error: (error, _) => Center(
+                    child: Text(feedErrorMessage(error, saving: false)),
+                  ),
                   data: (items) => ListView(
+                    controller: _scrollController,
                     padding: const EdgeInsets.only(bottom: 16),
                     children: [
-                      if (user == null)
-                        const SizedBox.shrink()
-                      else
+                      if (user != null)
                         PostTile(
                           post: value,
                           user: user,
-                          maxLines: null,
-                          showMenu: false,
-                          onOpen: () {},
+                          expanded: true,
+                          showPreview: false,
+                          onOpenComments: _commentFocus.requestFocus,
                         ),
+                      const SizedBox(height: 8),
                       if (items.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(24),
+                        Padding(
+                          padding: const EdgeInsets.all(24),
                           child: Text(
                             'Még nincs hozzászólás.',
                             textAlign: TextAlign.center,
+                            style: TextStyle(color: FeedPalette.muted(context)),
                           ),
                         )
                       else
                         for (final comment in items)
-                          _CommentTile(
+                          _CommentBubble(
                             comment: comment,
                             canDelete:
                                 user != null && canDeleteComment(user, comment),
@@ -125,6 +123,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           ),
           if (user != null)
             Material(
+              color: FeedPalette.card(context),
               elevation: 8,
               child: SafeArea(
                 top: false,
@@ -133,23 +132,47 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      AuthorAvatar(
+                        name: user.name,
+                        photoUrl: user.photoUrl,
+                        radius: 16,
+                      ),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _commentController,
+                          focusNode: _commentFocus,
                           maxLength: PostLimits.commentText,
                           minLines: 1,
                           maxLines: 4,
                           textInputAction: TextInputAction.send,
-                          decoration: const InputDecoration(
-                            hintText: 'Hozzászólás',
+                          style: TextStyle(color: FeedPalette.title(context)),
+                          decoration: InputDecoration(
+                            hintText: 'Írj hozzászólást...',
+                            counterText: '',
+                            filled: true,
+                            fillColor: FeedPalette.field(context),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
-                          onSubmitted: (_) => _send(user),
+                          onSubmitted: canSend ? (_) => _send(user) : null,
                         ),
                       ),
                       IconButton(
                         tooltip: 'Küldés',
-                        onPressed: _sending ? null : () => _send(user),
-                        icon: const Icon(Icons.send),
+                        onPressed: canSend ? () => _send(user) : null,
+                        icon: Icon(
+                          Icons.send,
+                          color: canSend
+                              ? Theme.of(context).colorScheme.primary
+                              : FeedPalette.muted(context),
+                        ),
                       ),
                     ],
                   ),
@@ -158,6 +181,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  void _scrollToEnd() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
     );
   }
 
@@ -177,38 +209,32 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             text: text,
           );
       _commentController.clear();
+      _scrollAfterSend = true;
       ref.invalidate(postCommentCountProvider(widget.postId));
+      ref.invalidate(recentCommentsProvider(widget.postId));
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(feedErrorMessage(error, saving: true))),
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
-  Future<void> _delete(String postId) async {
-    final deleted = await deletePostFlow(context, ref, postId);
-    if (deleted && mounted) context.pop();
-  }
-
   Future<void> _deleteComment(String commentId) async {
-    final confirmed = await confirmDelete(
-      context,
-      title: 'Törlöd a hozzászólást?',
-      message: 'A hozzászólás véglegesen törlődik.',
-    );
-    if (!confirmed || !mounted) return;
     try {
       await ref
           .read(postRepositoryProvider)
           .deleteComment(postId: widget.postId, commentId: commentId);
       ref.invalidate(postCommentCountProvider(widget.postId));
+      ref.invalidate(recentCommentsProvider(widget.postId));
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(feedErrorMessage(error, saving: true))),
+        );
       }
     }
   }
@@ -220,8 +246,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 }
 
-class _CommentTile extends StatelessWidget {
-  const _CommentTile({
+class _CommentBubble extends StatelessWidget {
+  const _CommentBubble({
     required this.comment,
     required this.canDelete,
     required this.onDelete,
@@ -233,9 +259,38 @@ class _CommentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final bubble = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: FeedPalette.field(context),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            comment.authorName,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: FeedPalette.title(context),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 2),
+          LinkText(
+            text: comment.text,
+            style: TextStyle(
+              color: FeedPalette.title(context),
+              fontSize: 15,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -244,36 +299,45 @@ class _CommentTile extends StatelessWidget {
             photoUrl: comment.authorPhotoUrl,
             radius: 16,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  comment.authorName,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  hungarianRelativeTime(comment.createdAt, DateTime.now()),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
+                GestureDetector(
+                  onLongPress: canDelete ? () => _askDelete(context) : null,
+                  child: bubble,
                 ),
                 const SizedBox(height: 4),
-                Text(comment.text),
+                Text(
+                  hungarianRelativeTime(comment.createdAt, DateTime.now()),
+                  style: TextStyle(
+                    color: FeedPalette.muted(context),
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
-          if (canDelete)
-            IconButton(
-              tooltip: 'Hozzászólás törlése',
-              onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline),
-            ),
         ],
       ),
     );
+  }
+
+  Future<void> _askDelete(BuildContext context) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: ListTile(
+            leading: const Icon(Icons.delete_outline),
+            title: const Text('Törlés'),
+            onTap: () => Navigator.of(context).pop('delete'),
+          ),
+        );
+      },
+    );
+    if (action == 'delete') onDelete();
   }
 }

@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
-import '../../auth/presentation/auth_error_message.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
 import 'feed_controller.dart';
+import 'feed_error_message.dart';
 
 /// Új bejegyzés, vagy egy meglévő szerkesztése.
 class PostEditorScreen extends ConsumerStatefulWidget {
@@ -51,7 +51,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     return post.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, _) => _messageScaffold(authErrorMessage(error)),
+      error: (error, _) =>
+          _messageScaffold(feedErrorMessage(error, saving: false)),
       data: (value) {
         if (value == null) {
           return _messageScaffold('A bejegyzés már nem elérhető.');
@@ -178,7 +179,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       if (mounted) context.pop();
     } catch (error) {
       if (mounted) {
-        setState(() => _error = authErrorMessage(error));
+        setState(() => _error = feedErrorMessage(error, saving: true));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);

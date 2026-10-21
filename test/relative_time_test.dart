@@ -29,9 +29,9 @@ void main() {
       'most',
     );
 
-    final older = hungarianRelativeTime(DateTime(2026, 10, 1, 18, 30), now);
-    expect(older.contains('tegnap'), isFalse);
-    expect(older.contains('18:30'), isTrue);
+    final older = hungarianRelativeTime(DateTime(2026, 10, 12, 18, 30), now);
+    expect(older, 'okt. 12.');
+    expect(older.contains('18:30'), isFalse);
   });
 
   test('a kezdőbetűk a név első és utolsó szavából jönnek', () {

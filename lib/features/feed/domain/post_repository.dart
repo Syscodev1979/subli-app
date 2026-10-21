@@ -41,6 +41,9 @@ abstract class PostRepository {
 
   Future<List<PostCheck>> fetchChecks(String postId);
 
+  /// A legutóbbi hozzászólások, időrendben.
+  Future<List<PostComment>> fetchRecentComments(String postId, {int limit = 2});
+
   Stream<List<PostComment>> watchComments(String postId);
 
   Future<void> addComment({

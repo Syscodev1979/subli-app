@@ -53,6 +53,7 @@ dependencies:
   cached_network_image: ^4.0.5
   table_calendar: ^3.3.0
   intl: ^0.20.3
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

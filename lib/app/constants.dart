@@ -20,8 +20,29 @@ abstract final class AppColors {
   /// Kiegészítő zöld.
   static const Color accentGreen = Color(0xFF2E7D32);
 
-  /// Világos mód háttere.
+  /// Világos mód háttere a belépő képernyőkön.
   static const Color background = Color(0xFFFAFAFA);
+
+  /// A hírfolyam oldala, a kártyák közötti rés.
+  static const Color feedBackground = Color(0xFFF0F1F3);
+
+  /// Bejegyzéskártya világos módban.
+  static const Color feedCard = Color(0xFFFFFFFF);
+
+  /// Lekerekített mező és hozzászólás-buborék.
+  static const Color feedField = Color(0xFFE6E0E2);
+
+  /// Másodlagos, szürke felirat a hírfolyamon.
+  static const Color feedMuted = Color(0xFF6E6A6C);
+
+  /// Hírfolyam háttere sötét módban.
+  static const Color feedDarkBackground = Color(0xFF141214);
+
+  /// Bejegyzéskártya sötét módban.
+  static const Color feedDarkCard = Color(0xFF221F21);
+
+  /// Mező és buborék sötét módban.
+  static const Color feedDarkField = Color(0xFF2C2A2B);
 
   /// Világos mód szövegszíne, egyben a sötét felület színe.
   static const Color text = Color(0xFF1C1B1F);
