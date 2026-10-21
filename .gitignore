@@ -46,3 +46,10 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Firebase Admin service-account keys. Client configs (firebase_options.dart,
+# google-services.json, GoogleService-Info.plist) stay tracked on purpose.
+*firebase-adminsdk*.json
+*serviceAccount*.json
+*service-account*.json
+*.pem
