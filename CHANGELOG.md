@@ -1,5 +1,19 @@
 # Változásnapló
 
+## 0.5.0
+
+### Hozzáadva
+
+- A fejléc logója és a klubnév bárhonnan a hírfolyamra visz. A hírfolyamon a lista tetejére görget és frissít.
+- Képes és videós bejegyzés: legfeljebb 10 kép és 1 videó, tömörítés, feltöltési százalék és megszakítás.
+- Egyszeri figyelmeztetés: csak szülői hozzájárulással készült gyermekfotó vagy videó tölthető fel.
+- Reakciók a pipa helyett: Like, szív, haha, wow, szomorú és Osu!. Rövid koppintás a Like-ot kapcsolja, hosszú nyomás a választósávot nyitja.
+- Storage-szabályok: aktív tag olvashat, admin és edző tölthet fel, a szerző vagy az admin törölhet.
+
+### Változtatva
+
+- A bejegyzés csak akkor jelenik meg, ha minden fájl feltöltődött. Törléskor a Storage-fájlok is törlődnek.
+
 ## 0.4.0
 
 ### Változtatva
