@@ -5,13 +5,12 @@ import 'constants.dart';
 
 /// Material 3 téma világos és sötét móddal.
 ///
-/// A színséma a bordó magból készül, majd a klub fix színeire állítjuk,
-/// hogy a generált árnyalatok ne írják felül a megadott értékeket.
-/// Az AppBar mindkét módban bordó, fehér szöveggel.
+/// A gombok és kiemelések bordók maradnak, a másodlagos szín a zöld pipáé.
+/// Az AppBar világos módban fehér, sötét módban a sötét felület.
 abstract final class AppTheme {
-  static ThemeData get light => _build(_lightScheme);
+  static ThemeData get light => _build(_lightScheme, _lightAppBar);
 
-  static ThemeData get dark => _build(_darkScheme);
+  static ThemeData get dark => _build(_darkScheme, _darkAppBar);
 
   static final ColorScheme _lightScheme =
       ColorScheme.fromSeed(
@@ -39,31 +38,62 @@ abstract final class AppTheme {
         onPrimaryContainer: AppColors.burgundyLight,
         secondary: AppColors.accentGreen,
         onSecondary: AppColors.onPrimary,
+        surface: AppColors.darkSurface,
       );
 
-  static const AppBarTheme _appBarTheme = AppBarTheme(
-    backgroundColor: AppColors.burgundy,
-    foregroundColor: AppColors.onPrimary,
+  /// Fehér fejléc, sötét bordó felirat és ikonok, alul egy halványszürke vonal.
+  static const AppBarTheme _lightAppBar = AppBarTheme(
+    backgroundColor: Color(0xFFFFFFFF),
+    foregroundColor: AppColors.burgundy,
     elevation: 0,
     scrolledUnderElevation: 0,
     surfaceTintColor: Colors.transparent,
+    shadowColor: Colors.transparent,
     centerTitle: false,
-    systemOverlayStyle: SystemUiOverlayStyle.light,
-    iconTheme: IconThemeData(color: AppColors.onPrimary),
-    actionsIconTheme: IconThemeData(color: AppColors.onPrimary),
+    systemOverlayStyle: SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+    ),
+    iconTheme: IconThemeData(color: AppColors.burgundy),
+    actionsIconTheme: IconThemeData(color: AppColors.burgundy),
     titleTextStyle: TextStyle(
-      color: AppColors.onPrimary,
+      color: AppColors.burgundy,
       fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
+    ),
+    shape: Border(bottom: BorderSide(color: AppColors.appBarDivider, width: 1)),
+  );
+
+  /// Sötét felület, rózsaszínes bordó felirat és ikonok.
+  static const AppBarTheme _darkAppBar = AppBarTheme(
+    backgroundColor: AppColors.darkSurface,
+    foregroundColor: AppColors.burgundyDarkMode,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    surfaceTintColor: Colors.transparent,
+    shadowColor: Colors.transparent,
+    centerTitle: false,
+    systemOverlayStyle: SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    ),
+    iconTheme: IconThemeData(color: AppColors.burgundyDarkMode),
+    actionsIconTheme: IconThemeData(color: AppColors.burgundyDarkMode),
+    titleTextStyle: TextStyle(
+      color: AppColors.burgundyDarkMode,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
     ),
   );
 
-  static ThemeData _build(ColorScheme scheme) {
+  static ThemeData _build(ColorScheme scheme, AppBarTheme appBarTheme) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
-      appBarTheme: _appBarTheme,
+      appBarTheme: appBarTheme,
     );
   }
 }

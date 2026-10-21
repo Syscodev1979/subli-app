@@ -23,20 +23,30 @@ abstract final class AppColors {
   /// Világos mód háttere.
   static const Color background = Color(0xFFFAFAFA);
 
-  /// Világos mód szövegszíne.
+  /// Világos mód szövegszíne, egyben a sötét felület színe.
   static const Color text = Color(0xFF1C1B1F);
+
+  /// Sötét mód felülete és AppBar háttere.
+  static const Color darkSurface = Color(0xFF1C1B1F);
+
+  /// Világos AppBar alatti elválasztó vonal.
+  static const Color appBarDivider = Color(0xFFE6E0E2);
 
   /// Szöveg és ikon a bordó felületeken.
   static const Color onPrimary = Color(0xFFFFFFFF);
 }
 
-/// Az app útvonalai. Az auth védelem később kerül ide.
+/// Az app útvonalai.
 abstract final class AppRoutes {
+  static const String splash = '/';
   static const String login = '/login';
+  static const String register = '/register';
+  static const String pending = '/pending';
   static const String feed = '/feed';
   static const String chat = '/chat';
   static const String profile = '/profile';
   static const String calendar = '/calendar';
+  static const String admin = '/admin';
 }
 
 /// Közös, a felületen megjelenő nevek.
