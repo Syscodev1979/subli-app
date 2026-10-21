@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/constants.dart';
+import '../../features/auth/data/auth_providers.dart';
+import '../../features/auth/domain/auth_session.dart';
 
 /// A hírfolyam jobb oldali menüje.
-///
-/// A kijelentkezés egyelőre csak a bejelentkező képernyőre visz.
-/// A Firebase Auth kijelentkeztetés az auth lépésben kerül ide.
-class ClubDrawer extends StatelessWidget {
+class ClubDrawer extends ConsumerWidget {
   const ClubDrawer({super.key});
 
   void _go(BuildContext context, String location) {
@@ -17,7 +17,11 @@ class ClubDrawer extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(authGateProvider).asData?.value;
+    final user = session is AuthSignedIn ? session.user : null;
+    final showAdmin = user?.role.canReviewMembers ?? false;
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -36,6 +40,12 @@ class ClubDrawer extends StatelessWidget {
               ),
             ),
           ),
+          if (showAdmin)
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings_outlined),
+              title: const Text('Adminisztráció'),
+              onTap: () => _go(context, AppRoutes.admin),
+            ),
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profil'),
@@ -55,7 +65,11 @@ class ClubDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Kijelentkezés'),
-            onTap: () => _go(context, AppRoutes.login),
+            onTap: () async {
+              final auth = ref.read(authRepositoryProvider);
+              Navigator.of(context).pop();
+              await auth.signOut();
+            },
           ),
         ],
       ),
