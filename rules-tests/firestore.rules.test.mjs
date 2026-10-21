@@ -5,7 +5,14 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, setDoc, updateDoc, Timestamp } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  Timestamp,
+} from "firebase/firestore";
 
 const projectId = "demo-gastroyal-rules";
 const createdAt = Timestamp.fromDate(new Date("2026-01-15T10:00:00Z"));
@@ -206,6 +213,196 @@ test("edző jóváhagyhat egy pending sportolót", async () => {
   await assertSucceeds(
     updateDoc(doc(coach.firestore(), "users", "athlete1"), {
       status: "active",
+    }),
+  );
+});
+
+function postDoc(overrides = {}) {
+  return {
+    authorId: "coach1",
+    authorName: "Edző",
+    authorPhotoUrl: null,
+    text: "Holnap edzés.",
+    createdAt,
+    updatedAt: createdAt,
+    pinned: false,
+    ...overrides,
+  };
+}
+
+async function seedDoc(segments, data) {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), ...segments), data);
+  });
+}
+
+test("sportoló nem posztolhat", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+  });
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(athlete.firestore(), "posts", "post-1"),
+      postDoc({ authorId: "athlete1", authorName: "Sportoló" }),
+    ),
+  );
+});
+
+test("edző a saját nevében posztolhat", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertSucceeds(
+    setDoc(doc(coach.firestore(), "posts", "post-1"), postDoc()),
+  );
+});
+
+test("más nevében nem lehet pipázni", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(
+    setDoc(doc(athlete.firestore(), "posts", "post-1", "checks", "coach1"), {
+      userName: "Sportoló",
+      createdAt,
+    }),
+  );
+});
+
+test("a saját pipa létrehozható és nem módosítható", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  const check = doc(athlete.firestore(), "posts", "post-1", "checks", "athlete1");
+  await assertSucceeds(
+    setDoc(check, { userName: "Sportoló", createdAt }),
+  );
+  await assertFails(updateDoc(check, { userName: "Más név" }));
+  await assertSucceeds(deleteDoc(check));
+});
+
+test("idegen hozzászólást sportoló nem törölhet", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  await seedDoc(["posts", "post-1", "comments", "comment-1"], {
+    authorId: "coach1",
+    authorName: "Edző",
+    authorPhotoUrl: null,
+    text: "Rendben.",
+    createdAt,
+  });
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(
+    deleteDoc(
+      doc(athlete.firestore(), "posts", "post-1", "comments", "comment-1"),
+    ),
+  );
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertSucceeds(
+    deleteDoc(
+      doc(coach.firestore(), "posts", "post-1", "comments", "comment-1"),
+    ),
+  );
+});
+
+test("pending felhasználó nem olvashat bejegyzést", async () => {
+  await seed({
+    pending1: userDoc({
+      id: "pending1",
+      email: "pending@example.com",
+      role: "athlete",
+      status: "pending",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const pending = testEnv.authenticatedContext("pending1", {
+    email: "pending@example.com",
+  });
+  await assertFails(getDoc(doc(pending.firestore(), "posts", "post-1")));
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertSucceeds(getDoc(doc(athlete.firestore(), "posts", "post-1")));
+});
+
+test("a szerző nem írhatja át a bejegyzés authorId-ját", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    updateDoc(doc(coach.firestore(), "posts", "post-1"), {
+      authorId: "athlete1",
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(coach.firestore(), "posts", "post-1"), {
+      text: "Módosított szöveg.",
     }),
   );
 });
