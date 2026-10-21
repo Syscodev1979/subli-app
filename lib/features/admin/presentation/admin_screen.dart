@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
+import '../../../core/widgets/club_app_bar.dart';
 import '../../../core/utils/hungarian_date.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/age.dart';
@@ -25,8 +26,7 @@ class AdminScreen extends ConsumerWidget {
     final reviewer = session is AuthSignedIn ? session.user : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Adminisztráció'),
+      appBar: ClubAppBar(
         leading: IconButton(
           tooltip: 'Vissza a hírfolyamra',
           onPressed: () => context.go(AppRoutes.feed),

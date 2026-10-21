@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/constants.dart';
+import 'club_app_bar.dart';
 
 /// Egyszerű képernyő a még el nem készült funkciók helyén.
 ///
@@ -20,21 +21,27 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: ClubAppBar(
         leading: IconButton(
           tooltip: 'Vissza a hírfolyamra',
           onPressed: () => context.go(AppRoutes.feed),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: Text(title),
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
           ),
         ),
       ),

@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
+import '../../../core/widgets/club_app_bar.dart';
 import '../../../core/widgets/club_drawer.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
 import 'author_avatar.dart';
+import 'feed_chrome.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
@@ -29,14 +31,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    ref.read(feedChromeProvider).scrollToTopAndRefresh = _scrollToTopAndRefresh;
   }
 
   @override
   void dispose() {
+    ref.read(feedChromeProvider).scrollToTopAndRefresh = null;
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
+  }
+
+  Future<void> _scrollToTopAndRefresh() async {
+    if (_scrollController.hasClients) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    await _refresh();
   }
 
   void _onScroll() {
@@ -80,22 +95,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return Scaffold(
       backgroundColor: FeedPalette.background(context),
       endDrawer: const ClubDrawer(),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        titleSpacing: 16,
-        title: const Row(
-          children: [
-            _ClubLogo(),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                AppInfo.clubName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+      appBar: ClubAppBar(
         actions: [
           Builder(
             builder: (buttonContext) {
@@ -314,28 +314,6 @@ class _FeedMessage extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton(onPressed: onRetry, child: const Text('Újra')),
         ],
-      ),
-    );
-  }
-}
-
-/// A klublogó helye, amíg a címer nem kerül az appba.
-class _ClubLogo extends StatelessWidget {
-  const _ClubLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Klublogó',
-      excludeSemantics: true,
-      child: const CircleAvatar(
-        radius: 16,
-        backgroundColor: AppColors.burgundyLight,
-        child: Icon(
-          Icons.sports_martial_arts,
-          size: 18,
-          color: AppColors.burgundy,
-        ),
       ),
     );
   }
