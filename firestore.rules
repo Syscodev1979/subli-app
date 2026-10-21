@@ -26,8 +26,8 @@ service cloud.firestore {
 
     function isActiveRole(role) {
       return callerExists()
-        && caller().status == 'active'
-        && caller().role == role;
+        && caller().get('status', null) == 'active'
+        && caller().get('role', null) == role;
     }
 
     function isAdmin() {
@@ -38,47 +38,83 @@ service cloud.firestore {
       return isActiveRole('coach');
     }
 
-    // Edző a szerepet és a profiladatot nem írhatja, csak a jóváhagyást
-    // és a szülő–gyermek kapcsolatot.
-    function coachMayUpdate() {
-      return isCoach()
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.email == resource.data.email
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.name == resource.data.name
-        && request.resource.data.birthDate == resource.data.birthDate
-        && request.resource.data.photoUrl == resource.data.photoUrl
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.childRequests == resource.data.childRequests;
+    function isMemberRole(role) {
+      return role == 'athlete' || role == 'parent';
     }
 
-    // A saját dokumentumban ezeket a mezőket a felhasználó nem írhatja.
+    // Hiányzó mező null, így az összehasonlítás nem utasít el egy üres mezőt.
+    function unchanged(field) {
+      return request.resource.data.get(field, null) == resource.data.get(field, null);
+    }
+
+    function hasAllowedKeys() {
+      return request.resource.data.keys().hasOnly([
+        'id',
+        'name',
+        'email',
+        'role',
+        'status',
+        'birthDate',
+        'photoUrl',
+        'childIds',
+        'parentIds',
+        'childRequests',
+        'createdAt',
+      ]);
+    }
+
+    // Edző csak sportoló vagy szülő fiókot hagyhat jóvá és kapcsolhat össze.
+    // A szerep nem változhat: admin és edző dokumentumát csak admin írhatja.
+    function coachMayUpdate() {
+      return isCoach()
+        && isMemberRole(resource.data.get('role', null))
+        && isMemberRole(request.resource.data.get('role', null))
+        && unchanged('role')
+        && unchanged('email')
+        && unchanged('id')
+        && unchanged('name')
+        && unchanged('birthDate')
+        && unchanged('photoUrl')
+        && unchanged('createdAt')
+        && unchanged('childRequests');
+    }
+
+    // A saját dokumentumban a szerep, az állapot és a kapcsolatok nem írhatók.
+    // A születési dátum pending állapotban még javítható.
     function protectedFieldsUnchanged() {
-      return request.resource.data.role == resource.data.role
-        && request.resource.data.status == resource.data.status
-        && request.resource.data.childIds == resource.data.childIds
-        && request.resource.data.parentIds == resource.data.parentIds
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.email == resource.data.email;
+      return unchanged('role')
+        && unchanged('status')
+        && unchanged('childIds')
+        && unchanged('parentIds')
+        && unchanged('id')
+        && unchanged('email')
+        && (
+          resource.data.get('status', null) == 'pending'
+          || unchanged('birthDate')
+        );
     }
 
     // Új fiók csak a saját uid-re, pending sportoló vagy szülő lehet.
     function validCreate(userId) {
       let data = request.resource.data;
-      return data.id == userId
-        && data.status == 'pending'
-        && data.role in ['athlete', 'parent']
-        && data.childIds is list
-        && data.childIds.size() == 0
-        && data.parentIds is list
-        && data.parentIds.size() == 0
-        && data.name is string
-        && data.name.size() > 0
-        && data.name.size() <= 120
-        && data.email is string
-        && data.email == request.auth.token.email
-        && data.createdAt is timestamp
-        && (data.role == 'parent' || data.birthDate is timestamp);
+      return hasAllowedKeys()
+        && data.get('id', null) == userId
+        && data.get('status', null) == 'pending'
+        && data.get('role', null) in ['athlete', 'parent']
+        && data.get('childIds', null) is list
+        && data.get('childIds', null).size() == 0
+        && data.get('parentIds', null) is list
+        && data.get('parentIds', null).size() == 0
+        && data.get('name', null) is string
+        && data.get('name', '').size() > 0
+        && data.get('name', '').size() <= 120
+        && data.get('email', null) is string
+        && data.get('email', null) == request.auth.token.email
+        && data.get('createdAt', null) is timestamp
+        && (
+          data.get('role', null) == 'parent'
+          || data.get('birthDate', null) is timestamp
+        );
     }
 
     match /users/{userId} {
@@ -90,7 +126,7 @@ service cloud.firestore {
       // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat.
       allow update: if isAdmin()
         || coachMayUpdate()
-        || (isSelf(userId) && protectedFieldsUnchanged());
+        || (isSelf(userId) && hasAllowedKeys() && protectedFieldsUnchanged());
 
       allow delete: if false;
     }
