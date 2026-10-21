@@ -26,17 +26,19 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final _scrollController = ScrollController();
+  FeedChrome? _chrome;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    ref.read(feedChromeProvider).scrollToTopAndRefresh = _scrollToTopAndRefresh;
+    _chrome = ref.read(feedChromeProvider);
+    _chrome!.scrollToTopAndRefresh = _scrollToTopAndRefresh;
   }
 
   @override
   void dispose() {
-    ref.read(feedChromeProvider).scrollToTopAndRefresh = null;
+    _chrome?.scrollToTopAndRefresh = null;
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
