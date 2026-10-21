@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 0.3.0
+
+### Hozzáadva
+
+- Hírfolyam a kitűzött bejegyzésekkel felül, lapozással és lehúzással frissítéssel.
+- Bejegyzést admin és edző írhat, szerkeszthet és törölhet; admin bármelyiket kezelheti.
+- Zöld pipa és hozzászólások. A számlálók Firestore count() aggregációval készülnek.
+- Firestore-szabályok és index a `posts` gyűjteményre.
+
 ## 0.2.1
 
 ### Javítva
