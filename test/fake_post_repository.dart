@@ -1,5 +1,6 @@
 import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/post_repository.dart';
+import 'package:gastroyal_karate_app/features/feed/domain/reaction.dart';
 
 /// Üres hírfolyam a widgettesztekhez, Firebase nélkül.
 class FakePostRepository implements PostRepository {
@@ -73,6 +74,38 @@ class FakePostRepository implements PostRepository {
 
   @override
   Future<List<PostCheck>> fetchChecks(String postId) async => const [];
+
+  @override
+  Stream<ReactionType?> watchMyReaction({
+    required String postId,
+    required String userId,
+  }) {
+    return Stream<ReactionType?>.value(null);
+  }
+
+  @override
+  Future<void> setReaction({
+    required String postId,
+    required String userId,
+    required String userName,
+    required ReactionType type,
+  }) async {}
+
+  @override
+  Future<void> removeReaction({
+    required String postId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<int> countReactions(String postId) async => 0;
+
+  @override
+  Future<List<PostReaction>> fetchReactions(String postId) async => const [];
+
+  @override
+  Future<List<ReactionType>> fetchReactionTypes(String postId) async =>
+      const [];
 
   @override
   Future<List<PostComment>> fetchRecentComments(

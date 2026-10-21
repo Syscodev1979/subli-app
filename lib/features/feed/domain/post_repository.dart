@@ -1,4 +1,5 @@
 import 'post.dart';
+import 'reaction.dart';
 
 /// A hírfolyam Firestore-műveletei.
 abstract class PostRepository {
@@ -45,6 +46,27 @@ abstract class PostRepository {
   Future<void> removeCheck({required String postId, required String userId});
 
   Future<List<PostCheck>> fetchChecks(String postId);
+
+  Stream<ReactionType?> watchMyReaction({
+    required String postId,
+    required String userId,
+  });
+
+  Future<void> setReaction({
+    required String postId,
+    required String userId,
+    required String userName,
+    required ReactionType type,
+  });
+
+  Future<void> removeReaction({required String postId, required String userId});
+
+  Future<int> countReactions(String postId);
+
+  Future<List<PostReaction>> fetchReactions(String postId);
+
+  /// A kártyán látható reakcióikonok, a legutóbbi reakciókból.
+  Future<List<ReactionType>> fetchReactionTypes(String postId);
 
   /// A legutóbbi hozzászólások, időrendben.
   Future<List<PostComment>> fetchRecentComments(String postId, {int limit = 2});

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/post.dart';
+import '../domain/reaction.dart';
 
 /// `posts` dokumentumok és a domain modell közötti átalakítás.
 class PostMapper {
@@ -32,6 +33,21 @@ class PostMapper {
     return PostCheck(
       userId: doc.id,
       userName: data['userName'] as String? ?? '',
+      createdAt: _date(data['createdAt']),
+    );
+  }
+
+  static PostReaction reactionFromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    if (data == null) {
+      throw FormatException('Missing reaction document: ${doc.id}');
+    }
+    return PostReaction(
+      userId: doc.id,
+      userName: data['userName'] as String? ?? '',
+      type: ReactionType.fromName(data['type']) ?? ReactionType.like,
       createdAt: _date(data['createdAt']),
     );
   }

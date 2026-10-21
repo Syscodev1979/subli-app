@@ -41,6 +41,8 @@ class FeedController extends AsyncNotifier<FeedView> {
 
   Future<void> refresh() async {
     ref.invalidate(postCheckCountProvider);
+    ref.invalidate(postReactionCountProvider);
+    ref.invalidate(reactionTypesProvider);
     ref.invalidate(postCommentCountProvider);
     state = AsyncData(await _firstPage());
   }

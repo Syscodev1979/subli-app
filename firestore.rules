@@ -307,6 +307,26 @@ service cloud.firestore {
         );
       }
 
+      match /reactions/{userId} {
+        allow read: if isActive();
+        allow create, update: if isActive()
+          && isSelf(userId)
+          && request.resource.data.keys().hasOnly(['userName', 'type', 'createdAt'])
+          && request.resource.data.get('userName', null) is string
+          && request.resource.data.get('userName', '').size() > 0
+          && request.resource.data.get('userName', '').size() <= 120
+          && request.resource.data.get('type', null) in [
+            'like', 'heart', 'haha', 'wow', 'sad', 'osu',
+          ]
+          && request.resource.data.get('createdAt', null) is timestamp;
+        allow delete: if isActive()
+          && (
+            isSelf(userId)
+            || isAdmin()
+            || get(/databases/$(database)/documents/posts/$(postId)).data.get('authorId', null) == request.auth.uid
+          );
+      }
+
       match /comments/{commentId} {
         allow read: if isActive();
         allow create: if isActive() && validCommentShape();

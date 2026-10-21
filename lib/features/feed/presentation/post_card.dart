@@ -10,6 +10,7 @@ import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
 import '../domain/post_repository.dart';
+import '../domain/reaction.dart';
 import 'author_avatar.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
@@ -53,7 +54,7 @@ Future<bool> deletePostFlow(
   final confirmed = await confirmDelete(
     context,
     title: 'Törlöd a bejegyzést?',
-    message: 'A bejegyzés, a pipák, a hozzászólások és a feltöltött fájlok véglegesen törlődnek.',
+    message: 'A bejegyzés, a reakciók, a hozzászólások és a feltöltött fájlok véglegesen törlődnek.',
   );
   if (!confirmed || !context.mounted) return false;
   try {
@@ -70,13 +71,13 @@ Future<bool> deletePostFlow(
   }
 }
 
-/// A pipázók listája.
-Future<void> showChecksSheet(
+/// A reakciók listája.
+Future<void> showReactionsSheet(
   BuildContext context,
   PostRepository repository,
   String postId,
 ) async {
-  final future = repository.fetchChecks(postId);
+  final future = repository.fetchReactions(postId);
   await showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
@@ -84,7 +85,7 @@ Future<void> showChecksSheet(
       return SafeArea(
         child: SizedBox(
           height: 360,
-          child: FutureBuilder<List<PostCheck>>(
+          child: FutureBuilder<List<PostReaction>>(
             future: future,
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
@@ -100,25 +101,33 @@ Future<void> showChecksSheet(
                   ),
                 );
               }
-              final checks = snapshot.data ?? const <PostCheck>[];
+              final reactions = snapshot.data ?? const <PostReaction>[];
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
                     child: Text(
-                      'Kik pipázták',
+                      'Reakciók',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
                   Expanded(
-                    child: checks.isEmpty
-                        ? const Center(child: Text('Még senki nem pipázta.'))
+                    child: reactions.isEmpty
+                        ? const Center(child: Text('Még nincs reakció.'))
                         : ListView.builder(
-                            itemCount: checks.length,
+                            itemCount: reactions.length,
                             itemBuilder: (context, index) {
+                              final reaction = reactions[index];
+                              final mark =
+                                  reaction.type.emoji ?? reaction.type.label;
                               return ListTile(
-                                title: Text(checks[index].userName),
+                                leading: Text(
+                                  mark,
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                                title: Text(reaction.userName),
+                                subtitle: Text(reaction.type.label),
                               );
                             },
                           ),
@@ -138,13 +147,15 @@ class PostCard extends StatelessWidget {
   const PostCard({
     required this.post,
     required this.timeLabel,
-    required this.checkCount,
+    required this.reactionCount,
+    required this.reactionTypes,
     required this.commentCount,
-    required this.checkedByMe,
+    required this.myReaction,
     required this.canManage,
     required this.recentComments,
-    required this.onToggleCheck,
-    required this.onShowChecks,
+    required this.onToggleLike,
+    required this.onPickReaction,
+    required this.onShowReactions,
     required this.onOpenComments,
     this.onEdit,
     this.onDelete,
@@ -155,13 +166,15 @@ class PostCard extends StatelessWidget {
 
   final Post post;
   final String timeLabel;
-  final int? checkCount;
+  final int? reactionCount;
+  final List<ReactionType> reactionTypes;
   final int? commentCount;
-  final bool checkedByMe;
+  final ReactionType? myReaction;
   final bool canManage;
   final List<PostComment> recentComments;
-  final VoidCallback? onToggleCheck;
-  final VoidCallback onShowChecks;
+  final VoidCallback? onToggleLike;
+  final ValueChanged<ReactionType> onPickReaction;
+  final VoidCallback onShowReactions;
   final VoidCallback onOpenComments;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -170,11 +183,11 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checks = checkCount ?? 0;
+    final reactions = reactionCount ?? 0;
     final comments = commentCount ?? 0;
     final showSummary =
-        checkCount != null && checks > 0 ||
-        commentCount != null && comments > 0;
+        (reactionCount != null && reactions > 0) ||
+        (commentCount != null && comments > 0);
     final textColor = FeedPalette.title(context);
     return ColoredBox(
       color: FeedPalette.card(context),
@@ -274,30 +287,25 @@ class PostCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
               child: Row(
                 children: [
-                  if (checkCount != null && checks > 0)
+                  if (reactionCount != null && reactions > 0)
                     InkWell(
-                      onTap: onShowChecks,
+                      onTap: onShowReactions,
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
                           children: [
-                            Container(
-                              width: 18,
-                              height: 18,
-                              decoration: const BoxDecoration(
-                                color: AppColors.accentGreen,
-                                shape: BoxShape.circle,
+                            for (final type
+                                in (reactionTypes.isEmpty
+                                        ? const [ReactionType.like]
+                                        : reactionTypes)
+                                    .take(3))
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: _ReactionGlyph(type: type),
                               ),
-                              child: const Icon(
-                                Icons.check,
-                                size: 12,
-                                color: AppColors.onPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
                             Text(
-                              '$checks',
+                              '$reactions',
                               style: TextStyle(
                                 color: FeedPalette.muted(context),
                                 fontSize: 14,
@@ -329,9 +337,10 @@ class PostCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _CheckButton(
-                  checked: checkedByMe,
-                  onPressed: onToggleCheck,
+                child: _ReactionButton(
+                  reaction: myReaction,
+                  onPressed: onToggleLike,
+                  onPick: onPickReaction,
                 ),
               ),
               Expanded(
@@ -475,17 +484,22 @@ class _PostBodyState extends State<_PostBody> {
   }
 }
 
-class _CheckButton extends StatefulWidget {
-  const _CheckButton({required this.checked, required this.onPressed});
+class _ReactionButton extends StatefulWidget {
+  const _ReactionButton({
+    required this.reaction,
+    required this.onPressed,
+    required this.onPick,
+  });
 
-  final bool checked;
+  final ReactionType? reaction;
   final VoidCallback? onPressed;
+  final ValueChanged<ReactionType> onPick;
 
   @override
-  State<_CheckButton> createState() => _CheckButtonState();
+  State<_ReactionButton> createState() => _ReactionButtonState();
 }
 
-class _CheckButtonState extends State<_CheckButton>
+class _ReactionButtonState extends State<_ReactionButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scale;
@@ -516,9 +530,9 @@ class _CheckButtonState extends State<_CheckButton>
   }
 
   @override
-  void didUpdateWidget(_CheckButton oldWidget) {
+  void didUpdateWidget(_ReactionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.checked && widget.checked) {
+    if (oldWidget.reaction != widget.reaction && widget.reaction != null) {
       _controller.forward(from: 0);
       HapticFeedback.lightImpact();
     }
@@ -532,17 +546,110 @@ class _CheckButtonState extends State<_CheckButton>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.checked
-        ? AppColors.accentGreen
-        : FeedPalette.muted(context);
+    final reaction = widget.reaction;
+    final color = reaction == null
+        ? FeedPalette.muted(context)
+        : _reactionColor(reaction);
     return _ActionButton(
-      icon: widget.checked ? Icons.check_circle : Icons.check_circle_outline,
-      label: 'Pipa',
+      icon: reaction == ReactionType.like
+          ? Icons.check_circle
+          : Icons.check_circle_outline,
+      emoji: reaction?.emoji,
+      label: reaction?.label ?? 'Like',
       color: color,
       scale: _scale,
       onPressed: widget.onPressed,
+      onLongPress: () => _openPicker(context),
     );
   }
+
+  void _openPicker(BuildContext context) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final origin = box.localToGlobal(Offset.zero);
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (overlayContext) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: entry.remove,
+                behavior: HitTestBehavior.opaque,
+              ),
+            ),
+            Positioned(
+              left: 8,
+              right: 8,
+              top: (origin.dy - 72).clamp(8, origin.dy),
+              child: Material(
+                elevation: 6,
+                borderRadius: BorderRadius.circular(28),
+                color: FeedPalette.card(overlayContext),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (final type in ReactionType.values)
+                        IconButton(
+                          tooltip: type.label,
+                          onPressed: () {
+                            entry.remove();
+                            widget.onPick(type);
+                          },
+                          icon: _ReactionGlyph(type: type, size: 28),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    overlay.insert(entry);
+  }
+}
+
+class _ReactionGlyph extends StatelessWidget {
+  const _ReactionGlyph({required this.type, this.size = 18});
+
+  final ReactionType type;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final emoji = type.emoji;
+    if (emoji != null) {
+      return Text(emoji, style: TextStyle(fontSize: size * 0.9));
+    }
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: AppColors.accentGreen,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.check, size: size * 0.66, color: AppColors.onPrimary),
+    );
+  }
+}
+
+Color _reactionColor(ReactionType type) {
+  return switch (type) {
+    ReactionType.like => AppColors.accentGreen,
+    ReactionType.heart => const Color(0xFFC62828),
+    ReactionType.haha ||
+    ReactionType.wow ||
+    ReactionType.sad => const Color(0xFFF9A825),
+    ReactionType.osu => AppColors.burgundy,
+  };
 }
 
 class _ActionButton extends StatelessWidget {
@@ -550,31 +657,38 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
+    this.emoji,
     this.color,
     this.scale,
+    this.onLongPress,
   });
 
   final IconData icon;
+  final String? emoji;
   final String label;
   final VoidCallback? onPressed;
   final Color? color;
   final Animation<double>? scale;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final tint = color ?? FeedPalette.muted(context);
-    final iconWidget = Icon(icon, color: tint, size: 22);
+    final mark = emoji == null
+        ? Icon(icon, color: tint, size: 22)
+        : Text(emoji!, style: const TextStyle(fontSize: 20));
+    final scaled = scale == null
+        ? mark
+        : ScaleTransition(scale: scale!, child: mark);
     return InkWell(
       onTap: onPressed,
+      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (scale == null)
-              iconWidget
-            else
-              ScaleTransition(scale: scale!, child: iconWidget),
+            scaled,
             const SizedBox(width: 8),
             Text(
               label,
@@ -613,29 +727,31 @@ class PostTile extends ConsumerStatefulWidget {
 }
 
 class _PostTileState extends ConsumerState<PostTile> {
-  bool? _checkedOverride;
+  ReactionType? _reactionOverride;
+  var _hasReactionOverride = false;
   int? _countOverride;
   var _pending = false;
 
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
-    final checks = ref.watch(postCheckCountProvider(post.id));
+    final reactions = ref.watch(postReactionCountProvider(post.id));
+    final types = ref.watch(reactionTypesProvider(post.id));
     final comments = ref.watch(postCommentCountProvider(post.id));
-    final mine = ref.watch(myCheckProvider(post.id));
+    final mine = ref.watch(myReactionProvider(post.id));
     final recent = ref.watch(recentCommentsProvider(post.id));
-    final serverChecked = mine.asData?.value ?? false;
-    final checked = _checkedOverride ?? serverChecked;
-    final serverCount = checks.asData?.value;
+    final serverReaction = mine.asData?.value;
+    final reaction = _hasReactionOverride ? _reactionOverride : serverReaction;
+    final serverCount = reactions.asData?.value;
     final commentCount = comments.asData?.value;
 
-    ref.listen(myCheckProvider(post.id), (previous, next) {
+    ref.listen(myReactionProvider(post.id), (previous, next) {
       final value = next.asData?.value;
-      if (_checkedOverride != null && value == _checkedOverride && mounted) {
-        setState(() => _checkedOverride = null);
+      if (_hasReactionOverride && value == _reactionOverride && mounted) {
+        setState(() => _hasReactionOverride = false);
       }
     });
-    ref.listen(postCheckCountProvider(post.id), (previous, next) {
+    ref.listen(postReactionCountProvider(post.id), (previous, next) {
       final value = next.asData?.value;
       if (_countOverride != null && value == _countOverride && mounted) {
         setState(() => _countOverride = null);
@@ -645,18 +761,28 @@ class _PostTileState extends ConsumerState<PostTile> {
     return PostCard(
       post: post,
       timeLabel: hungarianRelativeTime(post.createdAt, DateTime.now()),
-      checkCount: _countOverride ?? serverCount,
+      reactionCount: _countOverride ?? serverCount,
+      reactionTypes: types.asData?.value ?? const <ReactionType>[],
       commentCount: commentCount,
-      checkedByMe: checked,
+      myReaction: reaction,
       canManage: canManagePost(widget.user, post),
       recentComments: (commentCount ?? 0) > 0
           ? (recent.asData?.value ?? const <PostComment>[])
           : const <PostComment>[],
       expanded: widget.expanded,
       showPreview: widget.showPreview,
-      onToggleCheck: () => _toggle(checked, serverCount),
-      onShowChecks: () =>
-          showChecksSheet(context, ref.read(postRepositoryProvider), post.id),
+      onToggleLike: () => _apply(
+        reaction == ReactionType.like ? null : ReactionType.like,
+        reaction,
+        serverCount,
+      ),
+      onPickReaction: (type) =>
+          _apply(reaction == type ? null : type, reaction, serverCount),
+      onShowReactions: () => showReactionsSheet(
+        context,
+        ref.read(postRepositoryProvider),
+        post.id,
+      ),
       onOpenComments:
           widget.onOpenComments ??
           () => context.push(AppRoutes.feedPost(post.id)),
@@ -665,35 +791,43 @@ class _PostTileState extends ConsumerState<PostTile> {
     );
   }
 
-  Future<void> _toggle(bool checked, int? serverCount) async {
+  Future<void> _apply(
+    ReactionType? next,
+    ReactionType? current,
+    int? serverCount,
+  ) async {
     if (_pending) return;
-    final next = !checked;
     setState(() {
       _pending = true;
-      _checkedOverride = next;
+      _hasReactionOverride = true;
+      _reactionOverride = next;
       if (serverCount != null) {
-        _countOverride = (serverCount + (next ? 1 : -1)).clamp(0, 1 << 20);
+        final delta = (next == null ? 0 : 1) - (current == null ? 0 : 1);
+        _countOverride = (serverCount + delta).clamp(0, 1 << 20);
       }
     });
     final repository = ref.read(postRepositoryProvider);
     try {
-      if (next) {
-        await repository.addCheck(
+      if (next == null) {
+        await repository.removeReaction(
+          postId: widget.post.id,
+          userId: widget.user.id,
+        );
+      } else {
+        await repository.setReaction(
           postId: widget.post.id,
           userId: widget.user.id,
           userName: widget.user.name,
-        );
-      } else {
-        await repository.removeCheck(
-          postId: widget.post.id,
-          userId: widget.user.id,
+          type: next,
         );
       }
-      ref.invalidate(postCheckCountProvider(widget.post.id));
+      ref.invalidate(postReactionCountProvider(widget.post.id));
+      ref.invalidate(reactionTypesProvider(widget.post.id));
     } catch (error) {
       if (mounted) {
         setState(() {
-          _checkedOverride = null;
+          _hasReactionOverride = false;
+          _reactionOverride = null;
           _countOverride = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(

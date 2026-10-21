@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import '../domain/post.dart';
 import '../domain/post_repository.dart';
+import '../domain/reaction.dart';
 import 'post_mapper.dart';
 import 'post_media_storage.dart';
 
@@ -95,6 +96,7 @@ class FirestorePostRepository implements PostRepository {
     final post = _posts.doc(postId);
     await _media.deletePost(postId);
     await _deleteAll(post.collection('checks'));
+    await _deleteAll(post.collection('reactions'));
     await _deleteAll(post.collection('comments'));
     await post.delete();
   }
@@ -144,6 +146,78 @@ class FirestorePostRepository implements PostRepository {
         .orderBy('createdAt')
         .get();
     return snapshot.docs.map(PostMapper.checkFromDoc).toList();
+  }
+
+  @override
+  Stream<ReactionType?> watchMyReaction({
+    required String postId,
+    required String userId,
+  }) {
+    return _posts
+        .doc(postId)
+        .collection('reactions')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          return ReactionType.fromName(doc.data()?['type']);
+        });
+  }
+
+  @override
+  Future<void> setReaction({
+    required String postId,
+    required String userId,
+    required String userName,
+    required ReactionType type,
+  }) {
+    return _posts.doc(postId).collection('reactions').doc(userId).set({
+      'userName': userName,
+      'type': type.name,
+      'createdAt': Timestamp.fromDate(DateTime.now()),
+    });
+  }
+
+  @override
+  Future<void> removeReaction({
+    required String postId,
+    required String userId,
+  }) {
+    return _posts.doc(postId).collection('reactions').doc(userId).delete();
+  }
+
+  @override
+  Future<int> countReactions(String postId) {
+    return _count(_posts.doc(postId).collection('reactions'));
+  }
+
+  @override
+  Future<List<PostReaction>> fetchReactions(String postId) async {
+    final snapshot = await _posts
+        .doc(postId)
+        .collection('reactions')
+        .orderBy('createdAt')
+        .get();
+    return snapshot.docs.map(PostMapper.reactionFromDoc).toList();
+  }
+
+  @override
+  Future<List<ReactionType>> fetchReactionTypes(String postId) async {
+    final snapshot = await _posts
+        .doc(postId)
+        .collection('reactions')
+        .orderBy('createdAt', descending: true)
+        .limit(30)
+        .get();
+    final found = <ReactionType>{};
+    for (final doc in snapshot.docs) {
+      final type = ReactionType.fromName(doc.data()['type']);
+      if (type != null) found.add(type);
+    }
+    return [
+      for (final type in ReactionType.values)
+        if (found.contains(type)) type,
+    ];
   }
 
   @override

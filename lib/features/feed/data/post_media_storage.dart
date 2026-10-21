@@ -83,9 +83,7 @@ class PostMediaStorage {
 
   /// A megmaradó letöltési URL-eken kívüli fájlokat törli.
   Future<void> deleteExcept(String postId, Iterable<String> keepUrls) async {
-    final keep = {
-      for (final url in keepUrls) ?storageObjectPath(url),
-    };
+    final keep = {for (final url in keepUrls) ?storageObjectPath(url)};
     final listed = await _storage.ref('posts/$postId').listAll();
     for (final item in listed.items) {
       if (!keep.contains(item.fullPath)) {

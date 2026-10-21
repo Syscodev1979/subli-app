@@ -5,6 +5,7 @@ import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/auth_session.dart';
 import '../domain/post.dart';
 import '../domain/post_repository.dart';
+import '../domain/reaction.dart';
 import 'firestore_post_repository.dart';
 
 final postRepositoryProvider = Provider<PostRepository>((ref) {
@@ -20,6 +21,30 @@ final postCommentsProvider = StreamProvider.family<List<PostComment>, String>((
   postId,
 ) {
   return ref.watch(postRepositoryProvider).watchComments(postId);
+});
+
+final postReactionCountProvider = FutureProvider.family<int, String>((
+  ref,
+  postId,
+) {
+  return ref.watch(postRepositoryProvider).countReactions(postId);
+});
+
+final reactionTypesProvider = FutureProvider.family<List<ReactionType>, String>(
+  (ref, postId) {
+    return ref.watch(postRepositoryProvider).fetchReactionTypes(postId);
+  },
+);
+
+final myReactionProvider = StreamProvider.family<ReactionType?, String>((
+  ref,
+  postId,
+) {
+  final session = ref.watch(authGateProvider).asData?.value;
+  if (session is! AuthSignedIn) return Stream<ReactionType?>.value(null);
+  return ref
+      .watch(postRepositoryProvider)
+      .watchMyReaction(postId: postId, userId: session.user.id);
 });
 
 /// A számlálók count() aggregációk, nem tárolt mezők.

@@ -632,3 +632,68 @@ test("sportoló nem tölthet fel, edző igen, a szerző törölheti a fájlt", a
     deleteObject(ref(admin.storage(), "posts/post-1/b.jpg")),
   );
 });
+
+test("a saját reakció cserélhető, idegenét más sportoló nem törli", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      name: "Másik Sportoló",
+      email: "athlete2@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  const reaction = doc(
+    athlete.firestore(),
+    "posts",
+    "post-1",
+    "reactions",
+    "athlete1",
+  );
+  await assertSucceeds(
+    setDoc(reaction, { userName: "Sportoló", type: "like", createdAt }),
+  );
+  await assertSucceeds(
+    updateDoc(reaction, { userName: "Sportoló", type: "osu", createdAt }),
+  );
+  await assertFails(
+    setDoc(doc(athlete.firestore(), "posts", "post-1", "reactions", "athlete2"), {
+      userName: "Másik",
+      type: "like",
+      createdAt,
+    }),
+  );
+
+  const other = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(
+    deleteDoc(
+      doc(other.firestore(), "posts", "post-1", "reactions", "athlete1"),
+    ),
+  );
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertSucceeds(
+    deleteDoc(
+      doc(coach.firestore(), "posts", "post-1", "reactions", "athlete1"),
+    ),
+  );
+});

@@ -3,10 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gastroyal_karate_app/app/constants.dart';
 import 'package:gastroyal_karate_app/app/theme.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
+import 'package:gastroyal_karate_app/features/feed/domain/reaction.dart';
 import 'package:gastroyal_karate_app/features/feed/presentation/post_card.dart';
 
 void main() {
-  testWidgets('a kitűzött bejegyzésen a pipa zöld, a kártya fehér', (
+  testWidgets('a kitűzött bejegyzésen a Like zöld, a kártya fehér', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -25,9 +26,10 @@ void main() {
               pinned: true,
             ),
             timeLabel: 'tegnap 18:30',
-            checkCount: 3,
+            reactionCount: 3,
+            reactionTypes: const [ReactionType.like],
             commentCount: 1,
-            checkedByMe: true,
+            myReaction: ReactionType.like,
             canManage: true,
             recentComments: [
               PostComment(
@@ -39,8 +41,9 @@ void main() {
                 createdAt: DateTime(2026, 10, 21, 19),
               ),
             ],
-            onToggleCheck: () {},
-            onShowChecks: () {},
+            onToggleLike: () {},
+            onPickReaction: (_) {},
+            onShowReactions: () {},
             onOpenComments: () {},
           ),
         ),
@@ -50,12 +53,12 @@ void main() {
     expect(find.text('Kitűzve'), findsOneWidget);
     expect(find.text('KA'), findsOneWidget);
     expect(find.text('tegnap 18:30'), findsOneWidget);
-    expect(find.text('Pipa'), findsOneWidget);
+    expect(find.text('Like'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
     expect(find.text('1 hozzászólás'), findsOneWidget);
     expect(find.textContaining('Ott leszek.'), findsOneWidget);
     expect(
-      tester.widget<Text>(find.text('Pipa')).style?.color,
+      tester.widget<Text>(find.text('Like')).style?.color,
       AppColors.accentGreen,
     );
 
