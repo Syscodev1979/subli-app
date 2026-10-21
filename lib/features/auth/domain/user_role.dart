@@ -20,6 +20,9 @@ enum UserRole {
   /// Jóváhagyási lista: admin és edző.
   bool get canReviewMembers => this == UserRole.admin || this == UserRole.coach;
 
+  /// Bejegyzést admin és edző írhat.
+  bool get canWritePosts => canReviewMembers;
+
   /// Edzői vagy admin szerep kiosztása.
   bool get canAssignRoles => this == UserRole.admin;
 }

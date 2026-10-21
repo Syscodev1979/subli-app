@@ -11,6 +11,8 @@ import '../features/auth/presentation/register_screen.dart';
 import '../features/calendar/presentation/calendar_screen.dart';
 import '../features/chat/presentation/chat_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
+import '../features/feed/presentation/post_detail_screen.dart';
+import '../features/feed/presentation/post_editor_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import 'auth_redirect.dart';
 import 'constants.dart';
@@ -54,6 +56,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.feed,
         builder: (context, state) => const FeedScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const PostEditorScreen(),
+          ),
+          GoRoute(
+            path: ':postId',
+            builder: (context, state) {
+              return PostDetailScreen(postId: state.pathParameters['postId']!);
+            },
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) {
+                  return PostEditorScreen(
+                    postId: state.pathParameters['postId'],
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.chat,

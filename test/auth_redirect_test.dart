@@ -62,6 +62,25 @@ void main() {
     );
   });
 
+  test('aktív felhasználó megnyithatja a bejegyzést', () {
+    expect(
+      authRedirect(
+        phase: AuthPhase.active,
+        canReviewMembers: false,
+        location: AppRoutes.feedPost('post-1'),
+      ),
+      isNull,
+    );
+    expect(
+      authRedirect(
+        phase: AuthPhase.pending,
+        canReviewMembers: false,
+        location: AppRoutes.newPost,
+      ),
+      AppRoutes.pending,
+    );
+  });
+
   test('aktív felhasználó a hírfolyamra kerül a belépő képernyőkről', () {
     expect(
       authRedirect(

@@ -43,6 +43,11 @@ abstract final class AppRoutes {
   static const String register = '/register';
   static const String pending = '/pending';
   static const String feed = '/feed';
+  static const String newPost = '/feed/new';
+
+  static String feedPost(String id) => '/feed/$id';
+
+  static String editPost(String id) => '/feed/$id/edit';
   static const String chat = '/chat';
   static const String profile = '/profile';
   static const String calendar = '/calendar';
