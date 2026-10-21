@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 0.2.1
+
+### Javítva
+
+- Az edző csak sportoló vagy szülő fiókot módosíthat. Admin és edző dokumentumát csak admin írhatja.
+- Jóváhagyás után a születési dátum a saját dokumentumban sem írható át. Pending állapotban még javítható.
+- Létrehozáskor és saját módosításkor a dokumentum csak az ismert mezőket tartalmazhatja.
+- A hiányzó mező nem utasítja el a szabályos összehasonlítást.
+
+### Hozzáadva
+
+- Firestore szabálytesztek a helyi emulátoron (`npm run test:rules`).
+
 ## 0.2.0
 
 ### Hozzáadva
