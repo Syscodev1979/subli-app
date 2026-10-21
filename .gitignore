@@ -53,3 +53,11 @@ app.*.map.json
 *serviceAccount*.json
 *service-account*.json
 *.pem
+
+# Firestore rules unit tests (Node). The lockfile stays tracked.
+node_modules/
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
