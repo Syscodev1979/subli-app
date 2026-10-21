@@ -38,6 +38,20 @@ service cloud.firestore {
       return isActiveRole('coach');
     }
 
+    // Edző a szerepet és a profiladatot nem írhatja, csak a jóváhagyást
+    // és a szülő–gyermek kapcsolatot.
+    function coachMayUpdate() {
+      return isCoach()
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.name == resource.data.name
+        && request.resource.data.birthDate == resource.data.birthDate
+        && request.resource.data.photoUrl == resource.data.photoUrl
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.childRequests == resource.data.childRequests;
+    }
+
     // A saját dokumentumban ezeket a mezőket a felhasználó nem írhatja.
     function protectedFieldsUnchanged() {
       return request.resource.data.role == resource.data.role
@@ -75,7 +89,7 @@ service cloud.firestore {
 
       // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat.
       allow update: if isAdmin()
-        || (isCoach() && request.resource.data.role == resource.data.role)
+        || coachMayUpdate()
         || (isSelf(userId) && protectedFieldsUnchanged());
 
       allow delete: if false;
