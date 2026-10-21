@@ -80,10 +80,10 @@ class FirestorePostRepository implements PostRepository {
 
   @override
   Future<void> deletePost(String postId) async {
-    // A pipákat a szabály csak a pipázó saját uid-jével engedi törölni,
-    // ezért a bejegyzés törlésekor a checks algyűjtemény a helyén marad.
-    await _deleteAll(_posts.doc(postId).collection('comments'));
-    await _posts.doc(postId).delete();
+    final post = _posts.doc(postId);
+    await _deleteAll(post.collection('checks'));
+    await _deleteAll(post.collection('comments'));
+    await post.delete();
   }
 
   @override
@@ -199,13 +199,14 @@ class FirestorePostRepository implements PostRepository {
     CollectionReference<Map<String, dynamic>> collection,
   ) async {
     while (true) {
-      final snapshot = await collection.limit(400).get();
+      final snapshot = await collection.limit(500).get();
       if (snapshot.docs.isEmpty) return;
       final batch = _firestore.batch();
       for (final document in snapshot.docs) {
         batch.delete(document.reference);
       }
       await batch.commit();
+      if (snapshot.docs.length < 500) return;
     }
   }
 }

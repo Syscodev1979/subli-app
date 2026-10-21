@@ -226,7 +226,12 @@ service cloud.firestore {
         allow read: if isActive();
         allow create: if validCheckCreate(userId);
         allow update: if false;
-        allow delete: if isActive() && isSelf(userId);
+        allow delete: if isActive()
+        && (
+          isSelf(userId)
+          || isAdmin()
+          || get(/databases/$(database)/documents/posts/$(postId)).data.get('authorId', null) == request.auth.uid
+        );
       }
 
       match /comments/{commentId} {

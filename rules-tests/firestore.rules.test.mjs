@@ -406,3 +406,63 @@ test("a szerző nem írhatja át a bejegyzés authorId-ját", async () => {
     }),
   );
 });
+
+test("a szerző és az admin törölheti az idegen pipát", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      name: "Másik Sportoló",
+      email: "athlete2@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    admin1: userDoc({
+      id: "admin1",
+      email: "admin@example.com",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  await seedDoc(["posts", "post-1", "checks", "athlete1"], {
+    userName: "Sportoló",
+    createdAt,
+  });
+
+  const other = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(
+    deleteDoc(doc(other.firestore(), "posts", "post-1", "checks", "athlete1")),
+  );
+
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertSucceeds(
+    deleteDoc(doc(coach.firestore(), "posts", "post-1", "checks", "athlete1")),
+  );
+
+  await seedDoc(["posts", "post-1", "checks", "athlete1"], {
+    userName: "Sportoló",
+    createdAt,
+  });
+  const admin = testEnv.authenticatedContext("admin1", {
+    email: "admin@example.com",
+  });
+  await assertSucceeds(
+    deleteDoc(doc(admin.firestore(), "posts", "post-1", "checks", "athlete1")),
+  );
+});
