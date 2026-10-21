@@ -1,0 +1,88 @@
+rules_version = '2';
+
+// Gastroyal Karate SE — users collection.
+// Deploy: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function callerPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function callerExists() {
+      return signedIn() && exists(callerPath());
+    }
+
+    function caller() {
+      return get(callerPath()).data;
+    }
+
+    function isActiveRole(role) {
+      return callerExists()
+        && caller().status == 'active'
+        && caller().role == role;
+    }
+
+    function isAdmin() {
+      return isActiveRole('admin');
+    }
+
+    function isCoach() {
+      return isActiveRole('coach');
+    }
+
+    // A saját dokumentumban ezeket a mezőket a felhasználó nem írhatja.
+    function protectedFieldsUnchanged() {
+      return request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.childIds == resource.data.childIds
+        && request.resource.data.parentIds == resource.data.parentIds
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.email == resource.data.email;
+    }
+
+    // Új fiók csak a saját uid-re, pending sportoló vagy szülő lehet.
+    function validCreate(userId) {
+      let data = request.resource.data;
+      return data.id == userId
+        && data.status == 'pending'
+        && data.role in ['athlete', 'parent']
+        && data.childIds is list
+        && data.childIds.size() == 0
+        && data.parentIds is list
+        && data.parentIds.size() == 0
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 120
+        && data.email is string
+        && data.email == request.auth.token.email
+        && data.createdAt is timestamp
+        && (data.role == 'parent' || data.birthDate is timestamp);
+    }
+
+    match /users/{userId} {
+      // Pending fiók csak a saját dokumentumát olvassa. Admin és edző mindet.
+      allow read: if isSelf(userId) || isAdmin() || isCoach();
+
+      allow create: if isSelf(userId) && validCreate(userId);
+
+      // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat.
+      allow update: if isAdmin()
+        || (isCoach() && request.resource.data.role == resource.data.role)
+        || (isSelf(userId) && protectedFieldsUnchanged());
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
