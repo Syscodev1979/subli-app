@@ -1,13 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../domain/post.dart';
 import '../domain/post_repository.dart';
 import 'post_mapper.dart';
+import 'post_media_storage.dart';
 
 class FirestorePostRepository implements PostRepository {
-  FirestorePostRepository(this._firestore);
+  FirestorePostRepository(this._firestore, {FirebaseStorage? storage})
+    : _media = PostMediaStorage(storage ?? FirebaseStorage.instance);
 
   final FirebaseFirestore _firestore;
+  final PostMediaStorage _media;
 
   CollectionReference<Map<String, dynamic>> get _posts =>
       _firestore.collection('posts');
@@ -44,14 +48,19 @@ class FirestorePostRepository implements PostRepository {
   }
 
   @override
+  String reservePostId() => _posts.doc().id;
+
+  @override
   Future<String> createPost({
     required String authorId,
     required String authorName,
     required String? authorPhotoUrl,
     required String text,
     required bool pinned,
+    List<PostMedia> media = const [],
+    String? postId,
   }) async {
-    final ref = _posts.doc();
+    final ref = postId == null ? _posts.doc() : _posts.doc(postId);
     final now = Timestamp.fromDate(DateTime.now());
     await ref.set({
       'authorId': authorId,
@@ -61,6 +70,7 @@ class FirestorePostRepository implements PostRepository {
       'createdAt': now,
       'updatedAt': now,
       'pinned': pinned,
+      'media': [for (final item in media) item.toMap()],
     });
     return ref.id;
   }
@@ -70,17 +80,20 @@ class FirestorePostRepository implements PostRepository {
     required String postId,
     required String text,
     required bool pinned,
+    required List<PostMedia> media,
   }) {
     return _posts.doc(postId).update({
       'text': text,
       'pinned': pinned,
       'updatedAt': Timestamp.fromDate(DateTime.now()),
+      'media': [for (final item in media) item.toMap()],
     });
   }
 
   @override
   Future<void> deletePost(String postId) async {
     final post = _posts.doc(postId);
+    await _media.deletePost(postId);
     await _deleteAll(post.collection('checks'));
     await _deleteAll(post.collection('comments'));
     await post.delete();

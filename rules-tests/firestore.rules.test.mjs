@@ -13,6 +13,7 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
+import { deleteObject, getBytes, ref, uploadString } from "firebase/storage";
 
 const projectId = "demo-gastroyal-rules";
 const createdAt = Timestamp.fromDate(new Date("2026-01-15T10:00:00Z"));
@@ -43,6 +44,9 @@ before(async () => {
     firestore: {
       rules: readFileSync(new URL("../firestore.rules", import.meta.url), "utf8"),
     },
+    storage: {
+      rules: readFileSync(new URL("../storage.rules", import.meta.url), "utf8"),
+    },
   });
 });
 
@@ -52,6 +56,7 @@ after(async () => {
 
 beforeEach(async () => {
   await testEnv.clearFirestore();
+  await testEnv.clearStorage();
 });
 
 async function seed(documents) {
@@ -464,5 +469,166 @@ test("a szerző és az admin törölheti az idegen pipát", async () => {
   });
   await assertSucceeds(
     deleteDoc(doc(admin.firestore(), "posts", "post-1", "checks", "athlete1")),
+  );
+});
+
+function imageMedia(url = "https://example.com/a.jpg") {
+  return {
+    type: "image",
+    url,
+    thumbUrl: null,
+    width: 800,
+    height: 600,
+    durationSec: null,
+  };
+}
+
+function videoMedia(durationSec = 30) {
+  return {
+    type: "video",
+    url: "https://example.com/a.mp4",
+    thumbUrl: "https://example.com/a.jpg",
+    width: 1280,
+    height: 720,
+    durationSec,
+  };
+}
+
+test("üres szöveggel is posztolható, ha van kép", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertSucceeds(
+    setDoc(
+      doc(coach.firestore(), "posts", "post-1"),
+      postDoc({ text: "", media: [imageMedia()] }),
+    ),
+  );
+});
+
+test("tíz képnél több és két videó elutasítva", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "too-many"),
+      postDoc({
+        media: Array.from({ length: 11 }, (_, index) =>
+          imageMedia(`https://example.com/${index}.jpg`),
+        ),
+      }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "two-videos"),
+      postDoc({ media: [videoMedia(), videoMedia(20)] }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "long-video"),
+      postDoc({ media: [videoMedia(181)] }),
+    ),
+  );
+});
+
+test("sportoló nem tölthet fel, edző igen, a szerző törölheti a fájlt", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      name: "Másik Sportoló",
+      email: "athlete2@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    pending1: userDoc({
+      id: "pending1",
+      email: "pending@example.com",
+      role: "athlete",
+      status: "pending",
+    }),
+    admin1: userDoc({
+      id: "admin1",
+      email: "admin@example.com",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(
+    uploadString(ref(athlete.storage(), "posts/post-1/a.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  const file = ref(coach.storage(), "posts/post-1/a.jpg");
+  await assertSucceeds(
+    uploadString(file, "img", "raw", { contentType: "image/jpeg" }),
+  );
+  await assertFails(
+    uploadString(ref(coach.storage(), "posts/post-1/note.txt"), "x", "raw", {
+      contentType: "text/plain",
+    }),
+  );
+
+  const pending = testEnv.authenticatedContext("pending1", {
+    email: "pending@example.com",
+  });
+  await assertFails(getBytes(ref(pending.storage(), "posts/post-1/a.jpg")));
+  await assertSucceeds(getBytes(ref(athlete.storage(), "posts/post-1/a.jpg")));
+
+  const other = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(deleteObject(ref(other.storage(), "posts/post-1/a.jpg")));
+  await assertSucceeds(deleteObject(file));
+
+  await assertSucceeds(
+    uploadString(ref(coach.storage(), "posts/post-1/b.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+  const admin = testEnv.authenticatedContext("admin1", {
+    email: "admin@example.com",
+  });
+  await assertSucceeds(
+    deleteObject(ref(admin.storage(), "posts/post-1/b.jpg")),
   );
 });

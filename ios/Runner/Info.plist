@@ -47,6 +47,12 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>A klubhírekhez fotót választhatsz a galériából.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>A klubhírekhez fotót vagy videót készíthetsz a kamerával.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>A videó hangjához a mikrofon szükséges.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

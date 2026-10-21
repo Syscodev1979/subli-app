@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test:rules": "firebase emulators:exec --project demo-gastroyal-rules --only firestore \"node --test rules-tests/firestore.rules.test.mjs\""
+    "test:rules": "firebase emulators:exec --project demo-gastroyal-rules --only firestore,storage \"node --test rules-tests/firestore.rules.test.mjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",

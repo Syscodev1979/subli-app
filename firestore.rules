@@ -121,6 +121,74 @@ service cloud.firestore {
       return callerExists() && caller().get('status', null) == 'active';
     }
 
+    function mediaItemOk(item) {
+      return item is map
+        && item.keys().hasOnly([
+          'type', 'url', 'thumbUrl', 'width', 'height', 'durationSec',
+        ])
+        && item.get('type', null) in ['image', 'video']
+        && item.get('url', null) is string
+        && item.get('url', '').size() > 0
+        && item.get('url', '').size() <= 2000
+        && (
+          item.get('thumbUrl', null) == null
+          || (
+            item.get('thumbUrl', null) is string
+            && item.get('thumbUrl', '').size() <= 2000
+          )
+        )
+        && (item.get('width', null) == null || item.get('width', null) is int)
+        && (item.get('height', null) == null || item.get('height', null) is int)
+        && (
+          item.get('durationSec', null) == null
+          || item.get('durationSec', null) is int
+        )
+        && (
+          item.get('type', null) == 'image'
+          || (
+            item.get('durationSec', null) is int
+            && item.get('durationSec', 0) > 0
+            && item.get('durationSec', 0) <= 180
+          )
+        );
+    }
+
+    function mediaIndexOk(media, index) {
+      return index >= media.size() || mediaItemOk(media[index]);
+    }
+
+    function isVideoAt(media, index) {
+      return index < media.size()
+        && media[index].get('type', null) == 'video';
+    }
+
+    function validMediaList(media) {
+      return media is list
+        && media.size() <= 10
+        && mediaIndexOk(media, 0)
+        && mediaIndexOk(media, 1)
+        && mediaIndexOk(media, 2)
+        && mediaIndexOk(media, 3)
+        && mediaIndexOk(media, 4)
+        && mediaIndexOk(media, 5)
+        && mediaIndexOk(media, 6)
+        && mediaIndexOk(media, 7)
+        && mediaIndexOk(media, 8)
+        && mediaIndexOk(media, 9)
+        && (
+          (isVideoAt(media, 0) ? 1 : 0)
+          + (isVideoAt(media, 1) ? 1 : 0)
+          + (isVideoAt(media, 2) ? 1 : 0)
+          + (isVideoAt(media, 3) ? 1 : 0)
+          + (isVideoAt(media, 4) ? 1 : 0)
+          + (isVideoAt(media, 5) ? 1 : 0)
+          + (isVideoAt(media, 6) ? 1 : 0)
+          + (isVideoAt(media, 7) ? 1 : 0)
+          + (isVideoAt(media, 8) ? 1 : 0)
+          + (isVideoAt(media, 9) ? 1 : 0)
+        ) <= 1;
+    }
+
     function validPostShape() {
       let data = request.resource.data;
       return data.keys().hasOnly([
@@ -131,6 +199,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt',
           'pinned',
+          'media',
         ])
         && data.get('authorId', null) is string
         && data.get('authorName', null) is string
@@ -141,8 +210,12 @@ service cloud.firestore {
           || data.get('authorPhotoUrl', null) is string
         )
         && data.get('text', null) is string
-        && data.get('text', '').size() > 0
         && data.get('text', '').size() <= 5000
+        && (
+          data.get('text', '').size() > 0
+          || data.get('media', []).size() > 0
+        )
+        && validMediaList(data.get('media', []))
         && data.get('createdAt', null) is timestamp
         && data.get('updatedAt', null) is timestamp
         && data.get('pinned', null) is bool;

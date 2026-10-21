@@ -20,6 +20,7 @@ class PostMapper {
       createdAt: _date(data['createdAt']),
       updatedAt: _date(data['updatedAt']),
       pinned: data['pinned'] as bool? ?? false,
+      media: PostMedia.listFrom(data['media']),
     );
   }
 

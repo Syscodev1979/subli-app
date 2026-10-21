@@ -21,14 +21,19 @@ class FakePostRepository implements PostRepository {
   Stream<Post?> watchPost(String postId) => Stream<Post?>.value(null);
 
   @override
+  String reservePostId() => 'new-post';
+
+  @override
   Future<String> createPost({
     required String authorId,
     required String authorName,
     required String? authorPhotoUrl,
     required String text,
     required bool pinned,
+    List<PostMedia> media = const [],
+    String? postId,
   }) async {
-    return 'new-post';
+    return postId ?? 'new-post';
   }
 
   @override
@@ -36,6 +41,7 @@ class FakePostRepository implements PostRepository {
     required String postId,
     required String text,
     required bool pinned,
+    required List<PostMedia> media,
   }) async {}
 
   @override

@@ -15,6 +15,7 @@ import 'feed_controller.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
 import 'link_text.dart';
+import 'post_media_gallery.dart';
 
 /// Törlés előtt megerősítés. Igaz, ha a felhasználó a törlést választotta.
 Future<bool> confirmDelete(
@@ -52,7 +53,7 @@ Future<bool> deletePostFlow(
   final confirmed = await confirmDelete(
     context,
     title: 'Törlöd a bejegyzést?',
-    message: 'A bejegyzés, a pipák és a hozzászólások véglegesen törlődnek.',
+    message: 'A bejegyzés, a pipák, a hozzászólások és a feltöltött fájlok véglegesen törlődnek.',
   );
   if (!confirmed || !context.mounted) return false;
   try {
@@ -258,14 +259,16 @@ class PostCard extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-            child: _PostBody(
-              text: post.text,
-              color: textColor,
-              expanded: expanded,
+          if (post.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              child: _PostBody(
+                text: post.text,
+                color: textColor,
+                expanded: expanded,
+              ),
             ),
-          ),
+          if (post.media.isNotEmpty) PostMediaGallery(media: post.media),
           if (showSummary)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),

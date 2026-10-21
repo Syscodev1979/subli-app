@@ -9,18 +9,23 @@ abstract class PostRepository {
 
   Stream<Post?> watchPost(String postId);
 
+  String reservePostId();
+
   Future<String> createPost({
     required String authorId,
     required String authorName,
     required String? authorPhotoUrl,
     required String text,
     required bool pinned,
+    List<PostMedia> media = const [],
+    String? postId,
   });
 
   Future<void> updatePost({
     required String postId,
     required String text,
     required bool pinned,
+    required List<PostMedia> media,
   });
 
   Future<void> deletePost(String postId);
