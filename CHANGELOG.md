@@ -1,5 +1,18 @@
 # Változásnapló
 
+## 0.4.0
+
+### Változtatva
+
+- A hírfolyam teljes szélességű fehér kártyákból áll, a cím alatt az edző és az admin a „Mire gondolsz?” sávból ír.
+- A pipa pattanó animációval és haptikus visszajelzéssel azonnal megjelenik. A hosszú szöveg helyben nyílik ki, a linkek megnyithatók.
+- A kártya alján a legutóbbi két hozzászólás látszik. A részleteken a hozzászólások buborékban vannak, alul rögzített beviteli sorral.
+- Betöltéskor skeleton helyőrző jelenik meg. Az üres állapot és a hibák külön, pontos szöveggel jelennek meg.
+
+### Javítva
+
+- Bejegyzés törlésekor a pipák és a hozzászólások is törlődnek. A pipát a pipázó, a bejegyzés szerzője és az admin törölheti.
+
 ## 0.3.0
 
 ### Hozzáadva
