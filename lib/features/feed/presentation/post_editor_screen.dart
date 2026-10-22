@@ -547,6 +547,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   Future<void> _finishClose() async {
     if (!mounted) return;
     setState(() => _allowPop = true);
+    await Future<void>.delayed(const Duration(milliseconds: 16));
+    if (!mounted) return;
     context.pop();
   }
 
@@ -616,10 +618,12 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       if (isNew) await _clearDraft();
       if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
-      setState(() => _succeeded = true);
+      setState(() {
+        _succeeded = true;
+        _allowPop = true;
+      });
       await Future<void>.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
-      setState(() => _allowPop = true);
       context.pop();
       messenger.showSnackBar(
         SnackBar(
