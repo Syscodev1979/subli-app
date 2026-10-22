@@ -1,5 +1,21 @@
 # Változásnapló
 
+## 0.8.0
+
+### Hozzáadva
+
+- Saját profil a menüből: nagy profilkép arany gyűrűvel, név, szerepkör, sportolónál színes övfokozat, e-mail, születési dátum és edzéscsoport. A kép négyzetesen vágható, 512×512-es JPEG-ként töltődik fel.
+- Övfokozatok a klubbeállításban, 10. kyu-tól 10. danig. Edző és admin állíthatja az adminisztráción vagy a sportoló profilján. A sportoló a saját övét nem módosíthatja.
+- Szülőnél „Gyermekeim” szakasz. A szülő megnyithatja a gyerek profilját, és a profilképét cserélheti.
+- Más tag profilja a hírfolyamból, a hozzászólásokból és a csevegésből. E-mail és születési dátum nem látszik. Az „Üzenet küldése” a meglévő beszélgetést nyitja.
+- Regisztráción „Edző vagyok”. A fiók jóváhagyásig sportoló, arany „Edzőként jelentkezett” címkével. Csak admin hagyhatja jóvá edzőként vagy sportolóként.
+- Dokumentum a bejegyzésben: PDF, Word, Excel és PowerPoint, fájlonként legfeljebb 20 MB, bejegyzésenként legfeljebb 5. A PDF az alkalmazásban lapozható és nagyítható, a többi a telefon alkalmazásával nyílik. A fájlnév a keresőbe is bekerül.
+
+### Változtatva
+
+- A hírfolyam „Kamera” gombja „Dokumentum”. A fotó és a videó galériából vagy kamerából választható.
+- A név vagy a profilkép változása frissíti a taglistát, valamint a szerző bejegyzéseit és hozzászólásait.
+
 ## 0.7.2
 
 ### Változtatva
