@@ -1,5 +1,14 @@
 # Változásnapló
 
+## 0.6.0
+
+### Hozzáadva
+
+- A lista alján jelzés, ha minden bejegyzés betöltődött. Két képernyőnyi görgetés után jobb alul egy gomb a tetejére ugrik. Új bejegyzésnél felül egy „Új bejegyzések” jelzés frissít.
+- Kategóriák: Hír, Közlemény, Eredmény, Edzés, Esemény. A szerkesztőben választható, a kártyán címke, a hírfolyamon szűrő. A választott szűrő a munkamenetben megmarad.
+- Keresés a fejlécből. Ékezetfüggetlen, a találatok kiemelve, kategórián belül is.
+- Az adminisztráció „Adatok frissítése” gombja a régi bejegyzéseket hírré és kereshetővé teszi.
+
 ## 0.5.3
 
 ### Javítva
