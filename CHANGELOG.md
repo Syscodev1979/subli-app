@@ -1,5 +1,15 @@
 # Változásnapló
 
+## 0.7.0
+
+### Hozzáadva
+
+- Üzenetek a hírfolyam jobb alsó gombjáról és a menüből. A gomb jelzi az olvasatlan beszélgetéseket.
+- Beszélgetéslista, tagkereső és csevegés valós időben. A saját üzenet azonnal megjelenik, törölhető, és látszik, ha elolvasták.
+- Sportoló és szülő gyors sablonjai, ha edző is a beszélgetésben van.
+- Kiskorú sportoló beszélgetésébe a jóváhagyott szülők automatikusan bekerülnek, és ezt egy arany sáv jelzi. A szabályt a szerver kényszeríti ki.
+- Az adminisztráció Karbantartás részén a taglista feltölthető a meglévő aktív tagokból.
+
 ## 0.6.0
 
 ### Hozzáadva
