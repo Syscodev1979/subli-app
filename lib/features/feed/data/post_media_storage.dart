@@ -68,11 +68,35 @@ class PostMediaStorage {
     );
   }
 
+  Future<PostMedia> uploadDocument({
+    required String postId,
+    required File file,
+    required String name,
+    required int sizeBytes,
+    required String mimeType,
+    required void Function(double fraction) onProgress,
+    required bool Function() isCancelled,
+  }) async {
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final safe = _safeFileName(name);
+    final url = await _put(
+      path: 'posts/$postId/docs/${stamp}_$safe',
+      file: file,
+      contentType: mimeType,
+      onProgress: onProgress,
+      isCancelled: isCancelled,
+    );
+    return PostMedia(
+      type: PostMediaType.document,
+      url: url,
+      name: name,
+      sizeBytes: sizeBytes,
+      mimeType: mimeType,
+    );
+  }
+
   Future<void> deletePost(String postId) async {
-    final listed = await _storage.ref('posts/$postId').listAll();
-    for (final item in listed.items) {
-      await item.delete();
-    }
+    await _eachFile(_storage.ref('posts/$postId'), (item) => item.delete());
   }
 
   Future<void> deleteUrls(Iterable<String> urls) async {
@@ -84,11 +108,21 @@ class PostMediaStorage {
   /// A megmaradó letöltési URL-eken kívüli fájlokat törli.
   Future<void> deleteExcept(String postId, Iterable<String> keepUrls) async {
     final keep = {for (final url in keepUrls) ?storageObjectPath(url)};
-    final listed = await _storage.ref('posts/$postId').listAll();
+    await _eachFile(_storage.ref('posts/$postId'), (item) async {
+      if (!keep.contains(item.fullPath)) await item.delete();
+    });
+  }
+
+  Future<void> _eachFile(
+    Reference ref,
+    Future<void> Function(Reference item) action,
+  ) async {
+    final listed = await ref.listAll();
     for (final item in listed.items) {
-      if (!keep.contains(item.fullPath)) {
-        await item.delete();
-      }
+      await action(item);
+    }
+    for (final prefix in listed.prefixes) {
+      await _eachFile(prefix, action);
     }
   }
 
@@ -127,6 +161,15 @@ class PostMediaStorage {
     } finally {
       await subscription.cancel();
     }
+  }
+
+  String _safeFileName(String name) {
+    final trimmed = name.trim();
+    final cleaned = trimmed.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+    if (cleaned.isEmpty) return 'dokumentum';
+    return cleaned.length > 80
+        ? cleaned.substring(cleaned.length - 80)
+        : cleaned;
   }
 
   void _ensureActive(bool Function() isCancelled) {

@@ -65,7 +65,7 @@ void main() {
     expect(find.text('Közzététel'), findsOneWidget);
   });
 
-  testWidgets('1.3-as betűméretnél a Kamera felirat egy sorban marad', (
+  testWidgets('1.3-as betűméretnél a Dokumentum felirat egy sorban marad', (
     tester,
   ) async {
     _usePhoneSurface(tester);
@@ -74,7 +74,7 @@ void main() {
     await _openComposer(tester, ThemeMode.light);
 
     expect(tester.takeException(), isNull);
-    final labels = tester.widgetList<Text>(find.text('Kamera'));
+    final labels = tester.widgetList<Text>(find.text('Dokumentum'));
     expect(labels, isNotEmpty);
     for (final label in labels) {
       expect(label.maxLines, 1);

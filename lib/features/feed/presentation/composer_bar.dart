@@ -100,11 +100,12 @@ class ComposerBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     _QuickButton(
-                      label: 'Kamera',
-                      icon: Icons.photo_camera_outlined,
-                      foreground: colors.camera,
-                      background: colors.cameraBackground,
-                      launch: ComposerLaunch.camera,
+                      label: 'Dokumentum',
+                      icon: Icons.description_outlined,
+                      foreground: colors.gold,
+                      background: colors.goldSurface,
+                      labelColor: colors.onGoldSurface,
+                      launch: ComposerLaunch.document,
                     ),
                   ],
                 ),
@@ -144,12 +145,14 @@ class _QuickButton extends StatelessWidget {
     required this.foreground,
     required this.background,
     required this.launch,
+    this.labelColor,
   });
 
   final String label;
   final IconData icon;
   final Color foreground;
   final Color background;
+  final Color? labelColor;
   final ComposerLaunch launch;
 
   @override
@@ -159,7 +162,7 @@ class _QuickButton extends StatelessWidget {
         final media = switch (launch) {
           ComposerLaunch.photo => 'photo',
           ComposerLaunch.video => 'video',
-          ComposerLaunch.camera => 'camera',
+          ComposerLaunch.document => 'document',
         };
         context.push('${AppRoutes.newPost}?media=$media');
       },
@@ -180,7 +183,7 @@ class _QuickButton extends StatelessWidget {
                 maxLines: 1,
                 softWrap: false,
                 style: TextStyle(
-                  color: foreground,
+                  color: labelColor ?? foreground,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),

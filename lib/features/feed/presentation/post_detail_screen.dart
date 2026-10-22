@@ -8,6 +8,7 @@ import '../../auth/domain/auth_session.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
+import '../../profile/presentation/profile_navigation.dart';
 import 'author_avatar.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
@@ -268,12 +269,15 @@ class _CommentBubble extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            comment.authorName,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: FeedPalette.title(context),
-              fontSize: 14,
+          ProfileTap(
+            userId: comment.authorId,
+            child: Text(
+              comment.authorName,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: FeedPalette.title(context),
+                fontSize: 14,
+              ),
             ),
           ),
           const SizedBox(height: 2),
@@ -294,10 +298,13 @@ class _CommentBubble extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AuthorAvatar(
-            name: comment.authorName,
-            photoUrl: comment.authorPhotoUrl,
-            radius: 16,
+          ProfileTap(
+            userId: comment.authorId,
+            child: AuthorAvatar(
+              name: comment.authorName,
+              photoUrl: comment.authorPhotoUrl,
+              radius: 16,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(

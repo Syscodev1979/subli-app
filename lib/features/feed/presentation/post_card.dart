@@ -11,6 +11,7 @@ import '../domain/post.dart';
 import '../domain/post_access.dart';
 import '../domain/post_repository.dart';
 import '../domain/reaction.dart';
+import '../../profile/presentation/profile_navigation.dart';
 import 'author_avatar.dart';
 import 'category_style.dart';
 import 'feed_controller.dart';
@@ -202,10 +203,13 @@ class PostCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AuthorAvatar(
-                  name: post.authorName,
-                  photoUrl: post.authorPhotoUrl,
-                  radius: 20,
+                ProfileTap(
+                  userId: post.authorId,
+                  child: AuthorAvatar(
+                    name: post.authorName,
+                    photoUrl: post.authorPhotoUrl,
+                    radius: 20,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -214,12 +218,15 @@ class PostCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          post.authorName,
-                          style: TextStyle(
-                            color: textColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                        ProfileTap(
+                          userId: post.authorId,
+                          child: Text(
+                            post.authorName,
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -377,20 +384,30 @@ class PostCard extends StatelessWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AuthorAvatar(
-                            name: comment.authorName,
-                            photoUrl: comment.authorPhotoUrl,
-                            radius: 14,
+                          ProfileTap(
+                            userId: comment.authorId,
+                            child: AuthorAvatar(
+                              name: comment.authorName,
+                              photoUrl: comment.authorPhotoUrl,
+                              radius: 14,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(
-                                    text: comment.authorName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.baseline,
+                                    baseline: TextBaseline.alphabetic,
+                                    child: ProfileTap(
+                                      userId: comment.authorId,
+                                      child: Text(
+                                        comment.authorName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const TextSpan(text: '  '),

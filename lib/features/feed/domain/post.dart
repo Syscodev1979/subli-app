@@ -1,8 +1,11 @@
 import 'post_category.dart';
 
-enum PostMediaType { image, video }
+enum PostMediaType { image, video, document }
 
-/// Egy kép vagy videó a bejegyzésen. A [durationSec] csak videónál van kitöltve.
+/// Egy kép, videó vagy dokumentum a bejegyzésen.
+///
+/// A [durationSec] csak videónál van kitöltve. A [name], [sizeBytes] és
+/// [mimeType] csak dokumentumnál.
 class PostMedia {
   const PostMedia({
     required this.type,
@@ -11,6 +14,9 @@ class PostMedia {
     this.width,
     this.height,
     this.durationSec,
+    this.name,
+    this.sizeBytes,
+    this.mimeType,
   });
 
   final PostMediaType type;
@@ -19,8 +25,20 @@ class PostMedia {
   final int? width;
   final int? height;
   final int? durationSec;
+  final String? name;
+  final int? sizeBytes;
+  final String? mimeType;
 
   Map<String, Object?> toMap() {
+    if (type == PostMediaType.document) {
+      return {
+        'type': type.name,
+        'url': url,
+        'name': name,
+        'sizeBytes': sizeBytes,
+        'mimeType': mimeType,
+      };
+    }
     return {
       'type': type.name,
       'url': url,
@@ -44,6 +62,7 @@ class PostMedia {
     final type = switch (typeName) {
       'image' => PostMediaType.image,
       'video' => PostMediaType.video,
+      'document' => PostMediaType.document,
       _ => null,
     };
     if (type == null) return null;
@@ -54,6 +73,9 @@ class PostMedia {
       width: raw['width'] is int ? raw['width'] as int : null,
       height: raw['height'] is int ? raw['height'] as int : null,
       durationSec: raw['durationSec'] is int ? raw['durationSec'] as int : null,
+      name: raw['name'] is String ? raw['name'] as String : null,
+      sizeBytes: raw['sizeBytes'] is int ? raw['sizeBytes'] as int : null,
+      mimeType: raw['mimeType'] is String ? raw['mimeType'] as String : null,
     );
   }
 }
@@ -96,6 +118,21 @@ class Post {
       if (item.type == PostMediaType.video) return item;
     }
     return null;
+  }
+
+  List<PostMedia> get documents => [
+    for (final item in media)
+      if (item.type == PostMediaType.document) item,
+  ];
+
+  /// A keresés második szavát a szövegben és a dokumentumnevekben is keresi.
+  String get searchText {
+    final names = [
+      for (final item in documents)
+        if (item.name != null) item.name!,
+    ];
+    if (names.isEmpty) return text;
+    return '$text ${names.join(' ')}';
   }
 }
 
@@ -152,6 +189,8 @@ abstract final class PostLimits {
   static const int maxVideoSeconds = 180;
   static const int maxImageBytes = 10 * 1024 * 1024;
   static const int maxVideoBytes = 100 * 1024 * 1024;
+  static const int maxDocuments = 5;
+  static const int maxDocumentBytes = 20 * 1024 * 1024;
   static const int maxSearchKeywords = 200;
   static const int imageLongestSide = 2048;
   static const int imageQuality = 80;

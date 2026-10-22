@@ -100,7 +100,7 @@ class FeedController extends AsyncNotifier<FeedView> {
           );
       final matched = [
         for (final post in page.posts)
-          if (matchesExtraTerms(post.text, terms)) post,
+          if (matchesExtraTerms(post.searchText, terms)) post,
       ];
       posts = [...posts, ...matched];
       hasMore = page.hasMore;

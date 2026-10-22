@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/club_colors.dart';
+import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
@@ -22,6 +25,7 @@ import '../domain/post_access.dart';
 import '../domain/post_category.dart';
 import 'author_avatar.dart';
 import 'category_style.dart';
+import 'document_card.dart';
 import 'feed_chrome.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
@@ -31,7 +35,7 @@ import 'press_scale.dart';
 const _draftKey = 'composer_draft_text';
 
 /// A hírfolyam sávjáról induló médiaválasztó.
-enum ComposerLaunch { photo, video, camera }
+enum ComposerLaunch { photo, video, document }
 
 /// Új bejegyzés, vagy egy meglévő szerkesztése.
 ///
@@ -50,6 +54,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
   final _images = <_MediaDraft>[];
+  final _documents = <_DocumentDraft>[];
   final _prep = const MediaPrep();
   final _picker = ImagePicker();
   _MediaDraft? _video;
@@ -71,6 +76,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   var _originalCategory = PostCategory.news;
   List<String?> _originalImageUrls = const [];
   String? _originalVideoUrl;
+  List<String?> _originalDocumentUrls = const [];
   Timer? _draftTimer;
 
   @override
@@ -146,11 +152,11 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   Future<void> _launchMediaIfNeeded() async {
     switch (widget.launch) {
       case ComposerLaunch.photo:
-        await _pickGalleryPhotos();
+        await _chooseImageSource();
       case ComposerLaunch.video:
-        await _pickGalleryVideo();
-      case ComposerLaunch.camera:
-        await _openCamera();
+        await _chooseVideoSource();
+      case ComposerLaunch.document:
+        await _pickDocuments();
       case null:
         return;
     }
@@ -177,11 +183,12 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   bool get _canSubmit {
     if (_submitting || _preparing || _succeeded) return false;
     final text = _textController.text.trim();
-    final hasMedia = _images.isNotEmpty || _video != null;
+    final hasMedia = _mediaCount > 0;
     if (text.isEmpty && !hasMedia) return false;
     if (_textController.text.length > PostLimits.postText) return false;
-    final count = _images.length + (_video == null ? 0 : 1);
-    if (_images.length > PostLimits.maxImages || count > PostLimits.maxMedia) {
+    if (_images.length > PostLimits.maxImages ||
+        _documents.length > PostLimits.maxDocuments ||
+        _mediaCount > PostLimits.maxMedia) {
       return false;
     }
     return true;
@@ -192,6 +199,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       return _textController.text.trim().isNotEmpty ||
           _images.isNotEmpty ||
           _video != null ||
+          _documents.isNotEmpty ||
           _category != PostCategory.news;
     }
     if (_textController.text != _originalText ||
@@ -200,10 +208,15 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       return true;
     }
     if (_video?.prepared != null ||
-        _images.any((item) => item.prepared != null)) {
+        _images.any((item) => item.prepared != null) ||
+        _documents.any((item) => item.file != null)) {
       return true;
     }
     if (_video?.remote?.url != _originalVideoUrl) return true;
+    if (_documents.length != _originalDocumentUrls.length) return true;
+    for (var i = 0; i < _documents.length; i++) {
+      if (_documents[i].remote?.url != _originalDocumentUrls[i]) return true;
+    }
     if (_images.length != _originalImageUrls.length) return true;
     for (var i = 0; i < _images.length; i++) {
       if (_images[i].remote?.url != _originalImageUrls[i]) return true;
@@ -211,10 +224,14 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     return false;
   }
 
+  int get _mediaCount =>
+      _images.length + (_video == null ? 0 : 1) + _documents.length;
+
   bool get _largeText {
     return _textController.text.length <= 120 &&
         _images.isEmpty &&
-        _video == null;
+        _video == null &&
+        _documents.isEmpty;
   }
 
   @override
@@ -280,8 +297,12 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       ..addAll(post.images.map(_MediaDraft.remote));
     final video = post.video;
     _video = video == null ? null : _MediaDraft.remote(video);
+    _documents
+      ..clear()
+      ..addAll(post.documents.map(_DocumentDraft.remote));
     _originalImageUrls = [for (final image in post.images) image.url];
     _originalVideoUrl = video?.url;
+    _originalDocumentUrls = [for (final item in post.documents) item.url];
   }
 
   String _title({required bool isNew}) {
@@ -348,6 +369,18 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
                   onReorder: _reorderImages,
                 ),
               ],
+              if (_documents.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                for (var index = 0; index < _documents.length; index++) ...[
+                  DocumentCard(
+                    name: _documents[index].displayName,
+                    sizeBytes: _documents[index].displaySize,
+                    mimeType: _documents[index].displayMime,
+                    onRemove: () => setState(() => _documents.removeAt(index)),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
             ],
           ),
           Positioned(
@@ -361,9 +394,9 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       toolbar: _MediaToolbar(
         enabled: !_submitting && !_preparing,
         pinned: _pinned,
-        onPhoto: _pickGalleryPhotos,
-        onVideo: _pickGalleryVideo,
-        onCamera: _openCamera,
+        onPhoto: _chooseImageSource,
+        onVideo: _chooseVideoSource,
+        onDocument: _pickDocuments,
         onPinned: (value) => setState(() => _pinned = value),
       ),
     );
@@ -572,7 +605,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
 
   Future<void> _save(AppUser user, {required bool isNew}) async {
     final text = _textController.text.trim();
-    final hasMedia = _images.isNotEmpty || _video != null;
+    final hasMedia = _mediaCount > 0;
     if (text.isEmpty && !hasMedia) return;
     if (_textController.text.length > PostLimits.postText) {
       setState(() => _error = 'A bejegyzés legfeljebb 5000 karakter lehet.');
@@ -583,7 +616,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       _cancelUpload = false;
       _uploadProgress =
           _images.any((item) => item.prepared != null) ||
-              _video?.prepared != null
+              _video?.prepared != null ||
+              _documents.any((item) => item.file != null)
           ? 0
           : null;
       _error = null;
@@ -592,7 +626,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     final needsStorage =
         !isNew ||
         _images.any((item) => item.prepared != null) ||
-        _video?.prepared != null;
+        _video?.prepared != null ||
+        _documents.any((item) => item.file != null);
     final storage = needsStorage
         ? PostMediaStorage(FirebaseStorage.instance)
         : null;
@@ -676,8 +711,10 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     required List<String> freshUrls,
   }) async {
     final drafts = [..._images, ?_video];
-    if (drafts.isEmpty) return const [];
-    final localCount = drafts.where((draft) => draft.prepared != null).length;
+    if (drafts.isEmpty && _documents.isEmpty) return const [];
+    final localCount =
+        drafts.where((draft) => draft.prepared != null).length +
+        _documents.where((draft) => draft.file != null).length;
     final uploaded = <PostMedia>[];
     var finished = 0;
     for (final draft in drafts) {
@@ -702,15 +739,35 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       uploaded.add(media);
       finished++;
     }
+    for (final draft in _documents) {
+      final remote = draft.remote;
+      if (remote != null) {
+        uploaded.add(remote);
+        continue;
+      }
+      final file = draft.file;
+      if (file == null || storage == null) continue;
+      final media = await storage.uploadDocument(
+        postId: postId,
+        file: file,
+        name: draft.name,
+        sizeBytes: draft.sizeBytes,
+        mimeType: draft.mimeType,
+        isCancelled: () => _cancelUpload,
+        onProgress: (fraction) {
+          if (!mounted) return;
+          setState(() => _uploadProgress = (finished + fraction) / localCount);
+        },
+      );
+      freshUrls.add(media.url);
+      uploaded.add(media);
+      finished++;
+    }
     return uploaded;
   }
 
-  Future<void> _pickGalleryPhotos() => _pickImages(ImageSource.gallery);
-
-  Future<void> _pickGalleryVideo() => _pickVideo(ImageSource.gallery);
-
-  Future<void> _openCamera() async {
-    final choice = await showModalBottomSheet<String>(
+  Future<ImageSource?> _askSource() {
+    return showModalBottomSheet<ImageSource>(
       context: context,
       showDragHandle: true,
       builder: (context) {
@@ -719,32 +776,37 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Fotó'),
-                onTap: () => Navigator.of(context).pop('photo'),
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Választás a galériából'),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
               ),
               ListTile(
-                leading: const Icon(Icons.videocam_outlined),
-                title: const Text('Videó'),
-                onTap: () => Navigator.of(context).pop('video'),
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Felvétel kamerával'),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
               ),
             ],
           ),
         );
       },
     );
-    if (!mounted || choice == null) return;
-    if (choice == 'photo') {
-      await _pickImages(ImageSource.camera);
-    } else {
-      await _pickVideo(ImageSource.camera);
-    }
+  }
+
+  Future<void> _chooseImageSource() async {
+    final source = await _askSource();
+    if (source == null || !mounted) return;
+    await _pickImages(source);
+  }
+
+  Future<void> _chooseVideoSource() async {
+    final source = await _askSource();
+    if (source == null || !mounted) return;
+    await _pickVideo(source);
   }
 
   Future<void> _pickImages(ImageSource source) async {
     if (!await ensureMediaConsent(context)) return;
-    final room =
-        PostLimits.maxMedia - _images.length - (_video == null ? 0 : 1);
+    final room = PostLimits.maxMedia - _mediaCount;
     final imageRoom = PostLimits.maxImages - _images.length;
     final allowed = room < imageRoom ? room : imageRoom;
     if (allowed <= 0) {
@@ -791,7 +853,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       setState(() => _error = 'Egy bejegyzéshez egy videó adható.');
       return;
     }
-    if (_images.length >= PostLimits.maxMedia) {
+    if (_mediaCount >= PostLimits.maxMedia) {
       setState(() => _error = 'Egy bejegyzéshez legfeljebb 10 fájl adható.');
       return;
     }
@@ -827,6 +889,65 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     } finally {
       if (mounted) setState(() => _preparing = false);
     }
+  }
+
+  Future<void> _pickDocuments() async {
+    final room = PostLimits.maxMedia - _mediaCount;
+    final docRoom = PostLimits.maxDocuments - _documents.length;
+    final allowed = room < docRoom ? room : docRoom;
+    if (allowed <= 0) {
+      setState(() {
+        _error = _documents.length >= PostLimits.maxDocuments
+            ? 'Egy bejegyzéshez legfeljebb 5 dokumentum adható.'
+            : 'Egy bejegyzéshez legfeljebb 10 fájl adható.';
+      });
+      return;
+    }
+    if (!await ensureDocumentConsent(context) || !mounted) return;
+    final picked = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ClubConfig.documentExtensions,
+    );
+    if (picked.isEmpty || !mounted) return;
+    final errors = <String>[];
+    final accepted = <_DocumentDraft>[];
+    for (final file in picked) {
+      if (accepted.length >= allowed) {
+        errors.add('Egy bejegyzéshez legfeljebb 5 dokumentum adható.');
+        break;
+      }
+      final type = ClubConfig.documentTypeForName(file.name);
+      if (type == null) {
+        errors.add(
+          'Ez a fájltípus nem engedélyezett. PDF, Word, Excel vagy PowerPoint tölthető fel.',
+        );
+        continue;
+      }
+      final path = file.path;
+      if (path == null) {
+        errors.add('A fájl nem olvasható erről a készülékről.');
+        continue;
+      }
+      final size =
+          file.lengthSync() ?? await file.length() ?? await File(path).length();
+      if (size > PostLimits.maxDocumentBytes) {
+        errors.add('A dokumentum legfeljebb 20 MB lehet.');
+        continue;
+      }
+      accepted.add(
+        _DocumentDraft.local(
+          file: File(path),
+          name: file.name,
+          sizeBytes: size,
+          mimeType: type.mimeType,
+        ),
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      _documents.addAll(accepted);
+      _error = errors.isEmpty ? null : errors.first;
+    });
   }
 
   void _reorderImages(int from, int to) {
@@ -865,6 +986,32 @@ class _MediaDraft {
   }
 
   int? get durationSec => prepared?.durationSec ?? remote?.durationSec;
+}
+
+class _DocumentDraft {
+  const _DocumentDraft.remote(PostMedia media)
+    : remote = media,
+      file = null,
+      name = '',
+      sizeBytes = 0,
+      mimeType = '';
+
+  const _DocumentDraft.local({
+    required this.file,
+    required this.name,
+    required this.sizeBytes,
+    required this.mimeType,
+  }) : remote = null;
+
+  final PostMedia? remote;
+  final File? file;
+  final String name;
+  final int sizeBytes;
+  final String mimeType;
+
+  String get displayName => remote?.name ?? name;
+  int get displaySize => remote?.sizeBytes ?? sizeBytes;
+  String? get displayMime => remote?.mimeType ?? mimeType;
 }
 
 class _Handle extends StatelessWidget {
@@ -1169,7 +1316,7 @@ class _MediaToolbar extends StatelessWidget {
     required this.pinned,
     required this.onPhoto,
     required this.onVideo,
-    required this.onCamera,
+    required this.onDocument,
     required this.onPinned,
   });
 
@@ -1177,7 +1324,7 @@ class _MediaToolbar extends StatelessWidget {
   final bool pinned;
   final VoidCallback onPhoto;
   final VoidCallback onVideo;
-  final VoidCallback onCamera;
+  final VoidCallback onDocument;
   final ValueChanged<bool> onPinned;
 
   @override
@@ -1209,11 +1356,12 @@ class _MediaToolbar extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _MediaTool(
-                    label: 'Kamera',
-                    icon: Icons.photo_camera_outlined,
-                    foreground: colors.camera,
-                    background: colors.cameraBackground,
-                    onTap: enabled ? onCamera : null,
+                    label: 'Dokumentum',
+                    icon: Icons.description_outlined,
+                    foreground: colors.gold,
+                    background: colors.goldSurface,
+                    labelColor: colors.onGoldSurface,
+                    onTap: enabled ? onDocument : null,
                   ),
                 ],
               ),
@@ -1234,12 +1382,14 @@ class _MediaTool extends StatelessWidget {
     required this.foreground,
     required this.background,
     required this.onTap,
+    this.labelColor,
   });
 
   final String label;
   final IconData icon;
   final Color foreground;
   final Color background;
+  final Color? labelColor;
   final VoidCallback? onTap;
 
   @override
@@ -1263,7 +1413,7 @@ class _MediaTool extends StatelessWidget {
                 maxLines: 1,
                 softWrap: false,
                 style: TextStyle(
-                  color: foreground,
+                  color: labelColor ?? foreground,
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
                 ),

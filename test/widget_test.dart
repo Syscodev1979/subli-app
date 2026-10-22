@@ -59,7 +59,7 @@ void main() {
     expect(find.text('Mire gondolsz, Anna?'), findsOneWidget);
     expect(find.text('Fotó'), findsOneWidget);
     expect(find.text('Videó'), findsOneWidget);
-    expect(find.text('Kamera'), findsOneWidget);
+    expect(find.text('Dokumentum'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
     await tester.tap(find.text('Mire gondolsz, Anna?'));
     await tester.pumpAndSettle();

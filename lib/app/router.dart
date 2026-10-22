@@ -15,6 +15,7 @@ import '../features/chat/presentation/member_search_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/feed/presentation/post_detail_screen.dart';
 import '../features/feed/presentation/post_editor_screen.dart';
+import '../features/profile/presentation/member_profile_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import 'auth_redirect.dart';
 import 'constants.dart';
@@ -68,7 +69,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   launch: switch (state.uri.queryParameters['media']) {
                     'photo' => ComposerLaunch.photo,
                     'video' => ComposerLaunch.video,
-                    'camera' => ComposerLaunch.camera,
+                    'document' => ComposerLaunch.document,
                     _ => null,
                   },
                 ),
@@ -117,6 +118,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.profile,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/members/:uid',
+        builder: (context, state) {
+          return MemberProfileScreen(userId: state.pathParameters['uid']!);
+        },
       ),
       GoRoute(
         path: AppRoutes.calendar,

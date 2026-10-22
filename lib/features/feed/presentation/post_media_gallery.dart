@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/post.dart';
+import 'document_card.dart';
+import 'document_opener.dart';
 import 'feed_palette.dart';
 import 'post_video_view.dart';
 
@@ -24,10 +26,31 @@ class PostMediaGallery extends StatelessWidget {
         break;
       }
     }
+    final documents = [
+      for (final item in media)
+        if (item.type == PostMediaType.document) item,
+    ];
     return Column(
       children: [
         if (images.isNotEmpty) _ImageGrid(images: images),
         if (video != null) PostVideoView(media: video),
+        if (documents.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Column(
+              children: [
+                for (final document in documents) ...[
+                  DocumentCard(
+                    name: document.name ?? 'dokumentum',
+                    sizeBytes: document.sizeBytes ?? 0,
+                    mimeType: document.mimeType,
+                    onTap: () => openPostDocument(context, document),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }

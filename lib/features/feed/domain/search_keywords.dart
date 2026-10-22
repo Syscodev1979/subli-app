@@ -1,3 +1,5 @@
+import 'post.dart';
+
 /// Gyakori töltelékszavak, ékezet nélkül. Ezek nem kerülnek a keresőlistába.
 const searchStopWords = <String>{
   'a',
@@ -71,6 +73,20 @@ String foldAccents(String value) {
     buffer.write(_accent[char] ?? char);
   }
   return buffer.toString();
+}
+
+/// A bejegyzés szövegéből és a csatolt dokumentumok fájlnevéből készült szavak.
+List<String> postSearchKeywords({
+  required String text,
+  List<PostMedia> media = const [],
+  int maxWords = 200,
+}) {
+  final names = [
+    for (final item in media)
+      if (item.type == PostMediaType.document && item.name != null) item.name!,
+  ];
+  final combined = names.isEmpty ? text : '$text ${names.join(' ')}';
+  return searchKeywords(combined, maxWords: maxWords);
 }
 
 /// A bejegyzés szövegéből készült keresőszavak.

@@ -94,8 +94,8 @@ class FirestorePostRepository implements PostRepository {
         final text = data['text'] is String ? data['text'] as String : '';
         batch.update(document.reference, {
           'category': PostCategory.news.name,
-          'searchKeywords': searchKeywords(
-            text,
+          'searchKeywords': postSearchKeywords(
+            text: text,
             maxWords: PostLimits.maxSearchKeywords,
           ),
         });
@@ -139,8 +139,9 @@ class FirestorePostRepository implements PostRepository {
       'updatedAt': now,
       'pinned': pinned,
       'category': category.name,
-      'searchKeywords': searchKeywords(
-        text,
+      'searchKeywords': postSearchKeywords(
+        text: text,
+        media: media,
         maxWords: PostLimits.maxSearchKeywords,
       ),
       'media': [for (final item in media) item.toMap()],
@@ -160,8 +161,9 @@ class FirestorePostRepository implements PostRepository {
       'text': text,
       'pinned': pinned,
       'category': category.name,
-      'searchKeywords': searchKeywords(
-        text,
+      'searchKeywords': postSearchKeywords(
+        text: text,
+        media: media,
         maxWords: PostLimits.maxSearchKeywords,
       ),
       'updatedAt': Timestamp.fromDate(DateTime.now()),
