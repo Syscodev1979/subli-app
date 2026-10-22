@@ -1,5 +1,12 @@
 # Változásnapló
 
+## 0.7.2
+
+### Változtatva
+
+- A fejléc a klublogót és a teljes nevet mutatja („Gastroyal Karate SE”). 360 px alatt a rövid név marad. Sötét módban a logó finom világos hátteret kap, hogy látható maradjon.
+- A keresés a hírfolyam tetejére került: teljes szélességű, lekerekített sáv, a listával együtt gördül. A fejlécben a logó, a téma-kapcsoló és a menü maradt. A találatok továbbra is ékezetfüggetlenek, kiemeltek, és a kategóriaszűrővel együtt működnek.
+
 ## 0.7.0
 
 ### Hozzáadva
