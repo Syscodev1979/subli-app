@@ -633,6 +633,76 @@ test("sportoló nem tölthet fel, edző igen, a szerző törölheti a fájlt", a
   );
 });
 
+test("edző csak a saját vagy még nem létező bejegyzéshez tölthet fel", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    coach2: userDoc({
+      id: "coach2",
+      name: "Másik Edző",
+      email: "coach2@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    admin1: userDoc({
+      id: "admin1",
+      email: "admin@example.com",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc({ authorId: "coach1" }));
+
+  const author = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  const file = ref(author.storage(), "posts/post-1/a.jpg");
+  await assertSucceeds(
+    uploadString(file, "img", "raw", { contentType: "image/jpeg" }),
+  );
+  await assertSucceeds(
+    uploadString(file, "img2", "raw", { contentType: "image/jpeg" }),
+  );
+
+  const other = testEnv.authenticatedContext("coach2", {
+    email: "coach2@example.com",
+  });
+  await assertFails(
+    uploadString(ref(other.storage(), "posts/post-1/b.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+  await assertFails(
+    uploadString(ref(other.storage(), "posts/post-1/a.jpg"), "overwrite", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+
+  const admin = testEnv.authenticatedContext("admin1", {
+    email: "admin@example.com",
+  });
+  await assertSucceeds(
+    uploadString(ref(admin.storage(), "posts/post-1/c.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+  await assertSucceeds(
+    uploadString(ref(admin.storage(), "posts/post-1/a.jpg"), "admin", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+
+  await assertSucceeds(
+    uploadString(ref(other.storage(), "posts/new-post/a.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+});
+
 test("a saját reakció cserélhető, idegenét más sportoló nem törli", async () => {
   await seed({
     coach1: userDoc({

@@ -28,6 +28,14 @@ service firebase.storage {
         && firestore.get(postPath(postId)).data.authorId == request.auth.uid;
     }
 
+    function coachMayWritePost(postId) {
+      return isCoach()
+        && (
+          !firestore.exists(postPath(postId))
+          || isPostAuthor(postId)
+        );
+    }
+
     function allowedUpload() {
       return request.resource != null
         && (
@@ -44,9 +52,8 @@ service firebase.storage {
 
     match /posts/{postId}/{fileName} {
       allow read: if activeUser();
-      allow create, update: if activeUser()
-        && (isAdmin() || isCoach())
-        && allowedUpload();
+      allow create, update: if allowedUpload()
+        && (isAdmin() || coachMayWritePost(postId));
       allow delete: if activeUser() && (isAdmin() || isPostAuthor(postId));
     }
 
