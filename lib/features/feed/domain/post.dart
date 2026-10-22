@@ -1,3 +1,5 @@
+import 'post_category.dart';
+
 enum PostMediaType { image, video }
 
 /// Egy kép vagy videó a bejegyzésen. A [durationSec] csak videónál van kitöltve.
@@ -67,6 +69,8 @@ class Post {
     required this.createdAt,
     required this.updatedAt,
     required this.pinned,
+    this.category = PostCategory.news,
+    this.searchKeywords = const [],
     this.media = const [],
   });
 
@@ -78,6 +82,8 @@ class Post {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool pinned;
+  final PostCategory category;
+  final List<String> searchKeywords;
   final List<PostMedia> media;
 
   List<PostMedia> get images => [
@@ -146,6 +152,7 @@ abstract final class PostLimits {
   static const int maxVideoSeconds = 180;
   static const int maxImageBytes = 10 * 1024 * 1024;
   static const int maxVideoBytes = 100 * 1024 * 1024;
+  static const int maxSearchKeywords = 200;
   static const int imageLongestSide = 2048;
   static const int imageQuality = 80;
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/post.dart';
+import '../domain/post_category.dart';
 import '../domain/reaction.dart';
 
 /// `posts` dokumentumok és a domain modell közötti átalakítás.
@@ -21,6 +22,11 @@ class PostMapper {
       createdAt: _date(data['createdAt']),
       updatedAt: _date(data['updatedAt']),
       pinned: data['pinned'] as bool? ?? false,
+      category: PostCategory.parse(data['category']),
+      searchKeywords: [
+        for (final word in (data['searchKeywords'] as List?) ?? const [])
+          if (word is String) word,
+      ],
       media: PostMedia.listFrom(data['media']),
     );
   }

@@ -199,6 +199,8 @@ service cloud.firestore {
           'createdAt',
           'updatedAt',
           'pinned',
+          'category',
+          'searchKeywords',
           'media',
         ])
         && data.get('authorId', null) is string
@@ -218,7 +220,16 @@ service cloud.firestore {
         && validMediaList(data.get('media', []))
         && data.get('createdAt', null) is timestamp
         && data.get('updatedAt', null) is timestamp
-        && data.get('pinned', null) is bool;
+        && data.get('pinned', null) is bool
+        && data.get('category', '') in [
+          'news',
+          'announcement',
+          'result',
+          'training',
+          'event',
+        ]
+        && data.get('searchKeywords', null) is list
+        && data.get('searchKeywords', []).size() <= 200;
     }
 
     function validCommentShape() {

@@ -231,6 +231,8 @@ function postDoc(overrides = {}) {
     createdAt,
     updatedAt: createdAt,
     pinned: false,
+    category: "news",
+    searchKeywords: ["holnap", "edzes"],
     ...overrides,
   };
 }
@@ -275,6 +277,47 @@ test("edző a saját nevében posztolhat", async () => {
   });
   await assertSucceeds(
     setDoc(doc(coach.firestore(), "posts", "post-1"), postDoc()),
+  );
+});
+
+test("ismeretlen kategória és túl hosszú keresőlista elutasítva", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "bad-category"),
+      postDoc({ category: "gossip" }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "long-keywords"),
+      postDoc({
+        searchKeywords: Array.from({ length: 201 }, (_, index) => `szo${index}`),
+      }),
+    ),
+  );
+  await assertSucceeds(
+    setDoc(
+      doc(coach.firestore(), "posts", "training"),
+      postDoc({ category: "training", searchKeywords: ["edzes"] }),
+    ),
+  );
+  await assertSucceeds(
+    updateDoc(doc(coach.firestore(), "posts", "training"), {
+      category: "event",
+      text: "Szombati verseny.",
+      searchKeywords: ["szombati", "verseny"],
+    }),
   );
 });
 

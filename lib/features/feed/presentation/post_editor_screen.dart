@@ -19,7 +19,9 @@ import '../data/media_prep.dart';
 import '../data/post_media_storage.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
+import '../domain/post_category.dart';
 import 'author_avatar.dart';
+import 'category_style.dart';
 import 'feed_chrome.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
@@ -52,6 +54,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   final _picker = ImagePicker();
   _MediaDraft? _video;
   var _pinned = false;
+  var _category = PostCategory.news;
   var _submitting = false;
   var _preparing = false;
   var _succeeded = false;
@@ -65,6 +68,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   String? _error;
   String _originalText = '';
   var _originalPinned = false;
+  var _originalCategory = PostCategory.news;
   List<String?> _originalImageUrls = const [];
   String? _originalVideoUrl;
   Timer? _draftTimer;
@@ -187,9 +191,12 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     if (widget.postId == null) {
       return _textController.text.trim().isNotEmpty ||
           _images.isNotEmpty ||
-          _video != null;
+          _video != null ||
+          _category != PostCategory.news;
     }
-    if (_textController.text != _originalText || _pinned != _originalPinned) {
+    if (_textController.text != _originalText ||
+        _pinned != _originalPinned ||
+        _category != _originalCategory) {
       return true;
     }
     if (_video?.prepared != null ||
@@ -264,8 +271,10 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     _textController.text = post.text;
     _applying = false;
     _pinned = post.pinned;
+    _category = post.category;
     _originalText = post.text;
     _originalPinned = post.pinned;
+    _originalCategory = post.category;
     _images
       ..clear()
       ..addAll(post.images.map(_MediaDraft.remote));
@@ -291,6 +300,15 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
             children: [
               _AuthorBlock(user: user),
+              const SizedBox(height: 12),
+              CategoryChipRow(
+                selected: _category,
+                padding: EdgeInsets.zero,
+                onSelected: (category) {
+                  if (category == null || _submitting) return;
+                  setState(() => _category = category);
+                },
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: _textController,
@@ -595,6 +613,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           authorPhotoUrl: _photo(user.photoUrl),
           text: text,
           pinned: _pinned,
+          category: _category,
           media: media,
         );
       } else {
@@ -602,6 +621,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           postId: postId,
           text: text,
           pinned: _pinned,
+          category: _category,
           media: media,
         );
         await storage?.deleteExcept(postId, [

@@ -1,4 +1,5 @@
 import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
+import 'package:gastroyal_karate_app/features/feed/domain/post_category.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/post_repository.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/reaction.dart';
 
@@ -6,17 +7,30 @@ import 'package:gastroyal_karate_app/features/feed/domain/reaction.dart';
 class FakePostRepository implements PostRepository {
   const FakePostRepository({
     this.page = const PostPage(posts: <Post>[], hasMore: false),
+    this.onFetch,
   });
 
   final PostPage page;
+  final void Function(PostCategory? category, String? keyword)? onFetch;
 
   @override
   Future<PostPage> fetchPosts({
     Object? startAfter,
     int limit = PostLimits.pageSize,
+    PostCategory? category,
+    String? keyword,
   }) async {
+    onFetch?.call(category, keyword);
     return page;
   }
+
+  @override
+  Stream<String?> watchNewestPostId({PostCategory? category}) {
+    return Stream<String?>.value(null);
+  }
+
+  @override
+  Future<int> backfillLegacyPosts() async => 0;
 
   @override
   Stream<Post?> watchPost(String postId) => Stream<Post?>.value(null);
@@ -31,6 +45,7 @@ class FakePostRepository implements PostRepository {
     required String? authorPhotoUrl,
     required String text,
     required bool pinned,
+    required PostCategory category,
     List<PostMedia> media = const [],
     String? postId,
   }) async {
@@ -42,6 +57,7 @@ class FakePostRepository implements PostRepository {
     required String postId,
     required String text,
     required bool pinned,
+    required PostCategory category,
     required List<PostMedia> media,
   }) async {}
 

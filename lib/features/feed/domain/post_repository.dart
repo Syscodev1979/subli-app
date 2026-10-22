@@ -1,4 +1,5 @@
 import 'post.dart';
+import 'post_category.dart';
 import 'reaction.dart';
 
 /// A hírfolyam Firestore-műveletei.
@@ -6,7 +7,15 @@ abstract class PostRepository {
   Future<PostPage> fetchPosts({
     Object? startAfter,
     int limit = PostLimits.pageSize,
+    PostCategory? category,
+    String? keyword,
   });
+
+  /// A legújabb bejegyzés azonosítója, kategórián belül is.
+  Stream<String?> watchNewestPostId({PostCategory? category});
+
+  /// A kategória nélküli bejegyzések `news` kategóriát és keresőszavakat kapnak.
+  Future<int> backfillLegacyPosts();
 
   Stream<Post?> watchPost(String postId);
 
@@ -18,6 +27,7 @@ abstract class PostRepository {
     required String? authorPhotoUrl,
     required String text,
     required bool pinned,
+    required PostCategory category,
     List<PostMedia> media = const [],
     String? postId,
   });
@@ -26,6 +36,7 @@ abstract class PostRepository {
     required String postId,
     required String text,
     required bool pinned,
+    required PostCategory category,
     required List<PostMedia> media,
   });
 

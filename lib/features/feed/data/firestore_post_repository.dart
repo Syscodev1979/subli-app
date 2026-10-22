@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../domain/post.dart';
+import '../domain/post_category.dart';
 import '../domain/post_repository.dart';
 import '../domain/reaction.dart';
+import '../domain/search_keywords.dart';
 import 'post_mapper.dart';
 import 'post_media_storage.dart';
 
@@ -21,11 +23,23 @@ class FirestorePostRepository implements PostRepository {
   Future<PostPage> fetchPosts({
     Object? startAfter,
     int limit = PostLimits.pageSize,
+    PostCategory? category,
+    String? keyword,
   }) async {
-    var query = _posts
-        .orderBy('pinned', descending: true)
-        .orderBy('createdAt', descending: true)
-        .limit(limit);
+    Query<Map<String, dynamic>> query = _posts;
+    if (category != null) {
+      query = query.where('category', isEqualTo: category.name);
+    }
+    if (keyword != null && keyword.isNotEmpty) {
+      query = query
+          .where('searchKeywords', arrayContains: keyword)
+          .orderBy('createdAt', descending: true);
+    } else {
+      query = query
+          .orderBy('pinned', descending: true)
+          .orderBy('createdAt', descending: true);
+    }
+    query = query.limit(limit);
     if (startAfter != null) {
       if (startAfter is! DocumentSnapshot<Object?>) {
         throw ArgumentError('Invalid post page cursor.');
@@ -49,6 +63,58 @@ class FirestorePostRepository implements PostRepository {
   }
 
   @override
+  Stream<String?> watchNewestPostId({PostCategory? category}) {
+    Query<Map<String, dynamic>> query = _posts;
+    if (category != null) {
+      query = query.where('category', isEqualTo: category.name);
+    }
+    return query
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs.isEmpty ? null : snapshot.docs.first.id,
+        );
+  }
+
+  @override
+  Future<int> backfillLegacyPosts() async {
+    var updated = 0;
+    QueryDocumentSnapshot<Map<String, dynamic>>? cursor;
+    while (true) {
+      var query = _posts.orderBy(FieldPath.documentId).limit(200);
+      if (cursor != null) query = query.startAfterDocument(cursor);
+      final snapshot = await query.get();
+      if (snapshot.docs.isEmpty) break;
+      var batch = _firestore.batch();
+      var writes = 0;
+      for (final document in snapshot.docs) {
+        final data = document.data();
+        if (data['category'] is String) continue;
+        final text = data['text'] is String ? data['text'] as String : '';
+        batch.update(document.reference, {
+          'category': PostCategory.news.name,
+          'searchKeywords': searchKeywords(
+            text,
+            maxWords: PostLimits.maxSearchKeywords,
+          ),
+        });
+        writes++;
+        updated++;
+        if (writes == 400) {
+          await batch.commit();
+          batch = _firestore.batch();
+          writes = 0;
+        }
+      }
+      if (writes > 0) await batch.commit();
+      cursor = snapshot.docs.last;
+      if (snapshot.docs.length < 200) break;
+    }
+    return updated;
+  }
+
+  @override
   String reservePostId() => _posts.doc().id;
 
   @override
@@ -58,6 +124,7 @@ class FirestorePostRepository implements PostRepository {
     required String? authorPhotoUrl,
     required String text,
     required bool pinned,
+    required PostCategory category,
     List<PostMedia> media = const [],
     String? postId,
   }) async {
@@ -71,6 +138,11 @@ class FirestorePostRepository implements PostRepository {
       'createdAt': now,
       'updatedAt': now,
       'pinned': pinned,
+      'category': category.name,
+      'searchKeywords': searchKeywords(
+        text,
+        maxWords: PostLimits.maxSearchKeywords,
+      ),
       'media': [for (final item in media) item.toMap()],
     });
     return ref.id;
@@ -81,11 +153,17 @@ class FirestorePostRepository implements PostRepository {
     required String postId,
     required String text,
     required bool pinned,
+    required PostCategory category,
     required List<PostMedia> media,
   }) {
     return _posts.doc(postId).update({
       'text': text,
       'pinned': pinned,
+      'category': category.name,
+      'searchKeywords': searchKeywords(
+        text,
+        maxWords: PostLimits.maxSearchKeywords,
+      ),
       'updatedAt': Timestamp.fromDate(DateTime.now()),
       'media': [for (final item in media) item.toMap()],
     });
