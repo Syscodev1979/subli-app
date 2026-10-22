@@ -746,6 +746,109 @@ test("edző csak a saját vagy még nem létező bejegyzéshez tölthet fel", as
   );
 });
 
+test("nem tag nem olvas üzenetet, és a kliens nem ír taglistát", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      name: "Másik Sportoló",
+      email: "athlete2@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "conversations", "c1"), {
+      memberIds: ["athlete1", "coach1"],
+      type: "direct",
+      createdAt,
+      updatedAt: createdAt,
+      lastReadAt: {},
+      hasMinor: false,
+      guardianIds: [],
+    });
+    await setDoc(doc(db, "conversations", "c1", "messages", "m1"), {
+      senderId: "coach1",
+      text: "Szia",
+      createdAt,
+      deleted: false,
+    });
+    await setDoc(doc(db, "members", "coach1"), {
+      name: "Edző",
+      photoUrl: null,
+      role: "coach",
+      isMinor: false,
+      parentIds: [],
+      searchKeywords: ["edzo"],
+      status: "active",
+    });
+  });
+
+  const outsider = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(
+    getDoc(doc(outsider.firestore(), "conversations", "c1", "messages", "m1")),
+  );
+  await assertFails(
+    setDoc(doc(outsider.firestore(), "members", "athlete2"), {
+      name: "Másik",
+      photoUrl: null,
+      role: "athlete",
+      isMinor: false,
+      parentIds: [],
+      searchKeywords: ["masik"],
+      status: "active",
+    }),
+  );
+
+  const member = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertSucceeds(
+    getDoc(doc(member.firestore(), "conversations", "c1", "messages", "m1")),
+  );
+  await assertSucceeds(getDoc(doc(member.firestore(), "members", "coach1")));
+  await assertFails(
+    setDoc(doc(member.firestore(), "conversations", "c1", "messages", "fake"), {
+      senderId: "coach1",
+      text: "Más nevében.",
+      createdAt,
+      deleted: false,
+    }),
+  );
+  await assertSucceeds(
+    setDoc(doc(member.firestore(), "conversations", "c1", "messages", "mine"), {
+      senderId: "athlete1",
+      text: "Ott leszek.",
+      createdAt,
+      deleted: false,
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(member.firestore(), "conversations", "c1"), {
+      memberIds: ["athlete1", "athlete2", "coach1"],
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(member.firestore(), "conversations", "c1"), {
+      "lastReadAt.athlete1": createdAt,
+    }),
+  );
+});
+
 test("a saját reakció cserélhető, idegenét más sportoló nem törli", async () => {
   await seed({
     coach1: userDoc({

@@ -351,6 +351,61 @@ service cloud.firestore {
       }
     }
 
+    function conversationPath(conversationId) {
+      return /databases/$(database)/documents/conversations/$(conversationId);
+    }
+
+    function inConversation(conversationId) {
+      return isActive()
+        && request.auth.uid in get(conversationPath(conversationId)).data.memberIds;
+    }
+
+    function messageShape() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['senderId', 'text', 'createdAt', 'deleted'])
+        && data.senderId == request.auth.uid
+        && data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 2000
+        && data.createdAt is timestamp
+        && data.deleted == false;
+    }
+
+    function onlyOwnReadStamp() {
+      let before = resource.data.get('lastReadAt', {});
+      let after = request.resource.data.get('lastReadAt', {});
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastReadAt'])
+        && after.diff(before).affectedKeys().hasOnly([request.auth.uid])
+        && after[request.auth.uid] is timestamp;
+    }
+
+    match /members/{memberId} {
+      allow read: if isActive();
+      allow write: if false;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if isActive()
+        && request.auth.uid in resource.data.memberIds;
+      allow create, delete: if false;
+      allow update: if isActive()
+        && request.auth.uid in resource.data.memberIds
+        && onlyOwnReadStamp();
+
+      match /messages/{messageId} {
+        allow read: if inConversation(conversationId);
+        allow create: if inConversation(conversationId) && messageShape();
+        allow update: if inConversation(conversationId)
+          && resource.data.senderId == request.auth.uid
+          && request.resource.data.keys().hasOnly(['senderId', 'text', 'createdAt', 'deleted'])
+          && request.resource.data.senderId == resource.data.senderId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.deleted == true
+          && request.resource.data.text == '';
+        allow delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
