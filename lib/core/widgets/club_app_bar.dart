@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/constants.dart';
 import '../../features/feed/presentation/feed_chrome.dart';
 import 'club_logo.dart';
+import 'theme_switch.dart';
 
 /// A klub neve és logója. Bárhonnan a hírfolyamra visz.
 ///
@@ -33,18 +34,15 @@ class ClubAppBar extends ConsumerWidget implements PreferredSizeWidget {
             children: [
               ClubLogo(),
               SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  AppInfo.clubName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Expanded(child: ClubTitle()),
             ],
           ),
         ),
       ),
-      actions: actions,
+      actions: [
+        const Padding(padding: EdgeInsets.only(right: 4), child: ThemeSwitch()),
+        ...?actions,
+      ],
     );
   }
 
@@ -59,4 +57,33 @@ class ClubAppBar extends ConsumerWidget implements PreferredSizeWidget {
     }
     if (context.mounted) context.go(AppRoutes.feed);
   }
+}
+
+/// A fejléc klubneve. Szűk helyen a rövidebb alakra vált, a kapcsoló marad.
+class ClubTitle extends StatelessWidget {
+  const ClubTitle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = DefaultTextStyle.of(context).style;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fullWidth = _textWidth(AppInfo.clubName, style);
+        final label =
+            !constraints.hasBoundedWidth || fullWidth <= constraints.maxWidth
+            ? AppInfo.clubName
+            : AppInfo.clubNameShort;
+        return Text(label, maxLines: 1, overflow: TextOverflow.ellipsis);
+      },
+    );
+  }
+}
+
+double _textWidth(String text, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    maxLines: 1,
+    textDirection: TextDirection.ltr,
+  )..layout();
+  return painter.width;
 }

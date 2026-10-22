@@ -26,6 +26,12 @@ abstract final class AppColors {
   /// Halvány arany felület.
   static const Color goldLight = Color(0xFFF6EBC8);
 
+  /// A téma kapcsoló sötét sínjének bal színe.
+  static const Color themeTrackNight = Color(0xFF2A1A2E);
+
+  /// A sötét állású csúszógomb.
+  static const Color themeKnobDark = Color(0xFF2B2930);
+
   /// Arany szöveg sötét felületen. A #C9A227 a sötét kártyán is átmegy,
   /// ez a világosabb változat a kiemeléshez.
   static const Color goldDark = Color(0xFFE6C35C);
@@ -118,4 +124,7 @@ abstract final class AppRoutes {
 /// Közös, a felületen megjelenő nevek.
 abstract final class AppInfo {
   static const String clubName = 'Gastroyal Karate SE';
+
+  /// Szűk fejlécen ennyi fér ki a klubnévből.
+  static const String clubNameShort = 'Gastroyal';
 }
