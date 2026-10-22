@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,13 +9,19 @@ import '../../../core/widgets/club_drawer.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
+import '../domain/post_category.dart';
+import '../domain/search_keywords.dart';
+import 'category_style.dart';
 import 'composer_bar.dart';
 import 'feed_chrome.dart';
 import 'feed_controller.dart';
+import 'feed_end.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
+import 'feed_query.dart';
 import 'feed_skeleton.dart';
 import 'post_card.dart';
+import 'scroll_to_top_button.dart';
 
 /// A klub kezdőoldala: a hírfolyam.
 class FeedScreen extends ConsumerStatefulWidget {
@@ -25,7 +33,14 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
   FeedChrome? _chrome;
+  Timer? _searchTimer;
+  var _searchOpen = false;
+  var _showTopButton = false;
+  var _atTop = true;
+  double? _lastOffset;
 
   @override
   void initState() {
@@ -37,10 +52,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   void dispose() {
+    _searchTimer?.cancel();
     _chrome?.scrollToTopAndRefresh = null;
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
+    _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -55,11 +73,47 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     await _refresh();
   }
 
+  Future<void> _scrollToTop() async {
+    if (!_scrollController.hasClients) return;
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _jumpTop() {
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    _lastOffset = 0;
+    if (_atTop && !_showTopButton) return;
+    setState(() {
+      _atTop = true;
+      _showTopButton = false;
+    });
+  }
+
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
+    final offset = position.pixels;
+    final delta = _lastOffset == null ? 0.0 : offset - _lastOffset!;
+    _lastOffset = offset;
+    final atTop = offset < 48;
+    final far = offset > position.viewportDimension * 2;
+    var show = _showTopButton;
+    if (atTop || delta < -6) {
+      show = false;
+    } else if (far && delta > 6) {
+      show = true;
+    }
+    if (show != _showTopButton || atTop != _atTop) {
+      setState(() {
+        _showTopButton = show;
+        _atTop = atTop;
+      });
+    }
     if (position.maxScrollExtent <= 0) return;
-    if (position.pixels < position.maxScrollExtent - 240) return;
+    if (offset < position.maxScrollExtent - 240) return;
     _loadMore();
   }
 
@@ -87,17 +141,81 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
   }
 
+  void _openSearch() {
+    setState(() => _searchOpen = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _searchFocus.requestFocus();
+    });
+  }
+
+  void _closeSearch() {
+    _searchTimer?.cancel();
+    _searchController.clear();
+    ref.read(feedSearchProvider.notifier).clear();
+    _searchFocus.unfocus();
+    setState(() => _searchOpen = false);
+  }
+
+  void _onSearchChanged(String value) {
+    _searchTimer?.cancel();
+    _searchTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      ref.read(feedSearchProvider.notifier).setQuery(value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(feedCategoryProvider, (previous, next) {
+      if (previous != next) _jumpTop();
+    });
+    ref.listen(feedSearchProvider, (previous, next) {
+      if (previous != next) _jumpTop();
+    });
+
     final session = ref.watch(authGateProvider).asData?.value;
     final user = session is AuthSignedIn ? session.user : null;
     final feed = ref.watch(feedControllerProvider);
+    final search = ref.watch(feedSearchProvider);
+    final category = ref.watch(feedCategoryProvider);
+    final newest = ref.watch(newestPostIdProvider).asData?.value;
+    final loaded = feed.asData?.value.posts ?? const [];
+    final hasNew = newest != null && loaded.every((post) => post.id != newest);
+    final showNew = _atTop && hasNew && search.trim().isEmpty;
+    final highlights = searchTerms(search);
 
     return Scaffold(
       backgroundColor: FeedPalette.background(context),
       endDrawer: const ClubDrawer(),
       appBar: ClubAppBar(
+        title: _searchOpen
+            ? TextField(
+                key: const ValueKey('feed-search'),
+                controller: _searchController,
+                focusNode: _searchFocus,
+                onChanged: _onSearchChanged,
+                textInputAction: TextInputAction.search,
+                style: TextStyle(color: FeedPalette.title(context)),
+                decoration: InputDecoration(
+                  hintText: 'Keresés a bejegyzésekben…',
+                  hintStyle: TextStyle(color: FeedPalette.muted(context)),
+                  border: InputBorder.none,
+                  isDense: true,
+                  suffixIcon: IconButton(
+                    tooltip: 'Bezárás',
+                    onPressed: _closeSearch,
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+              )
+            : null,
         actions: [
+          if (!_searchOpen)
+            IconButton(
+              tooltip: 'Keresés',
+              onPressed: _openSearch,
+              icon: const Icon(Icons.search),
+            ),
           Builder(
             builder: (buttonContext) {
               return IconButton(
@@ -109,56 +227,118 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
         ],
       ),
-      body: feed.when(
-        loading: () => _FeedFrame(
-          controller: _scrollController,
-          onRefresh: _refresh,
-          user: user,
-          slivers: const [SliverToBoxAdapter(child: FeedSkeleton())],
-        ),
-        error: (error, _) => _FeedFrame(
-          controller: _scrollController,
-          onRefresh: _refresh,
-          user: user,
-          slivers: [
-            SliverToBoxAdapter(
-              child: _FeedMessage(
-                message: feedErrorMessage(error, saving: false),
-                onRetry: () => ref.invalidate(feedControllerProvider),
+      body: Stack(
+        children: [
+          feed.when(
+            loading: () => _FeedFrame(
+              controller: _scrollController,
+              onRefresh: _refresh,
+              user: user,
+              slivers: const [SliverToBoxAdapter(child: FeedSkeleton())],
+            ),
+            error: (error, _) => _FeedFrame(
+              controller: _scrollController,
+              onRefresh: _refresh,
+              user: user,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _FeedMessage(
+                    message: feedErrorMessage(error, saving: false),
+                    onRetry: () => ref.invalidate(feedControllerProvider),
+                  ),
+                ),
+              ],
+            ),
+            data: (view) => _FeedFrame(
+              controller: _scrollController,
+              onRefresh: _refresh,
+              user: user,
+              slivers: [
+                if (view.posts.isEmpty)
+                  SliverToBoxAdapter(
+                    child: _EmptyFeed(
+                      message: _emptyMessage(
+                        search: search,
+                        category: category,
+                      ),
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final currentUser = user;
+                      if (currentUser == null) return const SizedBox.shrink();
+                      if (index >= view.posts.length) {
+                        if (view.loadingMore) {
+                          return const FeedSkeleton(cards: 1);
+                        }
+                        return const FeedEndMark();
+                      }
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom:
+                              index == view.posts.length - 1 &&
+                                  !view.loadingMore &&
+                                  view.hasMore
+                              ? 24
+                              : 8,
+                        ),
+                        child: PostTile(
+                          post: view.posts[index],
+                          user: currentUser,
+                          highlights: highlights,
+                        ),
+                      );
+                    }, childCount: view.posts.length + _tail(view)),
+                  ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 8,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              ignoring: !showNew,
+              child: ExcludeSemantics(
+                excluding: !showNew,
+                child: AnimatedOpacity(
+                  opacity: showNew ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Center(
+                    child: _NewPostsPill(onTap: _scrollToTopAndRefresh),
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-        data: (view) => _FeedFrame(
-          controller: _scrollController,
-          onRefresh: _refresh,
-          user: user,
-          slivers: [
-            if (view.posts.isEmpty)
-              const SliverToBoxAdapter(child: _EmptyFeed())
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final currentUser = user;
-                  if (currentUser == null) return const SizedBox.shrink();
-                  if (index >= view.posts.length) {
-                    return const FeedSkeleton(cards: 1);
-                  }
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom:
-                          index == view.posts.length - 1 && !view.loadingMore
-                          ? 24
-                          : 8,
-                    ),
-                    child: PostTile(post: view.posts[index], user: currentUser),
-                  );
-                }, childCount: view.posts.length + (view.loadingMore ? 1 : 0)),
-              ),
-          ],
-        ),
+          ),
+          Positioned(
+            right: 16,
+            bottom: 16 + MediaQuery.paddingOf(context).bottom,
+            child: ScrollToTopButton(
+              visible: _showTopButton,
+              onPressed: _scrollToTop,
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  int _tail(FeedView view) {
+    if (view.posts.isEmpty) return 0;
+    if (view.loadingMore || !view.hasMore) return 1;
+    return 0;
+  }
+
+  String? _emptyMessage({
+    required String search,
+    required PostCategory? category,
+  }) {
+    final query = search.trim();
+    if (query.isNotEmpty) return 'Nincs találat erre: $query';
+    if (category != null) return 'Nincs bejegyzés ebben a kategóriában.';
+    return null;
   }
 }
 
@@ -183,13 +363,36 @@ class _FeedFrame extends StatelessWidget {
         controller: controller,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          const SliverToBoxAdapter(child: _FeedTitle()),
+          const SliverToBoxAdapter(child: _FeedHeader()),
           if (user case final current? when current.role.canWritePosts)
             SliverToBoxAdapter(child: ComposerBar(user: current)),
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           ...slivers,
         ],
       ),
+    );
+  }
+}
+
+class _FeedHeader extends ConsumerWidget {
+  const _FeedHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(feedCategoryProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _FeedTitle(),
+        CategoryChipRow(
+          includeAll: true,
+          selected: selected,
+          onSelected: (category) {
+            ref.read(feedCategoryProvider.notifier).select(category);
+          },
+        ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 }
@@ -214,7 +417,9 @@ class _FeedTitle extends StatelessWidget {
 }
 
 class _EmptyFeed extends StatelessWidget {
-  const _EmptyFeed();
+  const _EmptyFeed({this.message});
+
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +434,8 @@ class _EmptyFeed extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Még nincs bejegyzés. Hamarosan itt lesznek a klub hírei!',
+            message ??
+                'Még nincs bejegyzés. Hamarosan itt lesznek a klub hírei!',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: FeedPalette.title(context),
@@ -267,6 +473,37 @@ class _FeedMessage extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton(onPressed: onRetry, child: const Text('Újra')),
         ],
+      ),
+    );
+  }
+}
+
+class _NewPostsPill extends StatelessWidget {
+  const _NewPostsPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.burgundy,
+      elevation: 3,
+      shadowColor: const Color(0x66000000),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Text(
+            'Új bejegyzések ↑',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+        ),
       ),
     );
   }

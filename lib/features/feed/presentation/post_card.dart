@@ -12,6 +12,7 @@ import '../domain/post_access.dart';
 import '../domain/post_repository.dart';
 import '../domain/reaction.dart';
 import 'author_avatar.dart';
+import 'category_style.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
@@ -161,6 +162,7 @@ class PostCard extends StatelessWidget {
     this.onDelete,
     this.expanded = false,
     this.showPreview = true,
+    this.highlights = const [],
     super.key,
   });
 
@@ -180,6 +182,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final bool expanded;
   final bool showPreview;
+  final List<String> highlights;
 
   @override
   Widget build(BuildContext context) {
@@ -225,12 +228,16 @@ class PostCard extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 timeLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: FeedPalette.muted(context),
                                   fontSize: 13,
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            CategoryLabel(category: post.category),
                             if (post.pinned) ...[
                               const SizedBox(width: 8),
                               Icon(
@@ -279,6 +286,7 @@ class PostCard extends StatelessWidget {
                 text: post.text,
                 color: textColor,
                 expanded: expanded,
+                highlights: highlights,
               ),
             ),
           if (post.media.isNotEmpty) PostMediaGallery(media: post.media),
@@ -426,11 +434,13 @@ class _PostBody extends StatefulWidget {
     required this.text,
     required this.color,
     required this.expanded,
+    required this.highlights,
   });
 
   final String text;
   final Color color;
   final bool expanded;
+  final List<String> highlights;
 
   @override
   State<_PostBody> createState() => _PostBodyState();
@@ -443,7 +453,11 @@ class _PostBodyState extends State<_PostBody> {
   Widget build(BuildContext context) {
     final style = TextStyle(color: widget.color, fontSize: 15, height: 1.4);
     if (widget.expanded || _opened) {
-      return LinkText(text: widget.text, style: style);
+      return LinkText(
+        text: widget.text,
+        style: style,
+        highlights: widget.highlights,
+      );
     }
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -461,6 +475,7 @@ class _PostBodyState extends State<_PostBody> {
               text: widget.text,
               style: style,
               maxLines: overflows ? 6 : null,
+              highlights: widget.highlights,
             ),
             if (overflows)
               GestureDetector(
@@ -713,6 +728,7 @@ class PostTile extends ConsumerStatefulWidget {
     this.expanded = false,
     this.showPreview = true,
     this.onOpenComments,
+    this.highlights = const [],
     super.key,
   });
 
@@ -721,6 +737,7 @@ class PostTile extends ConsumerStatefulWidget {
   final bool expanded;
   final bool showPreview;
   final VoidCallback? onOpenComments;
+  final List<String> highlights;
 
   @override
   ConsumerState<PostTile> createState() => _PostTileState();
@@ -771,6 +788,7 @@ class _PostTileState extends ConsumerState<PostTile> {
           : const <PostComment>[],
       expanded: widget.expanded,
       showPreview: widget.showPreview,
+      highlights: widget.highlights,
       onToggleLike: () => _apply(
         reaction == ReactionType.like ? null : ReactionType.like,
         reaction,

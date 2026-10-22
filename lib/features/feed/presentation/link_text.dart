@@ -2,6 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../app/constants.dart';
+import '../domain/search_keywords.dart';
+
 final _linkPattern = RegExp(
   r'(https?:\/\/[^\s]+|www\.[^\s]+)',
   caseSensitive: false,
@@ -13,12 +16,14 @@ class LinkText extends StatefulWidget {
     required this.text,
     required this.style,
     this.maxLines,
+    this.highlights = const [],
     super.key,
   });
 
   final String text;
   final TextStyle style;
   final int? maxLines;
+  final List<String> highlights;
 
   @override
   State<LinkText> createState() => _LinkTextState();
@@ -36,7 +41,8 @@ class _LinkTextState extends State<LinkText> {
   @override
   void didUpdateWidget(LinkText oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.text != widget.text) {
+    if (oldWidget.text != widget.text ||
+        oldWidget.highlights != widget.highlights) {
       final previous = List<_Segment>.from(_segments);
       _setSegments(widget.text);
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,16 +74,17 @@ class _LinkTextState extends State<LinkText> {
       TextSpan(
         children: [
           for (final segment in _segments)
-            TextSpan(
-              text: segment.text,
-              style: segment.url == null
-                  ? style
-                  : style.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      decoration: TextDecoration.underline,
-                    ),
-              recognizer: segment.recognizer,
-            ),
+            if (segment.url != null)
+              TextSpan(
+                text: segment.text,
+                style: style.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  decoration: TextDecoration.underline,
+                ),
+                recognizer: segment.recognizer,
+              )
+            else
+              ..._highlighted(segment.text, style, context),
         ],
       ),
       maxLines: widget.maxLines,
@@ -85,6 +92,38 @@ class _LinkTextState extends State<LinkText> {
           ? TextOverflow.visible
           : TextOverflow.ellipsis,
     );
+  }
+
+  List<InlineSpan> _highlighted(
+    String text,
+    TextStyle style,
+    BuildContext context,
+  ) {
+    final ranges = highlightRanges(text, widget.highlights);
+    if (ranges.isEmpty) return [TextSpan(text: text, style: style)];
+    final mark = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.goldDarkSurface
+        : AppColors.goldLight;
+    final spans = <InlineSpan>[];
+    var cursor = 0;
+    for (final range in ranges) {
+      if (range.start > cursor) {
+        spans.add(
+          TextSpan(text: text.substring(cursor, range.start), style: style),
+        );
+      }
+      spans.add(
+        TextSpan(
+          text: text.substring(range.start, range.end),
+          style: style.copyWith(backgroundColor: mark),
+        ),
+      );
+      cursor = range.end;
+    }
+    if (cursor < text.length) {
+      spans.add(TextSpan(text: text.substring(cursor), style: style));
+    }
+    return spans;
   }
 
   List<_Segment> _parse(String text) {

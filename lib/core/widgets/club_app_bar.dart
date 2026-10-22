@@ -11,9 +11,12 @@ import 'theme_switch.dart';
 ///
 /// A hírfolyamon a lista tetejére görget, és frissít.
 class ClubAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  const ClubAppBar({this.leading, this.actions, super.key});
+  const ClubAppBar({this.leading, this.title, this.actions, super.key});
 
   final Widget? leading;
+
+  /// Ha megvan, a logó és a klubnév helyére kerül.
+  final Widget? title;
   final List<Widget>? actions;
 
   @override
@@ -25,19 +28,27 @@ class ClubAppBar extends ConsumerWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       leading: leading,
       titleSpacing: leading == null ? 16 : 0,
-      title: InkWell(
-        onTap: () => _openFeed(context, ref),
-        borderRadius: BorderRadius.circular(8),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              ClubLogo(),
-              SizedBox(width: 12),
-              Expanded(child: ClubTitle()),
-            ],
-          ),
-        ),
+      title: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        child:
+            title ??
+            InkWell(
+              key: const ValueKey('club-brand'),
+              onTap: () => _openFeed(context, ref),
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    ClubLogo(),
+                    SizedBox(width: 12),
+                    Expanded(child: ClubTitle()),
+                  ],
+                ),
+              ),
+            ),
       ),
       actions: [
         const Padding(padding: EdgeInsets.only(right: 4), child: ThemeSwitch()),
