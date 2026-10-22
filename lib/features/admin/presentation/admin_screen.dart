@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
 import '../../../core/utils/hungarian_date.dart';
@@ -63,6 +64,7 @@ class AdminScreen extends ConsumerWidget {
                       athletes: athleteList,
                       athletesLoading: athletes.isLoading,
                       canAssignRoles: reviewer?.role.canAssignRoles ?? false,
+                      canSetBelt: reviewer?.role.canReviewMembers ?? false,
                     );
                   },
                 );
@@ -187,6 +189,7 @@ class _PendingUserCard extends ConsumerStatefulWidget {
     required this.athletes,
     required this.athletesLoading,
     required this.canAssignRoles,
+    required this.canSetBelt,
     super.key,
   });
 
@@ -194,6 +197,7 @@ class _PendingUserCard extends ConsumerStatefulWidget {
   final List<AppUser> athletes;
   final bool athletesLoading;
   final bool canAssignRoles;
+  final bool canSetBelt;
 
   @override
   ConsumerState<_PendingUserCard> createState() => _PendingUserCardState();
@@ -207,18 +211,19 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
   UserRole get _resultingRole =>
       widget.canAssignRoles ? _role : widget.user.role;
 
-  Future<void> _approve() async {
+  Future<void> _approve({UserRole? asRole}) async {
     setState(() => _submitting = true);
+    final assigned =
+        asRole ??
+        (widget.canAssignRoles && _role != widget.user.role ? _role : null);
     try {
       await ref
           .read(userRepositoryProvider)
           .approveUser(
             userId: widget.user.id,
             currentRole: widget.user.role,
-            assignedRole: widget.canAssignRoles && _role != widget.user.role
-                ? _role
-                : null,
-            childIds: _resultingRole == UserRole.parent
+            assignedRole: assigned,
+            childIds: (assigned ?? _resultingRole) == UserRole.parent
                 ? _childIds.toList()
                 : const [],
           );
@@ -262,6 +267,28 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(user.name, style: theme.textTheme.titleMedium),
+            if (user.requestedCoach) ...[
+              const SizedBox(height: 8),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.goldLight,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    child: Text(
+                      'Edzőként jelentkezett',
+                      style: TextStyle(
+                        color: AppColors.burgundyDark,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 4),
             Text(user.email),
             const SizedBox(height: 4),
@@ -327,7 +354,42 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
                           },
                   ),
             ],
-            if (widget.canAssignRoles) ...[
+            if (widget.canSetBelt &&
+                !user.requestedCoach &&
+                user.role == UserRole.athlete) ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                initialValue: ClubConfig.beltByKey(user.beltRank)?.key,
+                decoration: const InputDecoration(labelText: 'Övfokozat'),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Nincs megadva'),
+                  ),
+                  for (final grade in ClubConfig.belts)
+                    DropdownMenuItem(
+                      value: grade.key,
+                      child: Text(grade.caption),
+                    ),
+                ],
+                onChanged: _submitting
+                    ? null
+                    : (key) async {
+                        try {
+                          await ref
+                              .read(userRepositoryProvider)
+                              .setBeltRank(userId: user.id, beltRank: key);
+                        } catch (error) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(authErrorMessage(error))),
+                            );
+                          }
+                        }
+                      },
+              ),
+            ],
+            if (widget.canAssignRoles && !user.requestedCoach) ...[
               const SizedBox(height: 12),
               DropdownButtonFormField<UserRole>(
                 initialValue: _role,
@@ -344,23 +406,50 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
               ),
             ],
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _submitting ? null : _approve,
-                    child: const Text('Jóváhagyás'),
+            if (user.requestedCoach && !widget.canAssignRoles)
+              const Text('Ezt a jelentkezést csak admin hagyhatja jóvá.')
+            else if (user.requestedCoach)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => _approve(asRole: UserRole.coach),
+                    child: const Text('Jóváhagyás edzőként'),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton(
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => _approve(asRole: UserRole.athlete),
+                    child: const Text('Jóváhagyás sportolóként'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
                     onPressed: _submitting ? null : _reject,
                     child: const Text('Elutasítás'),
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _submitting ? null : () => _approve(),
+                      child: const Text('Jóváhagyás'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _submitting ? null : _reject,
+                      child: const Text('Elutasítás'),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
