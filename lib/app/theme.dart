@@ -12,7 +12,8 @@ abstract final class AppTheme {
   static ThemeData get light =>
       _build(_lightScheme, _lightAppBar, ClubColors.light);
 
-  static ThemeData get dark => _build(_darkScheme, _darkAppBar, ClubColors.dark);
+  static ThemeData get dark =>
+      _build(_darkScheme, _darkAppBar, ClubColors.dark);
 
   static final ColorScheme _lightScheme =
       ColorScheme.fromSeed(

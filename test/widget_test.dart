@@ -34,12 +34,18 @@ void main() {
   });
 
   testWidgets('Edző a Mire gondolsz sávból ír bejegyzést', (tester) async {
-    await _pumpApp(tester, AuthSignedIn(_activeUser(role: UserRole.coach)));
+    await _pumpApp(
+      tester,
+      AuthSignedIn(_activeUser(role: UserRole.coach, name: 'Kovács Anna')),
+    );
 
     expect(find.text('Hírfolyam'), findsOneWidget);
-    expect(find.text('Mire gondolsz?'), findsOneWidget);
+    expect(find.text('Mire gondolsz, Anna?'), findsOneWidget);
+    expect(find.text('Fotó'), findsOneWidget);
+    expect(find.text('Videó'), findsOneWidget);
+    expect(find.text('Kamera'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
-    await tester.tap(find.text('Mire gondolsz?'));
+    await tester.tap(find.text('Mire gondolsz, Anna?'));
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('Kitűzés'), findsOneWidget);
@@ -71,10 +77,13 @@ Future<void> _pumpApp(WidgetTester tester, AuthSession session) async {
 
 AppUser _activeAthlete() => _activeUser();
 
-AppUser _activeUser({UserRole role = UserRole.athlete}) {
+AppUser _activeUser({
+  UserRole role = UserRole.athlete,
+  String name = 'Teszt Sportoló',
+}) {
   return AppUser(
     id: 'athlete-1',
-    name: 'Teszt Sportoló',
+    name: name,
     email: 'teszt@example.com',
     role: role,
     birthDate: DateTime(2000, 1, 1),

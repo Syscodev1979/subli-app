@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
@@ -8,7 +7,7 @@ import '../../../core/widgets/club_drawer.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
-import 'author_avatar.dart';
+import 'composer_bar.dart';
 import 'feed_chrome.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
@@ -186,7 +185,7 @@ class _FeedFrame extends StatelessWidget {
         slivers: [
           const SliverToBoxAdapter(child: _FeedTitle()),
           if (user case final current? when current.role.canWritePosts)
-            SliverToBoxAdapter(child: _ComposerBar(user: current)),
+            SliverToBoxAdapter(child: ComposerBar(user: current)),
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           ...slivers,
         ],
@@ -208,54 +207,6 @@ class _FeedTitle extends StatelessWidget {
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: FeedPalette.title(context),
-        ),
-      ),
-    );
-  }
-}
-
-class _ComposerBar extends StatelessWidget {
-  const _ComposerBar({required this.user});
-
-  final AppUser user;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: FeedPalette.card(context),
-      child: InkWell(
-        onTap: () => context.push(AppRoutes.newPost),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              AuthorAvatar(
-                name: user.name,
-                photoUrl: user.photoUrl,
-                radius: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: FeedPalette.field(context),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Text(
-                    'Mire gondolsz?',
-                    style: TextStyle(
-                      color: FeedPalette.muted(context),
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
