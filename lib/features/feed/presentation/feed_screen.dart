@@ -22,6 +22,7 @@ import 'feed_end.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
 import 'feed_query.dart';
+import 'feed_search_bar.dart';
 import 'feed_skeleton.dart';
 import 'post_card.dart';
 import 'scroll_to_top_button.dart';
@@ -40,7 +41,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   final _searchFocus = FocusNode();
   FeedChrome? _chrome;
   Timer? _searchTimer;
-  var _searchOpen = false;
   var _showTopButton = false;
   var _atTop = true;
   double? _lastOffset;
@@ -49,6 +49,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _searchFocus.addListener(_onSearchFocus);
     _chrome = ref.read(feedChromeProvider);
     _chrome!.scrollToTopAndRefresh = _scrollToTopAndRefresh;
   }
@@ -56,6 +57,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   void dispose() {
     _searchTimer?.cancel();
+    _searchFocus.removeListener(_onSearchFocus);
     _chrome?.scrollToTopAndRefresh = null;
     _scrollController
       ..removeListener(_onScroll)
@@ -144,22 +146,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     }
   }
 
-  void _openSearch() {
-    setState(() => _searchOpen = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _searchFocus.requestFocus();
-    });
+  void _onSearchFocus() {
+    if (mounted) setState(() {});
   }
 
-  void _closeSearch() {
+  bool get _searchActive =>
+      _searchFocus.hasFocus || _searchController.text.isNotEmpty;
+
+  void _clearSearchText() {
     _searchTimer?.cancel();
     _searchController.clear();
     ref.read(feedSearchProvider.notifier).clear();
+    setState(() {});
+  }
+
+  void _closeSearch() {
+    _clearSearchText();
     _searchFocus.unfocus();
-    setState(() => _searchOpen = false);
   }
 
   void _onSearchChanged(String value) {
+    setState(() {});
     _searchTimer?.cancel();
     _searchTimer = Timer(const Duration(milliseconds: 300), () {
       if (!mounted) return;
@@ -187,38 +194,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final showNew = _atTop && hasNew && search.trim().isEmpty;
     final highlights = searchTerms(search);
 
+    final header = _FeedHeader(
+      controller: _searchController,
+      focusNode: _searchFocus,
+      active: _searchActive,
+      onChanged: _onSearchChanged,
+      onClear: _clearSearchText,
+      onCancel: _closeSearch,
+    );
+
     return Scaffold(
       backgroundColor: FeedPalette.background(context),
       endDrawer: const ClubDrawer(),
       appBar: ClubAppBar(
-        title: _searchOpen
-            ? TextField(
-                key: const ValueKey('feed-search'),
-                controller: _searchController,
-                focusNode: _searchFocus,
-                onChanged: _onSearchChanged,
-                textInputAction: TextInputAction.search,
-                style: TextStyle(color: FeedPalette.title(context)),
-                decoration: InputDecoration(
-                  hintText: 'Keresés a bejegyzésekben…',
-                  hintStyle: TextStyle(color: FeedPalette.muted(context)),
-                  border: InputBorder.none,
-                  isDense: true,
-                  suffixIcon: IconButton(
-                    tooltip: 'Bezárás',
-                    onPressed: _closeSearch,
-                    icon: const Icon(Icons.close),
-                  ),
-                ),
-              )
-            : null,
         actions: [
-          if (!_searchOpen)
-            IconButton(
-              tooltip: 'Keresés',
-              onPressed: _openSearch,
-              icon: const Icon(Icons.search),
-            ),
           Builder(
             builder: (buttonContext) {
               return IconButton(
@@ -237,12 +226,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               controller: _scrollController,
               onRefresh: _refresh,
               user: user,
+              header: header,
               slivers: const [SliverToBoxAdapter(child: FeedSkeleton())],
             ),
             error: (error, _) => _FeedFrame(
               controller: _scrollController,
               onRefresh: _refresh,
               user: user,
+              header: header,
               slivers: [
                 SliverToBoxAdapter(
                   child: _FeedMessage(
@@ -256,6 +247,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               controller: _scrollController,
               onRefresh: _refresh,
               user: user,
+              header: header,
               slivers: [
                 if (view.posts.isEmpty)
                   SliverToBoxAdapter(
@@ -358,12 +350,14 @@ class _FeedFrame extends StatelessWidget {
     required this.controller,
     required this.onRefresh,
     required this.user,
+    required this.header,
     required this.slivers,
   });
 
   final ScrollController controller;
   final Future<void> Function() onRefresh;
   final AppUser? user;
+  final Widget header;
   final List<Widget> slivers;
 
   @override
@@ -374,7 +368,7 @@ class _FeedFrame extends StatelessWidget {
         controller: controller,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          const SliverToBoxAdapter(child: _FeedHeader()),
+          SliverToBoxAdapter(child: header),
           if (user case final current? when current.role.canWritePosts)
             SliverToBoxAdapter(child: ComposerBar(user: current)),
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
@@ -391,41 +385,49 @@ class _FeedFrame extends StatelessWidget {
 }
 
 class _FeedHeader extends ConsumerWidget {
-  const _FeedHeader();
+  const _FeedHeader({
+    required this.controller,
+    required this.focusNode,
+    required this.active,
+    required this.onChanged,
+    required this.onClear,
+    required this.onCancel,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool active;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(feedCategoryProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const _FeedTitle(),
-        CategoryChipRow(
-          includeAll: true,
-          selected: selected,
-          onSelected: (category) {
-            ref.read(feedCategoryProvider.notifier).select(category);
-          },
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
-}
-
-class _FeedTitle extends StatelessWidget {
-  const _FeedTitle();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Text(
-        'Hírfolyam',
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: FeedPalette.title(context),
+    return RepaintBoundary(
+      key: const Key('feed-top'),
+      child: ColoredBox(
+        color: FeedPalette.background(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FeedSearchBar(
+              controller: controller,
+              focusNode: focusNode,
+              active: active,
+              onChanged: onChanged,
+              onClear: onClear,
+              onCancel: onCancel,
+            ),
+            CategoryChipRow(
+              includeAll: true,
+              selected: selected,
+              onSelected: (category) {
+                ref.read(feedCategoryProvider.notifier).select(category);
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
         ),
       ),
     );

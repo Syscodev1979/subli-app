@@ -20,7 +20,14 @@ void main() {
 
     expect(find.text('Gastroyal Karate SE'), findsOneWidget);
     expect(find.byTooltip('Menü'), findsOneWidget);
-    expect(find.text('Hírfolyam'), findsOneWidget);
+    expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('club-app-bar')),
+        matching: find.byIcon(Icons.search),
+      ),
+      findsNothing,
+    );
     expect(
       find.text('Még nincs bejegyzés. Hamarosan itt lesznek a klub hírei!'),
       findsOneWidget,
@@ -41,7 +48,14 @@ void main() {
       AuthSignedIn(_activeUser(role: UserRole.coach, name: 'Kovács Anna')),
     );
 
-    expect(find.text('Hírfolyam'), findsOneWidget);
+    expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('club-app-bar')),
+        matching: find.byIcon(Icons.search),
+      ),
+      findsNothing,
+    );
     expect(find.text('Mire gondolsz, Anna?'), findsOneWidget);
     expect(find.text('Fotó'), findsOneWidget);
     expect(find.text('Videó'), findsOneWidget);

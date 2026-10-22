@@ -34,14 +34,14 @@ void main() {
     expect(_publishButton(tester).onTap, isNull);
     expect(_field(tester).style?.fontSize, 24);
 
-    await tester.enterText(find.byType(TextField), 'abc');
+    await tester.enterText(_composerField, 'abc');
     await tester.pump();
 
     expect(_field(tester).style?.fontSize, 24);
     expect(_publishButton(tester).onTap, isNotNull);
     expect(find.text('4997'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'a' * 121);
+    await tester.enterText(_composerField, 'a' * 121);
     await tester.pump();
     expect(_field(tester).style?.fontSize, 18);
 
@@ -84,7 +84,7 @@ void main() {
 
   testWidgets('a mégse megerősítést kér, ha van szöveg', (tester) async {
     await _openComposer(tester, ThemeMode.light);
-    await tester.enterText(find.byType(TextField), 'Piszkozat');
+    await tester.enterText(_composerField, 'Piszkozat');
     await tester.pump();
 
     await tester.tap(find.byTooltip('Mégse'));
@@ -116,7 +116,7 @@ void main() {
     tester,
   ) async {
     await _openComposer(tester, ThemeMode.light);
-    await tester.enterText(find.byType(TextField), 'Elértük az aranyat.');
+    await tester.enterText(_composerField, 'Elértük az aranyat.');
     await tester.pump();
     await tester.tap(find.text('Közzététel'));
     await tester.pump();
@@ -133,16 +133,16 @@ void main() {
     tester,
   ) async {
     await _openComposer(tester, ThemeMode.light);
-    await tester.enterText(find.byType(TextField), 'a' * 4500);
+    await tester.enterText(_composerField, 'a' * 4500);
     await tester.pump();
     expect(tester.widget<Text>(find.text('500')).style?.color, AppColors.gold);
 
-    await tester.enterText(find.byType(TextField), 'a' * 5001);
+    await tester.enterText(_composerField, 'a' * 5001);
     await tester.pump();
     final over = tester.widget<Text>(find.text('-1'));
     expect(
       over.style?.color,
-      Theme.of(tester.element(find.byType(TextField))).colorScheme.error,
+      Theme.of(tester.element(_composerField)).colorScheme.error,
     );
     expect(_publishButton(tester).onTap, isNull);
   });
@@ -216,8 +216,13 @@ PressScale _publishButton(WidgetTester tester) {
   );
 }
 
+final _composerField = find.descendant(
+  of: find.byKey(const Key('composer-sheet')),
+  matching: find.byType(TextField),
+);
+
 TextField _field(WidgetTester tester) {
-  return tester.widget<TextField>(find.byType(TextField));
+  return tester.widget<TextField>(_composerField);
 }
 
 class _Harness extends ConsumerWidget {

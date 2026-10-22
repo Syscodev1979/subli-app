@@ -26,7 +26,14 @@ void main() {
     expect(find.text('Minden bejegyzést láttál 🥋'), findsOneWidget);
     expect(find.text('Nézz vissza később a friss hírekért!'), findsOneWidget);
     expect(find.text('Hír'), findsWidgets);
-    expect(find.byTooltip('Keresés'), findsOneWidget);
+    expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('club-app-bar')),
+        matching: find.byIcon(Icons.search),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('a kategória és a keresés a lekérdezésbe kerül', (tester) async {
@@ -45,9 +52,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(category, PostCategory.training);
 
-    await tester.tap(find.byTooltip('Keresés'));
+    await tester.tap(find.byKey(const Key('feed-search')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'edzés holnap');
+    expect(find.text('Mégse'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('feed-search')),
+      'edzés holnap',
+    );
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
     expect(keyword, 'edzes');
