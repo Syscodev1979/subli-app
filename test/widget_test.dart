@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastroyal_karate_app/features/auth/data/auth_providers.dart';
 import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
 import 'package:gastroyal_karate_app/features/auth/domain/auth_session.dart';
@@ -41,8 +42,9 @@ void main() {
     await tester.tap(find.text('Mire gondolsz?'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Kitűzés'), findsOneWidget);
+    expect(find.byTooltip('Kitűzés'), findsOneWidget);
     expect(find.text('Közzététel'), findsOneWidget);
+    expect(find.text('Új bejegyzés'), findsOneWidget);
   });
 
   testWidgets('Kijelentkezve a bejelentkezés látszik', (tester) async {
@@ -54,6 +56,7 @@ void main() {
 }
 
 Future<void> _pumpApp(WidgetTester tester, AuthSession session) async {
+  SharedPreferences.setMockInitialValues({});
   await tester.pumpWidget(
     ProviderScope(
       overrides: [

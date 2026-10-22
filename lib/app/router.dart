@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,7 +60,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'new',
-            builder: (context, state) => const PostEditorScreen(),
+            pageBuilder: (context, state) {
+              return _composerPage(
+                key: state.pageKey,
+                child: PostEditorScreen(
+                  launch: switch (state.uri.queryParameters['media']) {
+                    'photo' => ComposerLaunch.photo,
+                    'video' => ComposerLaunch.video,
+                    'camera' => ComposerLaunch.camera,
+                    _ => null,
+                  },
+                ),
+              );
+            },
           ),
           GoRoute(
             path: ':postId',
@@ -69,9 +82,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: 'edit',
-                builder: (context, state) {
-                  return PostEditorScreen(
-                    postId: state.pathParameters['postId'],
+                pageBuilder: (context, state) {
+                  return _composerPage(
+                    key: state.pageKey,
+                    child: PostEditorScreen(
+                      postId: state.pathParameters['postId'],
+                    ),
                   );
                 },
               ),
@@ -101,3 +117,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+CustomTransitionPage<void> _composerPage({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return CustomTransitionPage<void>(
+    key: key,
+    opaque: false,
+    barrierDismissible: false,
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 340),
+    reverseTransitionDuration: const Duration(milliseconds: 240),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return child;
+    },
+    child: child,
+  );
+}
