@@ -55,10 +55,12 @@ class _MemberSearchScreenState extends ConsumerState<MemberSearchScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _openingId = null);
-      final message = error is FirebaseFunctionsException && error.message != null
+      final message =
+          error is FirebaseFunctionsException && error.message != null
           ? error.message!
           : 'Nem sikerült megnyitni a beszélgetést.';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -70,9 +72,7 @@ class _MemberSearchScreenState extends ConsumerState<MemberSearchScreen> {
 
     return Scaffold(
       backgroundColor: FeedPalette.background(context),
-      appBar: AppBar(
-        title: const Text('Új üzenet'),
-      ),
+      appBar: AppBar(title: const Text('Új üzenet')),
       body: Column(
         children: [
           Padding(
@@ -96,7 +96,8 @@ class _MemberSearchScreenState extends ConsumerState<MemberSearchScreen> {
           Expanded(
             child: members.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => const Center(child: Text('A taglista most nem tölthető be.')),
+              error: (error, _) =>
+                  const Center(child: Text('A taglista most nem tölthető be.')),
               data: (people) {
                 final visible = [
                   for (final person in people)
@@ -133,7 +134,11 @@ class _MemberSearchScreenState extends ConsumerState<MemberSearchScreen> {
   Widget _tile(ClubMember person) {
     final busy = _openingId == person.id;
     return ListTile(
-      leading: AuthorAvatar(name: person.name, photoUrl: person.photoUrl, radius: 22),
+      leading: AuthorAvatar(
+        name: person.name,
+        photoUrl: person.photoUrl,
+        radius: 22,
+      ),
       title: Text(
         person.name,
         style: const TextStyle(fontWeight: FontWeight.w700),
@@ -175,10 +180,9 @@ class _Section extends StatelessWidget {
 /// A tagkereső első szava, ékezet és kisbetű nélkül. Két betű alatt üres.
 String _searchToken(String query) {
   final folded = foldAccents(query.trim().toLowerCase());
-  final word = folded.split(RegExp(r'\s+')).firstWhere(
-    (part) => part.isNotEmpty,
-    orElse: () => '',
-  );
+  final word = folded
+      .split(RegExp(r'\s+'))
+      .firstWhere((part) => part.isNotEmpty, orElse: () => '');
   if (word.length < 2) return '';
   return word.length > 24 ? word.substring(0, 24) : word;
 }

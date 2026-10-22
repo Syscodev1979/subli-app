@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/constants.dart';
 import '../../feed/presentation/author_avatar.dart';
+import '../../profile/presentation/profile_navigation.dart';
 import '../../feed/presentation/feed_palette.dart';
 import '../domain/club_member.dart';
 
@@ -69,10 +70,7 @@ class ConversationTile extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  timeLabel,
-                  style: TextStyle(color: muted, fontSize: 12),
-                ),
+                Text(timeLabel, style: TextStyle(color: muted, fontSize: 12)),
                 if (unread) ...[
                   const SizedBox(height: 6),
                   Container(
@@ -102,11 +100,14 @@ class _Avatars extends StatelessWidget {
   Widget build(BuildContext context) {
     if (people.length <= 1) {
       final person = people.isEmpty ? null : people.first;
-      return AuthorAvatar(
+      final id = person?.id;
+      final avatar = AuthorAvatar(
         name: person?.name ?? '?',
         photoUrl: person?.photoUrl,
         radius: 26,
       );
+      if (id == null) return avatar;
+      return ProfileTap(userId: id, child: avatar);
     }
     final shown = people.take(3).toList();
     return SizedBox(
@@ -126,10 +127,13 @@ class _Avatars extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: AuthorAvatar(
-                  name: shown[index].name,
-                  photoUrl: shown[index].photoUrl,
-                  radius: 14,
+                child: ProfileTap(
+                  userId: shown[index].id,
+                  child: AuthorAvatar(
+                    name: shown[index].name,
+                    photoUrl: shown[index].photoUrl,
+                    radius: 14,
+                  ),
                 ),
               ),
             ),

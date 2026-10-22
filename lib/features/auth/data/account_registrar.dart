@@ -19,6 +19,7 @@ class AccountRegistrar {
     required UserRole role,
     DateTime? birthDate,
     List<ChildRequest> childRequests = const [],
+    String? requestedRole,
   }) async {
     final account = await _auth.createAccount(email: email, password: password);
     try {
@@ -35,6 +36,7 @@ class AccountRegistrar {
           parentIds: const [],
           childRequests: childRequests,
           createdAt: DateTime.now(),
+          requestedRole: requestedRole,
         ),
       );
     } catch (error) {

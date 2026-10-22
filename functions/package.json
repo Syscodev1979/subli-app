@@ -6,7 +6,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "node --test test/conversation.test.js"
+    "test": "node --test test/*.js"
   },
   "dependencies": {
     "firebase-admin": "^13.6.0",

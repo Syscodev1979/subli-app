@@ -16,6 +16,8 @@ class AppUser {
     required this.parentIds,
     required this.childRequests,
     required this.createdAt,
+    this.beltRank,
+    this.requestedRole,
   });
 
   final String id;
@@ -31,4 +33,12 @@ class AppUser {
   /// Szülő regisztrációjakor megadott gyermekek. Az összekapcsolást edző végzi.
   final List<ChildRequest> childRequests;
   final DateTime createdAt;
+
+  /// Övfokozat kulcsa, például `kyu5`. Csak edző és admin írhatja.
+  final String? beltRank;
+
+  /// Jelentkezéskor kért szerep. Jelenleg csak `coach` lehet, és csak létrehozáskor.
+  final String? requestedRole;
+
+  bool get requestedCoach => requestedRole == 'coach';
 }

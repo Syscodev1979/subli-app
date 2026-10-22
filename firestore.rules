@@ -60,7 +60,26 @@ service cloud.firestore {
         'parentIds',
         'childRequests',
         'createdAt',
+        'beltRank',
+        'requestedRole',
       ]);
+    }
+
+    function validBeltRank(value) {
+      return value == null || value in [
+        'kyu10', 'kyu9', 'kyu8', 'kyu7', 'kyu6',
+        'kyu5', 'kyu4', 'kyu3', 'kyu2', 'kyu1',
+        'dan1', 'dan2', 'dan3', 'dan4', 'dan5',
+        'dan6', 'dan7', 'dan8', 'dan9', 'dan10',
+      ];
+    }
+
+    function validRequestedRole(data) {
+      return data.get('requestedRole', null) == null
+        || (
+          data.get('requestedRole', null) == 'coach'
+          && data.get('role', null) == 'athlete'
+        );
     }
 
     // Edző csak sportoló vagy szülő fiókot hagyhat jóvá és kapcsolhat össze.
@@ -76,7 +95,21 @@ service cloud.firestore {
         && unchanged('birthDate')
         && unchanged('photoUrl')
         && unchanged('createdAt')
-        && unchanged('childRequests');
+        && unchanged('childRequests')
+        && unchanged('requestedRole')
+        && resource.data.get('requestedRole', null) != 'coach'
+        && validBeltRank(request.resource.data.get('beltRank', null));
+    }
+
+    // A szülő a gyermeke dokumentumában csak a profilképet cserélheti.
+    function parentMayUpdatePhoto() {
+      return isActiveRole('parent')
+        && request.auth.uid in resource.data.get('parentIds', [])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoUrl'])
+        && (
+          request.resource.data.get('photoUrl', null) == null
+          || request.resource.data.get('photoUrl', null) is string
+        );
     }
 
     // A saját dokumentumban a szerep, az állapot és a kapcsolatok nem írhatók.
@@ -88,6 +121,11 @@ service cloud.firestore {
         && unchanged('parentIds')
         && unchanged('id')
         && unchanged('email')
+        && unchanged('beltRank')
+        && unchanged('requestedRole')
+        && request.resource.data.get('name', '') is string
+        && request.resource.data.get('name', '').size() >= 2
+        && request.resource.data.get('name', '').size() <= 120
         && (
           resource.data.get('status', null) == 'pending'
           || unchanged('birthDate')
@@ -111,6 +149,8 @@ service cloud.firestore {
         && data.get('email', null) is string
         && data.get('email', null) == request.auth.token.email
         && data.get('createdAt', null) is timestamp
+        && data.get('beltRank', null) == null
+        && validRequestedRole(data)
         && (
           data.get('role', null) == 'parent'
           || data.get('birthDate', null) is timestamp
@@ -121,9 +161,17 @@ service cloud.firestore {
       return callerExists() && caller().get('status', null) == 'active';
     }
 
-    function mediaItemOk(item) {
-      return item is map
-        && item.keys().hasOnly([
+    function officeMime(mime) {
+      return mime == 'application/msword'
+        || mime == 'application/vnd.ms-excel'
+        || mime == 'application/vnd.ms-powerpoint'
+        || mime == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        || mime == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        || mime == 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    }
+
+    function visualMediaOk(item) {
+      return item.keys().hasOnly([
           'type', 'url', 'thumbUrl', 'width', 'height', 'durationSec',
         ])
         && item.get('type', null) in ['image', 'video']
@@ -153,8 +201,22 @@ service cloud.firestore {
         );
     }
 
+    // A kifejezéshatár miatt a fájlnév, a méret és a típus ellenőrzése tömör.
+    // A letöltési cím hosszát a kliens és a Storage szabály tartja kordában.
+    function documentMediaOk(item) {
+      return item.get('name', '').size() > 0
+        && item.get('sizeBytes', 0) > 0
+        && item.get('sizeBytes', 0) <= 20971520
+        && (
+          item.get('mimeType', '') == 'application/pdf'
+          || officeMime(item.get('mimeType', ''))
+        );
+    }
+
     function mediaIndexOk(media, index) {
-      return index >= media.size() || mediaItemOk(media[index]);
+      return index >= media.size()
+        || media[index].get('type', null) == 'document' && documentMediaOk(media[index])
+        || media[index].get('type', null) != 'document' && visualMediaOk(media[index]);
     }
 
     function isVideoAt(media, index) {
@@ -162,19 +224,14 @@ service cloud.firestore {
         && media[index].get('type', null) == 'video';
     }
 
+    function isDocumentAt(media, index) {
+      return index < media.size()
+        && media[index].get('type', null) == 'document';
+    }
+
     function validMediaList(media) {
       return media is list
         && media.size() <= 10
-        && mediaIndexOk(media, 0)
-        && mediaIndexOk(media, 1)
-        && mediaIndexOk(media, 2)
-        && mediaIndexOk(media, 3)
-        && mediaIndexOk(media, 4)
-        && mediaIndexOk(media, 5)
-        && mediaIndexOk(media, 6)
-        && mediaIndexOk(media, 7)
-        && mediaIndexOk(media, 8)
-        && mediaIndexOk(media, 9)
         && (
           (isVideoAt(media, 0) ? 1 : 0)
           + (isVideoAt(media, 1) ? 1 : 0)
@@ -186,7 +243,29 @@ service cloud.firestore {
           + (isVideoAt(media, 7) ? 1 : 0)
           + (isVideoAt(media, 8) ? 1 : 0)
           + (isVideoAt(media, 9) ? 1 : 0)
-        ) <= 1;
+        ) <= 1
+        && (
+          (isDocumentAt(media, 0) ? 1 : 0)
+          + (isDocumentAt(media, 1) ? 1 : 0)
+          + (isDocumentAt(media, 2) ? 1 : 0)
+          + (isDocumentAt(media, 3) ? 1 : 0)
+          + (isDocumentAt(media, 4) ? 1 : 0)
+          + (isDocumentAt(media, 5) ? 1 : 0)
+          + (isDocumentAt(media, 6) ? 1 : 0)
+          + (isDocumentAt(media, 7) ? 1 : 0)
+          + (isDocumentAt(media, 8) ? 1 : 0)
+          + (isDocumentAt(media, 9) ? 1 : 0)
+        ) <= 5
+        && mediaIndexOk(media, 0)
+        && mediaIndexOk(media, 1)
+        && mediaIndexOk(media, 2)
+        && mediaIndexOk(media, 3)
+        && mediaIndexOk(media, 4)
+        && mediaIndexOk(media, 5)
+        && mediaIndexOk(media, 6)
+        && mediaIndexOk(media, 7)
+        && mediaIndexOk(media, 8)
+        && mediaIndexOk(media, 9);
     }
 
     function validPostShape() {
@@ -275,6 +354,7 @@ service cloud.firestore {
       // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat.
       allow update: if isAdmin()
         || coachMayUpdate()
+        || parentMayUpdatePhoto()
         || (isSelf(userId) && hasAllowedKeys() && protectedFieldsUnchanged());
 
       allow delete: if false;
@@ -290,11 +370,11 @@ service cloud.firestore {
       // A szerző az authorId-t és a createdAt-et nem írhatja. Admin bármit,
       // ami az engedélyezett mezők között marad.
       allow update: if validPostShape()
+        && isActive()
         && (
-          isAdmin()
+          caller().get('role', null) == 'admin'
           || (
-            isActive()
-            && resource.data.get('authorId', null) == request.auth.uid
+            resource.data.get('authorId', null) == request.auth.uid
             && unchanged('authorId')
             && unchanged('createdAt')
           )

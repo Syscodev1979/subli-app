@@ -9,6 +9,7 @@ class ClubMember {
     required this.role,
     required this.isMinor,
     required this.parentIds,
+    this.beltRank,
   });
 
   final String id;
@@ -17,6 +18,7 @@ class ClubMember {
   final UserRole role;
   final bool isMinor;
   final List<String> parentIds;
+  final String? beltRank;
 
   /// A tagkereső címkéje.
   String get roleLabel => switch (role) {

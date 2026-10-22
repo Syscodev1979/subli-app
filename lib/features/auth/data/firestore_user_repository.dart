@@ -62,6 +62,7 @@ class FirestoreUserRepository implements UserRepository {
       'status': UserStatus.active.value,
       if (assignedRole != null) 'role': assignedRole.value,
       if (resultingRole == UserRole.parent) 'childIds': linkedChildIds,
+      'requestedRole': FieldValue.delete(),
     });
     for (final childId in linkedChildIds) {
       batch.update(_users.doc(childId), {
@@ -74,5 +75,39 @@ class FirestoreUserRepository implements UserRepository {
   @override
   Future<void> rejectUser(String userId) {
     return _users.doc(userId).update({'status': UserStatus.rejected.value});
+  }
+
+  @override
+  Future<void> updateOwnProfile({
+    required String userId,
+    String? name,
+    DateTime? birthDate,
+    String? photoUrl,
+    bool clearPhoto = false,
+  }) {
+    return _users.doc(userId).update({
+      if (name != null) 'name': name.trim(),
+      if (birthDate != null) 'birthDate': Timestamp.fromDate(birthDate),
+      if (clearPhoto) 'photoUrl': null,
+      if (!clearPhoto && photoUrl != null) 'photoUrl': photoUrl,
+    });
+  }
+
+  @override
+  Future<void> updatePhotoUrl({
+    required String userId,
+    required String? photoUrl,
+  }) {
+    return _users.doc(userId).update({'photoUrl': photoUrl});
+  }
+
+  @override
+  Future<void> setBeltRank({
+    required String userId,
+    required String? beltRank,
+  }) {
+    return _users.doc(userId).update({
+      'beltRank': beltRank ?? FieldValue.delete(),
+    });
   }
 }

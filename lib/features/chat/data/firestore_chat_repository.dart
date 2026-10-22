@@ -32,9 +32,7 @@ class FirestoreChatRepository implements ChatRepository {
         .orderBy('updatedAt', descending: true)
         .snapshots()
         .map(
-          (snapshot) => [
-            for (final doc in snapshot.docs) _conversation(doc),
-          ],
+          (snapshot) => [for (final doc in snapshot.docs) _conversation(doc)],
         );
   }
 
@@ -48,9 +46,7 @@ class FirestoreChatRepository implements ChatRepository {
           .orderBy('name');
     }
     return query.snapshots().map(
-      (snapshot) => [
-        for (final doc in snapshot.docs) ?_member(doc),
-      ],
+      (snapshot) => [for (final doc in snapshot.docs) ?_member(doc)],
     );
   }
 
@@ -64,15 +60,14 @@ class FirestoreChatRepository implements ChatRepository {
         .limit(limit)
         .snapshots()
         .map((snapshot) {
-          final messages = [
-            for (final doc in snapshot.docs) _message(doc),
-          ];
+          final messages = [for (final doc in snapshot.docs) _message(doc)];
           return messages.reversed.toList();
         });
   }
 
   @override
-  String newMessageId(String conversationId) => _messages(conversationId).doc().id;
+  String newMessageId(String conversationId) =>
+      _messages(conversationId).doc().id;
 
   @override
   Future<String> startConversation(String otherId) async {
@@ -106,17 +101,13 @@ class FirestoreChatRepository implements ChatRepository {
     required String conversationId,
     required String messageId,
   }) {
-    return _messages(conversationId).doc(messageId).update({
-      'deleted': true,
-      'text': '',
-    });
+    return _messages(conversationId)
+        .doc(messageId)
+        .update({'deleted': true, 'text': ''});
   }
 
   @override
-  Future<void> markRead({
-    required String conversationId,
-    required String uid,
-  }) {
+  Future<void> markRead({required String conversationId, required String uid}) {
     return _conversations.doc(conversationId).update({
       'lastReadAt.$uid': FieldValue.serverTimestamp(),
     });
@@ -127,7 +118,9 @@ class FirestoreChatRepository implements ChatRepository {
     final result = await _functions.httpsCallable('backfillMembers').call();
     final data = result.data;
     if (data is Map && data['count'] is int) return data['count'] as int;
-    if (data is Map && data['count'] is num) return (data['count'] as num).toInt();
+    if (data is Map && data['count'] is num) {
+      return (data['count'] as num).toInt();
+    }
     return 0;
   }
 
@@ -171,6 +164,7 @@ class FirestoreChatRepository implements ChatRepository {
       role: role,
       isMinor: data['isMinor'] == true,
       parentIds: _strings(data['parentIds']),
+      beltRank: data['beltRank'] is String ? data['beltRank'] as String : null,
     );
   }
 
@@ -195,7 +189,10 @@ class FirestoreChatRepository implements ChatRepository {
 
   List<String> _strings(Object? raw) {
     if (raw is! List) return const [];
-    return [for (final item in raw) if (item is String) item];
+    return [
+      for (final item in raw)
+        if (item is String) item,
+    ];
   }
 
   Map<String, DateTime> _readMap(Object? raw) {

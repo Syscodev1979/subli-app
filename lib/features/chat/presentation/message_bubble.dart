@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/constants.dart';
 import '../../feed/presentation/author_avatar.dart';
+import '../../profile/presentation/profile_navigation.dart';
 import '../../feed/presentation/feed_palette.dart';
 import '../domain/chat_message.dart';
 import '../domain/club_member.dart';
@@ -47,11 +48,7 @@ class MessageBubble extends StatelessWidget {
     );
     final showAvatar = !mine && !groupedBelow;
     return Padding(
-      padding: EdgeInsets.only(
-        top: groupedAbove ? 2 : 8,
-        left: 12,
-        right: 12,
-      ),
+      padding: EdgeInsets.only(top: groupedAbove ? 2 : 8, left: 12, right: 12),
       child: Column(
         crossAxisAlignment: mine
             ? CrossAxisAlignment.end
@@ -67,10 +64,13 @@ class MessageBubble extends StatelessWidget {
                 SizedBox(
                   width: 28,
                   child: showAvatar
-                      ? AuthorAvatar(
-                          name: author?.name ?? '?',
-                          photoUrl: author?.photoUrl,
-                          radius: 12,
+                      ? ProfileTap(
+                          userId: message.senderId,
+                          child: AuthorAvatar(
+                            name: author?.name ?? '?',
+                            photoUrl: author?.photoUrl,
+                            radius: 12,
+                          ),
                         )
                       : null,
                 ),
@@ -109,10 +109,13 @@ class MessageBubble extends StatelessWidget {
                     for (final person in seenBy.take(4))
                       Padding(
                         padding: const EdgeInsets.only(left: 2),
-                        child: AuthorAvatar(
-                          name: person.name,
-                          photoUrl: person.photoUrl,
-                          radius: 8,
+                        child: ProfileTap(
+                          userId: person.id,
+                          child: AuthorAvatar(
+                            name: person.name,
+                            photoUrl: person.photoUrl,
+                            radius: 8,
+                          ),
                         ),
                       ),
                   ],
@@ -196,7 +199,9 @@ class _Bubble extends StatelessWidget {
         ? BoxDecoration(
             color: Colors.transparent,
             borderRadius: radius,
-            border: Border.all(color: FeedPalette.muted(context).withValues(alpha: 0.4)),
+            border: Border.all(
+              color: FeedPalette.muted(context).withValues(alpha: 0.4),
+            ),
           )
         : mine
         ? BoxDecoration(

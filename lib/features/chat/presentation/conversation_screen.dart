@@ -63,7 +63,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     if (_scroll.position.pixels <= 80 && _showNew) {
       setState(() => _showNew = false);
     }
-    final nearTop = _scroll.position.pixels >= _scroll.position.maxScrollExtent - 240;
+    final nearTop =
+        _scroll.position.pixels >= _scroll.position.maxScrollExtent - 240;
     if (nearTop && !_loadingOlder) {
       _loadingOlder = true;
       setState(() => _limit += 30);
@@ -135,10 +136,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       return;
     }
     try {
-      await ref.read(chatRepositoryProvider).deleteMessage(
-        conversationId: widget.conversationId,
-        messageId: message.id,
-      );
+      await ref
+          .read(chatRepositoryProvider)
+          .deleteMessage(
+            conversationId: widget.conversationId,
+            messageId: message.id,
+          );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,9 +188,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final myRole = session is AuthSignedIn ? session.user.role : null;
     final query = (id: widget.conversationId, limit: _limit);
     final messagesState = ref.watch(messagesProvider(query));
-    final conversations = ref.watch(conversationsProvider).asData?.value ?? const [];
+    final conversations =
+        ref.watch(conversationsProvider).asData?.value ?? const [];
     final members = {
-      for (final member in ref.watch(membersProvider('')).asData?.value ?? const <ClubMember>[])
+      for (final member
+          in ref.watch(membersProvider('')).asData?.value ??
+              const <ClubMember>[])
         member.id: member,
     };
     final conversation = conversations
@@ -216,10 +222,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       }
       if (_atBottom && myId.isNotEmpty) {
         unawaited(
-          ref.read(chatRepositoryProvider).markRead(
-            conversationId: widget.conversationId,
-            uid: myId,
-          ).catchError((_) {}),
+          ref
+              .read(chatRepositoryProvider)
+              .markRead(conversationId: widget.conversationId, uid: myId)
+              .catchError((_) {}),
         );
       }
     });
@@ -235,7 +241,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final notice = conversation == null
         ? null
         : guardianNotice(conversation, myId, members);
-    final coachPresent = conversation != null &&
+    final coachPresent =
+        conversation != null &&
         conversation.memberIds.any((id) => members[id]?.role == UserRole.coach);
     final showTemplates = showsQuickReplies(myRole, coachPresent);
 
@@ -265,7 +272,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           Expanded(
             child: messagesState.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => const Center(child: Text('Az üzenetek most nem tölthetők be.')),
+              error: (error, _) => const Center(
+                child: Text('Az üzenetek most nem tölthetők be.'),
+              ),
               data: (_) => Stack(
                 children: [
                   _Thread(
@@ -275,7 +284,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                     conversation: conversation,
                     members: members,
                     onLongPress: _ownMenu,
-                    onRetry: (message) => _send(message.text, messageId: message.id),
+                    onRetry: (message) =>
+                        _send(message.text, messageId: message.id),
                   ),
                   if (_showNew)
                     Positioned(
@@ -342,7 +352,8 @@ class _Header extends StatelessWidget {
     final group = conversation.isGroup && others.length > 1;
     return Row(
       children: [
-        if (others.isNotEmpty) _HeaderFaces(people: group ? others : others.take(1).toList()),
+        if (others.isNotEmpty)
+          _HeaderFaces(people: group ? others : others.take(1).toList()),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -352,7 +363,10 @@ class _Header extends StatelessWidget {
                 conversationTitle(conversation, myId, members),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 conversationSubtitle(conversation, myId, members),
@@ -483,13 +497,16 @@ class _Thread extends StatelessWidget {
           author: members[message.senderId],
           receipt: receipt?.label,
           seenBy: receipt?.seenBy ?? const [],
-          onLongPress: mine && !message.deleted ? () => onLongPress(message) : null,
+          onLongPress: mine && !message.deleted
+              ? () => onLongPress(message)
+              : null,
           onRetry: message.delivery == MessageDelivery.failed
               ? () => onRetry(message)
               : null,
         ),
       );
-      final dayChanges = older == null || !_sameDay(message.createdAt, older.createdAt);
+      final dayChanges =
+          older == null || !_sameDay(message.createdAt, older.createdAt);
       if (dayChanges) {
         children.add(_DayLabel(chatDayLabel(message.createdAt, now)));
       }
@@ -618,5 +635,7 @@ bool _sameRun(ChatMessage a, ChatMessage b) {
 bool _sameDay(DateTime a, DateTime b) {
   final left = a.toLocal();
   final right = b.toLocal();
-  return left.year == right.year && left.month == right.month && left.day == right.day;
+  return left.year == right.year &&
+      left.month == right.month &&
+      left.day == right.day;
 }

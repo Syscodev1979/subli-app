@@ -36,6 +36,26 @@ service firebase.storage {
         );
     }
 
+    function isApprovedParent(userId) {
+      return activeUser()
+        && firestore.get(userPath()).data.role == 'parent'
+        && request.auth.uid in firestore.get(/databases/(default)/documents/users/$(userId)).data.get('parentIds', []);
+    }
+
+    function allowedDocument() {
+      return request.resource != null
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-powerpoint',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        ];
+    }
+
     function allowedUpload() {
       return request.resource != null
         && (
@@ -48,6 +68,28 @@ service firebase.storage {
             && request.resource.size <= 100 * 1024 * 1024
           )
         );
+    }
+
+    match /users/{userId}/avatar.jpg {
+      allow read: if activeUser();
+      allow create, update: if request.resource != null
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size <= 5 * 1024 * 1024
+        && (
+          isAdmin()
+          || request.auth.uid == userId
+          || isApprovedParent(userId)
+        );
+      allow delete: if isAdmin()
+        || request.auth.uid == userId
+        || isApprovedParent(userId);
+    }
+
+    match /posts/{postId}/docs/{fileName} {
+      allow read: if activeUser();
+      allow create, update: if allowedDocument()
+        && (isAdmin() || coachMayWritePost(postId));
+      allow delete: if activeUser() && (isAdmin() || isPostAuthor(postId));
     }
 
     match /posts/{postId}/{fileName} {

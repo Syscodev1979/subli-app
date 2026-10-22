@@ -13,7 +13,7 @@ import {
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
-import { deleteObject, getBytes, ref, uploadString } from "firebase/storage";
+import { deleteObject, getBytes, ref, uploadBytes, uploadString } from "firebase/storage";
 
 const projectId = "demo-gastroyal-rules";
 const createdAt = Timestamp.fromDate(new Date("2026-01-15T10:00:00Z"));
@@ -911,5 +911,206 @@ test("a saját reakció cserélhető, idegenét más sportoló nem törli", asyn
     deleteDoc(
       doc(coach.firestore(), "posts", "post-1", "reactions", "athlete1"),
     ),
+  );
+});
+
+function documentItem(name, mime, sizeBytes) {
+  return {
+    type: "document",
+    url: `https://example.com/${name}`,
+    name,
+    sizeBytes,
+    mimeType: mime,
+  };
+}
+
+test("sportoló nem írhatja a saját beltRank-ját", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      status: "active",
+    }),
+  });
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(
+    updateDoc(doc(athlete.firestore(), "users", "athlete1"), {
+      beltRank: "kyu5",
+    }),
+  );
+});
+
+test("szülő a gyereke photoUrl-jét módosíthatja, más mezőjét nem", async () => {
+  await seed({
+    parent1: userDoc({
+      id: "parent1",
+      email: "parent@example.com",
+      role: "parent",
+      status: "active",
+      birthDate: null,
+      childIds: ["child1"],
+    }),
+    child1: userDoc({
+      id: "child1",
+      email: "child@example.com",
+      status: "active",
+      parentIds: ["parent1"],
+    }),
+  });
+  const parent = testEnv.authenticatedContext("parent1", {
+    email: "parent@example.com",
+  });
+  await assertSucceeds(
+    updateDoc(doc(parent.firestore(), "users", "child1"), {
+      photoUrl: "https://example.com/avatar.jpg",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(parent.firestore(), "users", "child1"), {
+      name: "Más név",
+    }),
+  );
+});
+
+test("idegen nem tölthet fel más profilképét", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      email: "athlete2@example.com",
+      status: "active",
+    }),
+  });
+  const other = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(
+    uploadString(ref(other.storage(), "users/athlete1/avatar.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+  const owner = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertSucceeds(
+    uploadString(ref(owner.storage(), "users/athlete1/avatar.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+});
+
+test("edző nem hagyhat jóvá edzőjelentkezést", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    applicant: userDoc({
+      id: "applicant",
+      email: "coach-applicant@example.com",
+      role: "athlete",
+      status: "pending",
+      requestedRole: "coach",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    updateDoc(doc(coach.firestore(), "users", "applicant"), {
+      status: "active",
+      role: "coach",
+    }),
+  );
+});
+
+test("requestedRole más értékkel elutasítva", async () => {
+  const uid = "new-coach";
+  const user = testEnv.authenticatedContext(uid, { email: "uj@example.com" });
+  await assertFails(
+    setDoc(
+      doc(user.firestore(), "users", uid),
+      userDoc({
+        id: uid,
+        email: "uj@example.com",
+        requestedRole: "admin",
+      }),
+    ),
+  );
+  await assertSucceeds(
+    setDoc(
+      doc(user.firestore(), "users", uid),
+      userDoc({
+        id: uid,
+        email: "uj@example.com",
+        requestedRole: "coach",
+      }),
+    ),
+  );
+});
+
+test("nem engedélyezett dokumentumtípus és 20 MB feletti dokumentum elutasítva", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    uploadString(ref(coach.storage(), "posts/post-1/docs/jegyzet.txt"), "x", "raw", {
+      contentType: "text/plain",
+    }),
+  );
+  await assertFails(
+    uploadBytes(
+      ref(coach.storage(), "posts/post-1/docs/nagy.pdf"),
+      new Uint8Array(20 * 1024 * 1024 + 1),
+      { contentType: "application/pdf" },
+    ),
+  );
+  await assertSucceeds(
+    uploadString(ref(coach.storage(), "posts/post-1/docs/oklevel.pdf"), "%PDF", "raw", {
+      contentType: "application/pdf",
+    }),
+  );
+});
+
+test("a hatodik dokumentum elutasítva", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  await seedDoc(["posts", "post-1"], postDoc());
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  const documents = [1, 2, 3, 4, 5, 6].map((index) =>
+    documentItem(`file-${index}.pdf`, "application/pdf", 1000),
+  );
+  await assertFails(
+    updateDoc(doc(coach.firestore(), "posts", "post-1"), { media: documents }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(coach.firestore(), "posts", "post-1"), {
+      media: documents.slice(0, 5),
+    }),
   );
 });

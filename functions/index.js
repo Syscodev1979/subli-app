@@ -10,6 +10,7 @@ const {
   addParents,
   nameKeywords,
 } = require("./conversation-logic");
+const { authorPropagationPlan, chunk } = require("./profile-sync");
 
 setGlobalOptions({ region: "europe-west3" });
 initializeApp();
@@ -53,7 +54,24 @@ function memberFromUser(id, data, today) {
     parentIds: person.parentIds,
     searchKeywords: nameKeywords(typeof data.name === "string" ? data.name : ""),
     status: "active",
+    beltRank: typeof data.beltRank === "string" && data.beltRank ? data.beltRank : null,
   };
+}
+
+async function propagateAuthor(uid, plan) {
+  const posts = await db.collection("posts").where("authorId", "==", uid).get();
+  const comments = await db.collectionGroup("comments").where("authorId", "==", uid).get();
+  const docs = [...posts.docs, ...comments.docs];
+  for (const group of chunk(docs, 500)) {
+    const batch = db.batch();
+    for (const doc of group) {
+      batch.update(doc.ref, {
+        authorName: plan.authorName,
+        authorPhotoUrl: plan.authorPhotoUrl,
+      });
+    }
+    await batch.commit();
+  }
 }
 
 async function activeParents(parentIds, today) {
@@ -90,6 +108,9 @@ exports.syncMember = onDocumentWritten("users/{uid}", async (event) => {
   } else {
     await memberRef.set(memberFromUser(uid, after, today));
   }
+
+  const plan = authorPropagationPlan(before, after);
+  if (plan) await propagateAuthor(uid, plan);
 
   if (!after || !isMinor(personFromUser(uid, after, today), today)) return;
   const previous = new Set(Array.isArray(before?.parentIds) ? before.parentIds : []);

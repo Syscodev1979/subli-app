@@ -16,5 +16,6 @@ String? validatePassword(String? value) {
 String? validateName(String? value) {
   final name = value?.trim() ?? '';
   if (name.length < 2) return 'Add meg a teljes nevet.';
+  if (name.length > 120) return 'A név legfeljebb 120 karakter lehet.';
   return null;
 }

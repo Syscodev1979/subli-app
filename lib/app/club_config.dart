@@ -1,5 +1,246 @@
-/// A klub megjelenéséhez tartozó, kódban rögzített értékek.
+import 'package:flutter/material.dart';
+
+/// A klub megjelenéséhez és szabályaihoz tartozó, kódban rögzített értékek.
+///
+/// Az övfokozatok és a dokumentumtípusok itt cserélhetők, ha a klub mást használ.
 abstract final class ClubConfig {
   /// A fejléc logója. Nagy felbontású kép, a felület kicsire méretezi.
   static const String logoAsset = 'assets/images/logo.png';
+
+  static const int avatarSize = 512;
+  static const int avatarQuality = 85;
+  static const int maxAvatarBytes = 5 * 1024 * 1024;
+  static const int maxDocumentBytes = 20 * 1024 * 1024;
+  static const int maxDocumentsPerPost = 5;
+
+  /// 10. kyu-tól 1. kyu-ig, majd 1. dan-tól 10. dan-ig.
+  ///
+  /// A színek egy szokásos magyar kyu-skála szerint vannak, és szabadon
+  /// átírhatók. A felirat mindig „5. kyu – kék öv” alakú.
+  static const List<BeltGrade> belts = [
+    BeltGrade(
+      key: 'kyu10',
+      label: '10. kyu',
+      beltName: 'fehér öv',
+      color: Color(0xFFF4F1F2),
+    ),
+    BeltGrade(
+      key: 'kyu9',
+      label: '9. kyu',
+      beltName: 'fehér-sárga öv',
+      color: Color(0xFFF4F1F2),
+      stripe: Color(0xFFF2C200),
+    ),
+    BeltGrade(
+      key: 'kyu8',
+      label: '8. kyu',
+      beltName: 'sárga öv',
+      color: Color(0xFFF2C200),
+    ),
+    BeltGrade(
+      key: 'kyu7',
+      label: '7. kyu',
+      beltName: 'narancssárga öv',
+      color: Color(0xFFF08A24),
+    ),
+    BeltGrade(
+      key: 'kyu6',
+      label: '6. kyu',
+      beltName: 'zöld öv',
+      color: Color(0xFF2E7D32),
+    ),
+    BeltGrade(
+      key: 'kyu5',
+      label: '5. kyu',
+      beltName: 'kék öv',
+      color: Color(0xFF1F6FEB),
+    ),
+    BeltGrade(
+      key: 'kyu4',
+      label: '4. kyu',
+      beltName: 'lila öv',
+      color: Color(0xFF7B4B9A),
+    ),
+    BeltGrade(
+      key: 'kyu3',
+      label: '3. kyu',
+      beltName: 'barna öv',
+      color: Color(0xFF8D5A32),
+    ),
+    BeltGrade(
+      key: 'kyu2',
+      label: '2. kyu',
+      beltName: 'barna öv',
+      color: Color(0xFF6B3E22),
+    ),
+    BeltGrade(
+      key: 'kyu1',
+      label: '1. kyu',
+      beltName: 'barna öv',
+      color: Color(0xFF4A2A16),
+    ),
+    BeltGrade(
+      key: 'dan1',
+      label: '1. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan2',
+      label: '2. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan3',
+      label: '3. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan4',
+      label: '4. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan5',
+      label: '5. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan6',
+      label: '6. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan7',
+      label: '7. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan8',
+      label: '8. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan9',
+      label: '9. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+    BeltGrade(
+      key: 'dan10',
+      label: '10. dan',
+      beltName: 'fekete öv',
+      color: Color(0xFF1C1B1F),
+    ),
+  ];
+
+  static BeltGrade? beltByKey(String? key) {
+    if (key == null || key.isEmpty) return null;
+    for (final belt in belts) {
+      if (belt.key == key) return belt;
+    }
+    return null;
+  }
+
+  static const List<ClubDocumentType> documentTypes = [
+    ClubDocumentType(
+      extension: 'pdf',
+      mimeType: 'application/pdf',
+      kind: DocumentKind.pdf,
+    ),
+    ClubDocumentType(
+      extension: 'doc',
+      mimeType: 'application/msword',
+      kind: DocumentKind.word,
+    ),
+    ClubDocumentType(
+      extension: 'docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      kind: DocumentKind.word,
+    ),
+    ClubDocumentType(
+      extension: 'xls',
+      mimeType: 'application/vnd.ms-excel',
+      kind: DocumentKind.excel,
+    ),
+    ClubDocumentType(
+      extension: 'xlsx',
+      mimeType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      kind: DocumentKind.excel,
+    ),
+    ClubDocumentType(
+      extension: 'ppt',
+      mimeType: 'application/vnd.ms-powerpoint',
+      kind: DocumentKind.powerpoint,
+    ),
+    ClubDocumentType(
+      extension: 'pptx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      kind: DocumentKind.powerpoint,
+    ),
+  ];
+
+  static List<String> get documentExtensions => [
+    for (final type in documentTypes) type.extension,
+  ];
+
+  static ClubDocumentType? documentTypeForName(String name) {
+    final dot = name.lastIndexOf('.');
+    if (dot < 0 || dot == name.length - 1) return null;
+    final extension = name.substring(dot + 1).toLowerCase();
+    for (final type in documentTypes) {
+      if (type.extension == extension) return type;
+    }
+    return null;
+  }
+
+  static ClubDocumentType? documentTypeForMime(String? mimeType) {
+    if (mimeType == null || mimeType.isEmpty) return null;
+    for (final type in documentTypes) {
+      if (type.mimeType == mimeType) return type;
+    }
+    return null;
+  }
+}
+
+/// Egy övfokozat. A [key] kerül a `users.beltRank` mezőbe.
+class BeltGrade {
+  const BeltGrade({
+    required this.key,
+    required this.label,
+    required this.beltName,
+    required this.color,
+    this.stripe,
+  });
+
+  final String key;
+  final String label;
+  final String beltName;
+  final Color color;
+  final Color? stripe;
+
+  /// Például „5. kyu – kék öv”.
+  String get caption => '$label – $beltName';
+}
+
+enum DocumentKind { pdf, word, excel, powerpoint }
+
+class ClubDocumentType {
+  const ClubDocumentType({
+    required this.extension,
+    required this.mimeType,
+    required this.kind,
+  });
+
+  final String extension;
+  final String mimeType;
+  final DocumentKind kind;
 }

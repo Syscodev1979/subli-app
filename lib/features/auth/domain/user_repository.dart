@@ -23,4 +23,22 @@ abstract class UserRepository {
   });
 
   Future<void> rejectUser(String userId);
+
+  /// Név, születési dátum vagy profilkép. Csak a megadott mezők íródnak.
+  Future<void> updateOwnProfile({
+    required String userId,
+    String? name,
+    DateTime? birthDate,
+    String? photoUrl,
+    bool clearPhoto = false,
+  });
+
+  /// Gyermek profilképe. A szülő más mezőt nem írhat.
+  Future<void> updatePhotoUrl({
+    required String userId,
+    required String? photoUrl,
+  });
+
+  /// Övfokozat. A [beltRank] null törli a mezőt.
+  Future<void> setBeltRank({required String userId, required String? beltRank});
 }

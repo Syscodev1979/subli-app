@@ -29,6 +29,8 @@ class AppUserMapper {
           )
           .toList(),
       'createdAt': Timestamp.fromDate(user.createdAt),
+      if (user.beltRank != null) 'beltRank': user.beltRank,
+      if (user.requestedRole != null) 'requestedRole': user.requestedRole,
     };
   }
 
@@ -50,6 +52,10 @@ class AppUserMapper {
       childRequests: _childRequests(data['childRequests']),
       createdAt:
           _date(data['createdAt']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      beltRank: data['beltRank'] is String ? data['beltRank'] as String : null,
+      requestedRole: data['requestedRole'] is String
+          ? data['requestedRole'] as String
+          : null,
     );
   }
 

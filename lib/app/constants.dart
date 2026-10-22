@@ -120,6 +120,8 @@ abstract final class AppRoutes {
 
   static String conversation(String id) => '/chat/$id';
   static const String profile = '/profile';
+
+  static String member(String id) => '/members/$id';
   static const String calendar = '/calendar';
   static const String admin = '/admin';
 }
