@@ -20,6 +20,46 @@ abstract final class AppColors {
   /// Kiegészítő zöld.
   static const Color accentGreen = Color(0xFF2E7D32);
 
+  /// Kiegészítő arany.
+  static const Color gold = Color(0xFFC9A227);
+
+  /// Halvány arany felület.
+  static const Color goldLight = Color(0xFFF6EBC8);
+
+  /// Arany szöveg sötét felületen. A #C9A227 a sötét kártyán is átmegy,
+  /// ez a világosabb változat a kiemeléshez.
+  static const Color goldDark = Color(0xFFE6C35C);
+
+  /// Halvány arany felület sötét módban.
+  static const Color goldDarkSurface = Color(0xFF3A3118);
+
+  /// A közzététel gomb átmenetének színei, balról jobbra.
+  static const Color gradientStart = Color(0xFF8E2438);
+  static const Color gradientMid = burgundy;
+  static const Color gradientEnd = burgundyDark;
+
+  /// Médiagombok: erős ikon és halvány háttér.
+  static const Color mediaPhoto = Color(0xFF2E7D32);
+  static const Color mediaPhotoBackground = Color(0xFFE6F4EA);
+  static const Color mediaVideo = Color(0xFFD1435B);
+  static const Color mediaVideoBackground = Color(0xFFFCE8EC);
+  static const Color mediaCamera = Color(0xFF2D6CDF);
+  static const Color mediaCameraBackground = Color(0xFFE7EFFC);
+
+  /// Sötét módbeli médiagombok. A szöveg és a háttér kontrasztja WCAG AA.
+  static const Color mediaPhotoDark = Color(0xFF8FD9A0);
+  static const Color mediaPhotoDarkBackground = Color(0xFF163322);
+  static const Color mediaVideoDark = Color(0xFFFFB0BE);
+  static const Color mediaVideoDarkBackground = Color(0xFF3A1824);
+  static const Color mediaCameraDark = Color(0xFFA9C7FF);
+  static const Color mediaCameraDarkBackground = Color(0xFF15233F);
+
+  /// Inaktív közzététel gomb. A felirat mindkét módban AA kontrasztú.
+  static const Color publishDisabled = Color(0xFFE4DFE1);
+  static const Color onPublishDisabled = Color(0xFF4E4A4C);
+  static const Color publishDisabledDark = Color(0xFF3A3638);
+  static const Color onPublishDisabledDark = Color(0xFFF2EEEF);
+
   /// Világos mód háttere a belépő képernyőkön.
   static const Color background = Color(0xFFFAFAFA);
 

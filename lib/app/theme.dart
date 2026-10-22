@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'club_colors.dart';
 import 'constants.dart';
 
 /// Material 3 téma világos és sötét móddal.
@@ -8,9 +9,10 @@ import 'constants.dart';
 /// A gombok és kiemelések bordók maradnak, a másodlagos szín a zöld pipáé.
 /// Az AppBar világos módban fehér, sötét módban a sötét felület.
 abstract final class AppTheme {
-  static ThemeData get light => _build(_lightScheme, _lightAppBar);
+  static ThemeData get light =>
+      _build(_lightScheme, _lightAppBar, ClubColors.light);
 
-  static ThemeData get dark => _build(_darkScheme, _darkAppBar);
+  static ThemeData get dark => _build(_darkScheme, _darkAppBar, ClubColors.dark);
 
   static final ColorScheme _lightScheme =
       ColorScheme.fromSeed(
@@ -88,12 +90,17 @@ abstract final class AppTheme {
     ),
   );
 
-  static ThemeData _build(ColorScheme scheme, AppBarTheme appBarTheme) {
+  static ThemeData _build(
+    ColorScheme scheme,
+    AppBarTheme appBarTheme,
+    ClubColors colors,
+  ) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       appBarTheme: appBarTheme,
+      extensions: [colors],
     );
   }
 }
