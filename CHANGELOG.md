@@ -1,5 +1,12 @@
 # Változásnapló
 
+## 0.5.3
+
+### Javítva
+
+- A „Mire gondolsz” sáv a vezetéknév utáni első szót használja. Az előtagok (Dr., dr., Ifj., id., Prof.) kimaradnak.
+- Edző csak a saját bejegyzéséhez, vagy még nem létező bejegyzéshez tölthet fel fájlt. Az admin bármelyikhez írhat.
+
 ## 0.5.2
 
 ### Hozzáadva
