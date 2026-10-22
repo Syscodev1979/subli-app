@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
 
-import '../../app/constants.dart';
+import '../../app/club_config.dart';
 
-/// A klublogó helye, amíg a címer nem kerül az appba.
+/// A klublogó a fejlécben, kb. 36 px magas, a kép arányát megtartva.
 class ClubLogo extends StatelessWidget {
   const ClubLogo({super.key});
 
+  static const double height = 36;
+
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Klublogó',
-      excludeSemantics: true,
-      child: const CircleAvatar(
-        radius: 16,
-        backgroundColor: AppColors.burgundyLight,
-        child: Icon(
-          Icons.sports_martial_arts,
-          size: 18,
-          color: AppColors.burgundy,
-        ),
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final image = Image.asset(
+      ClubConfig.logoAsset,
+      height: dark ? height - 6 : height,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
+      isAntiAlias: true,
+      semanticLabel: 'Klublogó',
+    );
+    if (!dark) return image;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F4F5),
+        borderRadius: BorderRadius.circular(10),
       ),
+      child: Padding(padding: const EdgeInsets.all(3), child: image),
     );
   }
 }

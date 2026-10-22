@@ -24,36 +24,42 @@ class ClubAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      leading: leading,
-      titleSpacing: leading == null ? 16 : 0,
-      title: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        child:
-            title ??
-            InkWell(
-              key: const ValueKey('club-brand'),
-              onTap: () => _openFeed(context, ref),
-              borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    ClubLogo(),
-                    SizedBox(width: 12),
-                    Expanded(child: ClubTitle()),
-                  ],
+    return RepaintBoundary(
+      key: const Key('club-app-bar'),
+      child: AppBar(
+        automaticallyImplyLeading: false,
+        leading: leading,
+        titleSpacing: leading == null ? 16 : 0,
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          child:
+              title ??
+              InkWell(
+                key: const ValueKey('club-brand'),
+                onTap: () => _openFeed(context, ref),
+                borderRadius: BorderRadius.circular(8),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      ClubLogo(),
+                      SizedBox(width: 12),
+                      Expanded(child: ClubTitle()),
+                    ],
+                  ),
                 ),
               ),
-            ),
+        ),
+        actions: [
+          const Padding(
+            padding: EdgeInsets.only(right: 4),
+            child: ThemeSwitch(),
+          ),
+          ...?actions,
+        ],
       ),
-      actions: [
-        const Padding(padding: EdgeInsets.only(right: 4), child: ThemeSwitch()),
-        ...?actions,
-      ],
     );
   }
 
@@ -70,31 +76,20 @@ class ClubAppBar extends ConsumerWidget implements PreferredSizeWidget {
   }
 }
 
-/// A fejléc klubneve. Szűk helyen a rövidebb alakra vált, a kapcsoló marad.
+/// A fejléc klubneve. 360 px alatt a rövid név, egyébként a teljes.
 class ClubTitle extends StatelessWidget {
   const ClubTitle({super.key});
 
+  static const double narrowWidth = 360;
+
   @override
   Widget build(BuildContext context) {
-    final style = DefaultTextStyle.of(context).style;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final fullWidth = _textWidth(AppInfo.clubName, style);
-        final label =
-            !constraints.hasBoundedWidth || fullWidth <= constraints.maxWidth
-            ? AppInfo.clubName
-            : AppInfo.clubNameShort;
-        return Text(label, maxLines: 1, overflow: TextOverflow.ellipsis);
-      },
+    final narrow = MediaQuery.sizeOf(context).width < narrowWidth;
+    final label = narrow ? AppInfo.clubNameShort : AppInfo.clubName;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(label, maxLines: 1, softWrap: false),
     );
   }
-}
-
-double _textWidth(String text, TextStyle style) {
-  final painter = TextPainter(
-    text: TextSpan(text: text, style: style),
-    maxLines: 1,
-    textDirection: TextDirection.ltr,
-  )..layout();
-  return painter.width;
 }
