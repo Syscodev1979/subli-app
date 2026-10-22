@@ -10,6 +10,8 @@ import '../features/auth/presentation/pending_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/calendar/presentation/calendar_screen.dart';
 import '../features/chat/presentation/chat_screen.dart';
+import '../features/chat/presentation/conversation_screen.dart';
+import '../features/chat/presentation/member_search_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/feed/presentation/post_detail_screen.dart';
 import '../features/feed/presentation/post_editor_screen.dart';
@@ -97,6 +99,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.chat,
         builder: (context, state) => const ChatScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const MemberSearchScreen(),
+          ),
+          GoRoute(
+            path: ':conversationId',
+            builder: (context, state) {
+              return ConversationScreen(
+                conversationId: state.pathParameters['conversationId']!,
+              );
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.profile,

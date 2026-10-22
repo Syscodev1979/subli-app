@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
 import '../../../core/widgets/club_drawer.dart';
 import '../../auth/data/auth_providers.dart';
+import '../../chat/data/chat_providers.dart';
+import '../../chat/presentation/chat_button.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
 import '../domain/post_category.dart';
@@ -314,10 +317,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
           Positioned(
             right: 16,
-            bottom: 16 + MediaQuery.paddingOf(context).bottom,
+            bottom: 16 + MediaQuery.paddingOf(context).bottom + 56 + 12,
             child: ScrollToTopButton(
               visible: _showTopButton,
               onPressed: _scrollToTop,
+            ),
+          ),
+          Positioned(
+            right: 16,
+            bottom: 16 + MediaQuery.paddingOf(context).bottom,
+            child: ChatButton(
+              unread: ref.watch(unreadConversationCountProvider),
+              onPressed: () => context.push(AppRoutes.chat),
             ),
           ),
         ],
@@ -368,6 +379,11 @@ class _FeedFrame extends StatelessWidget {
             SliverToBoxAdapter(child: ComposerBar(user: current)),
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           ...slivers,
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 16 + 56 + 12 + 48 + MediaQuery.paddingOf(context).bottom,
+            ),
+          ),
         ],
       ),
     );

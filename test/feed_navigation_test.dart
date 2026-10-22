@@ -6,6 +6,7 @@ import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
 import 'package:gastroyal_karate_app/features/auth/domain/auth_session.dart';
 import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
 import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
+import 'package:gastroyal_karate_app/features/chat/data/chat_providers.dart';
 import 'package:gastroyal_karate_app/features/feed/data/feed_providers.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/post_category.dart';
@@ -13,6 +14,7 @@ import 'package:gastroyal_karate_app/features/feed/presentation/category_style.d
 import 'package:gastroyal_karate_app/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'fake_chat_repository.dart';
 import 'fake_post_repository.dart';
 
 void main() {
@@ -79,6 +81,7 @@ Future<void> _pump(
         postRepositoryProvider.overrideWithValue(
           FakePostRepository(page: page, onFetch: onFetch),
         ),
+        chatRepositoryProvider.overrideWithValue(const FakeChatRepository()),
       ],
       child: const GastroyalApp(),
     ),

@@ -12,6 +12,7 @@ import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
 import '../../auth/presentation/auth_error_message.dart';
 import '../../auth/presentation/user_labels.dart';
+import '../../chat/data/chat_providers.dart';
 import '../../feed/data/feed_providers.dart';
 import '../../feed/presentation/feed_error_message.dart';
 import 'admin_providers.dart';
@@ -82,10 +83,11 @@ class _BackfillCard extends ConsumerStatefulWidget {
 }
 
 class _BackfillCardState extends ConsumerState<_BackfillCard> {
-  var _running = false;
+  var _runningPosts = false;
+  var _runningMembers = false;
 
-  Future<void> _run() async {
-    setState(() => _running = true);
+  Future<void> _runPosts() async {
+    setState(() => _runningPosts = true);
     try {
       final count = await ref
           .read(postRepositoryProvider)
@@ -99,7 +101,25 @@ class _BackfillCardState extends ConsumerState<_BackfillCard> {
         SnackBar(content: Text(feedErrorMessage(error, saving: true))),
       );
     } finally {
-      if (mounted) setState(() => _running = false);
+      if (mounted) setState(() => _runningPosts = false);
+    }
+  }
+
+  Future<void> _runMembers() async {
+    setState(() => _runningMembers = true);
+    try {
+      final count = await ref.read(chatRepositoryProvider).backfillMembers();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$count tag került a taglistára.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(feedErrorMessage(error, saving: true))),
+      );
+    } finally {
+      if (mounted) setState(() => _runningMembers = false);
     }
   }
 
@@ -114,7 +134,7 @@ class _BackfillCardState extends ConsumerState<_BackfillCard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Meglévő bejegyzések',
+                'Karbantartás',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 4),
@@ -123,8 +143,19 @@ class _BackfillCardState extends ConsumerState<_BackfillCard> {
               ),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: _running ? null : _run,
-                child: Text(_running ? 'Frissítés…' : 'Adatok frissítése'),
+                onPressed: _runningPosts ? null : _runPosts,
+                child: Text(_runningPosts ? 'Frissítés…' : 'Adatok frissítése'),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Az aktív tagok bekerülnek a taglistába, hogy üzenetet lehessen írni nekik.',
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: _runningMembers ? null : _runMembers,
+                child: Text(
+                  _runningMembers ? 'Frissítés…' : 'Taglista frissítése',
+                ),
               ),
             ],
           ),

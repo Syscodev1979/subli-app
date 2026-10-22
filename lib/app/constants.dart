@@ -116,6 +116,9 @@ abstract final class AppRoutes {
 
   static String editPost(String id) => '/feed/$id/edit';
   static const String chat = '/chat';
+  static const String newMessage = '/chat/new';
+
+  static String conversation(String id) => '/chat/$id';
   static const String profile = '/profile';
   static const String calendar = '/calendar';
   static const String admin = '/admin';
