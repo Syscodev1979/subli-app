@@ -1,5 +1,12 @@
 # Változásnapló
 
+## 0.5.2
+
+### Hozzáadva
+
+- Világos és sötét téma kapcsoló a fejlécben, a menü előtt. A választás a készüléken megmarad.
+- A menü Megjelenés sora: Világos, Sötét vagy a telefon rendszere. Első indításkor a rendszer témája érvényes.
+
 ## 0.5.1
 
 ### Változtatva
