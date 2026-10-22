@@ -12,6 +12,8 @@ import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
 import '../../auth/presentation/auth_error_message.dart';
 import '../../auth/presentation/user_labels.dart';
+import '../../feed/data/feed_providers.dart';
+import '../../feed/presentation/feed_error_message.dart';
 import 'admin_providers.dart';
 
 /// Jóváhagyásra váró fiókok. Admin és edző éri el.
@@ -33,30 +35,100 @@ class AdminScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
         ),
       ),
-      body: pending.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _Message(authErrorMessage(error)),
-        data: (users) {
-          if (users.isEmpty) {
-            return const _Message('Nincs jóváhagyásra váró regisztráció.');
-          }
-          final athleteList = athletes.asData?.value ?? const <AppUser>[];
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: users.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final user = users[index];
-              return _PendingUserCard(
-                key: ValueKey(user.id),
-                user: user,
-                athletes: athleteList,
-                athletesLoading: athletes.isLoading,
-                canAssignRoles: reviewer?.role.canAssignRoles ?? false,
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          if (reviewer?.role == UserRole.admin) const _BackfillCard(),
+          Expanded(
+            child: pending.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => _Message(authErrorMessage(error)),
+              data: (users) {
+                if (users.isEmpty) {
+                  return const _Message(
+                    'Nincs jóváhagyásra váró regisztráció.',
+                  );
+                }
+                final athleteList = athletes.asData?.value ?? const <AppUser>[];
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: users.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final user = users[index];
+                    return _PendingUserCard(
+                      key: ValueKey(user.id),
+                      user: user,
+                      athletes: athleteList,
+                      athletesLoading: athletes.isLoading,
+                      canAssignRoles: reviewer?.role.canAssignRoles ?? false,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackfillCard extends ConsumerStatefulWidget {
+  const _BackfillCard();
+
+  @override
+  ConsumerState<_BackfillCard> createState() => _BackfillCardState();
+}
+
+class _BackfillCardState extends ConsumerState<_BackfillCard> {
+  var _running = false;
+
+  Future<void> _run() async {
+    setState(() => _running = true);
+    try {
+      final count = await ref
+          .read(postRepositoryProvider)
+          .backfillLegacyPosts();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$count bejegyzés frissítve.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(feedErrorMessage(error, saving: true))),
+      );
+    } finally {
+      if (mounted) setState(() => _running = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Meglévő bejegyzések',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'A kategória nélküli bejegyzések hírré válnak, és kereshetővé.',
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: _running ? null : _run,
+                child: Text(_running ? 'Frissítés…' : 'Adatok frissítése'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
