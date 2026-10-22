@@ -1,5 +1,17 @@
 # Változásnapló
 
+## 0.5.1
+
+### Változtatva
+
+- A bejegyzés szerkesztője alulról felcsúszó lap: arany gyűrűs profil, nagy szövegmező, színes médiaeszköztár és bordó közzététel gomb.
+- A hírfolyam sávja keresztnévvel szólít meg, és fotó, videó vagy kamera választóval nyitja a szerkesztőt.
+- A piszkozat helyben megmarad. Ha van szöveg vagy média, az elvetés megerősítést kér.
+
+### Hozzáadva
+
+- Arany kiegészítő szín, bordó átmenet a fő gombon, és a médiagombok saját színei világos és sötét módban.
+
 ## 0.5.0
 
 ### Hozzáadva
