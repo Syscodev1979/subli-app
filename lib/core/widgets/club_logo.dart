@@ -20,12 +20,13 @@ class ClubLogo extends StatelessWidget {
       semanticLabel: 'Klublogó',
     );
     if (!dark) return image;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F4F5),
-        borderRadius: BorderRadius.circular(10),
+    // A logó papírja fehér. Sötét fejlécen ugyanez a fehér, lekerekített lap.
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: ColoredBox(
+        color: const Color(0xFFFFFFFF),
+        child: Padding(padding: const EdgeInsets.all(3), child: image),
       ),
-      child: Padding(padding: const EdgeInsets.all(3), child: image),
     );
   }
 }
