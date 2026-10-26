@@ -1,5 +1,21 @@
 # Változásnapló
 
+## 1.0.0
+
+Az első tesztelői kiadás.
+
+### Hozzáadva
+
+- Külön fejlesztői és éles app. A fejlesztői neve Gastroyal DEV, az azonosítója `hu.gastroyalkarate.app.dev`, és az ikonján DEV felirat van. Az éles neve Gastroyal, azonosítója `hu.gastroyalkarate.app`.
+- Indítóképernyő a klublogóval: világos módban fehér, sötét módban a szokásos sötét háttér.
+- Hibajelentés a Firebase Crashlyticsbe, csak a felhasználó azonosítójával. Név és e-mail nem kerül bele, debug módban pedig nem küld jelentést.
+- A profil alján halványan a verziószám, és a „Visszajelzés küldése”, ami e-mailt nyit a verzióval és a készülék típusával.
+
+### Változtatva
+
+- Az alkalmazásazonosító a `com.example` helyett a klub saját azonosítója.
+- Az App Store exportmegfelelősége rögzítve: az app csak a rendszer szokásos titkosítását használja.
+
 ## 0.9.0
 
 ### Hozzáadva
