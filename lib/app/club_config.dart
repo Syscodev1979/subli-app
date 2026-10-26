@@ -7,6 +7,21 @@ abstract final class ClubConfig {
   /// A fejléc logója. Nagy felbontású kép, a felület kicsire méretezi.
   static const String logoAsset = 'assets/images/logo.png';
 
+  /// Éles alkalmazásazonosító (iOS bundle ID és Android applicationId).
+  static const String prodApplicationId = 'hu.gastroyalkarate.app';
+
+  /// Fejlesztői alkalmazásazonosító. A két változat egyszerre telepíthető.
+  static const String devApplicationId = 'hu.gastroyalkarate.app.dev';
+
+  static const String prodAppName = 'Gastroyal';
+  static const String devAppName = 'Gastroyal DEV';
+
+  /// A profil „Visszajelzés küldése” sora ide nyit e-mailt.
+  static const String feedbackEmail = 'info@gastroyalkarate.hu';
+
+  /// Az iOS alkalmazás minimum verziója.
+  static const String iosMinimumVersion = '15.0';
+
   static const int avatarSize = 512;
   static const int avatarQuality = 85;
   static const int maxAvatarBytes = 5 * 1024 * 1024;

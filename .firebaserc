@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "gastroyal-karate"
+    "default": "gastroyal-karate",
+    "prod": "gastroyal-karate",
+    "dev": "gastroyal-karate-dev"
   }
 }

@@ -1,13 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gastroyal_karate_app/firebase_options.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app/constants.dart';
+import 'app/app_flavor.dart';
+import 'app/firebase_bootstrap.dart';
+import 'app/firebase_setup_screen.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
 import 'app/theme_controller.dart';
@@ -16,7 +18,16 @@ import 'app/theme_preference.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('hu');
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  final options = firebaseOptionsForCurrentFlavor();
+  if (options == null) {
+    runApp(const FirebaseSetupScreen());
+    return;
+  }
+  await Firebase.initializeApp(options: options);
+  await startCrashReporting();
+  FirebaseAuth.instance.authStateChanges().listen((user) {
+    setCrashlyticsUser(user?.uid);
+  });
   final prefs = await SharedPreferences.getInstance();
   final initial = ThemePreference.fromStorage(
     prefs.getString(ThemeController.storageKey),
@@ -43,7 +54,7 @@ class GastroyalApp extends ConsumerWidget {
     final preference = ref.watch(themePreferenceProvider);
 
     return MaterialApp.router(
-      title: AppInfo.clubName,
+      title: AppFlavor.current.appName,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: preference.themeMode,

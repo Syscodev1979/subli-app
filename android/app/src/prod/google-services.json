@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "555040837330",
+    "project_id": "gastroyal-karate",
+    "storage_bucket": "gastroyal-karate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555040837330:android:59bed8fa5d3c434918e70b",
+        "android_client_info": {
+          "package_name": "hu.gastroyalkarate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApFMD2liX5wTdaYxNXxXf8Ap49GA0ECXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

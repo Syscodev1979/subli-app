@@ -23,26 +23,44 @@
   "flutter": {
     "platforms": {
       "android": {
-        "default": {
+        "prod": {
           "projectId": "gastroyal-karate",
           "appId": "1:555040837330:android:59bed8fa5d3c434918e70b",
-          "fileOutput": "android/app/google-services.json"
+          "fileOutput": "android/app/src/prod/google-services.json"
+        },
+        "dev": {
+          "projectId": "gastroyal-karate-dev",
+          "appId": "1:000000000000:android:0000000000000000000000",
+          "fileOutput": "android/app/src/dev/google-services.json"
         }
       },
       "ios": {
-        "default": {
+        "prod": {
           "projectId": "gastroyal-karate",
           "appId": "1:555040837330:ios:58b7ba2a5807f47a18e70b",
-          "uploadDebugSymbols": false,
-          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/config/prod/GoogleService-Info.plist"
+        },
+        "dev": {
+          "projectId": "gastroyal-karate-dev",
+          "appId": "1:000000000000:ios:0000000000000000000000",
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/config/dev/GoogleService-Info.plist"
         }
       },
       "dart": {
-        "lib/firebase_options.dart": {
+        "lib/firebase_options_prod.dart": {
           "projectId": "gastroyal-karate",
           "configurations": {
             "android": "1:555040837330:android:59bed8fa5d3c434918e70b",
             "ios": "1:555040837330:ios:58b7ba2a5807f47a18e70b"
+          }
+        },
+        "lib/firebase_options_dev.dart": {
+          "projectId": "gastroyal-karate-dev",
+          "configurations": {
+            "android": "1:000000000000:android:0000000000000000000000",
+            "ios": "1:000000000000:ios:0000000000000000000000"
           }
         }
       }
