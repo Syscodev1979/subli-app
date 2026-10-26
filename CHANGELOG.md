@@ -4,6 +4,7 @@
 
 ### Hozzáadva
 
+- Esemény bejegyzésnél a nap, a kezdés és az opcionális vége naptárból adható meg. Dátum nélkül nem tehető közzé, a vége nem előzheti meg a kezdést. A hírfolyamon naptárcsík mutatja az időpontot, és a nap a keresőbe is bekerül.
 - Saját profil a menüből: nagy profilkép arany gyűrűvel, név, szerepkör, sportolónál színes övfokozat, e-mail, születési dátum és edzéscsoport. A kép négyzetesen vágható, 512×512-es JPEG-ként töltődik fel.
 - Övfokozatok a klubbeállításban, 10. kyu-tól 10. danig. Edző és admin állíthatja az adminisztráción vagy a sportoló profilján. A sportoló a saját övét nem módosíthatja.
 - Szülőnél „Gyermekeim” szakasz. A szülő megnyithatja a gyerek profilját, és a profilképét cserélheti.
