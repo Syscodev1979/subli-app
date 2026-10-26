@@ -1,3 +1,4 @@
+import 'event_time.dart';
 import 'post_category.dart';
 
 enum PostMediaType { image, video, document }
@@ -94,6 +95,8 @@ class Post {
     this.category = PostCategory.news,
     this.searchKeywords = const [],
     this.media = const [],
+    this.eventStartsAt,
+    this.eventEndsAt,
   });
 
   final String id;
@@ -107,6 +110,12 @@ class Post {
   final PostCategory category;
   final List<String> searchKeywords;
   final List<PostMedia> media;
+
+  /// Eseménynél a kezdés. Más kategóriánál nincs kitöltve.
+  final DateTime? eventStartsAt;
+
+  /// Eseménynél a vége, ha megadták.
+  final DateTime? eventEndsAt;
 
   List<PostMedia> get images => [
     for (final item in media)
@@ -125,14 +134,15 @@ class Post {
       if (item.type == PostMediaType.document) item,
   ];
 
-  /// A keresés második szavát a szövegben és a dokumentumnevekben is keresi.
+  /// A keresés második szavát a szövegben, a dokumentumnevekben és a dátumban keresi.
   String get searchText {
-    final names = [
+    final parts = <String>[
+      text,
       for (final item in documents)
         if (item.name != null) item.name!,
+      if (eventStartsAt != null) eventSearchText(eventStartsAt!),
     ];
-    if (names.isEmpty) return text;
-    return '$text ${names.join(' ')}';
+    return parts.join(' ');
   }
 }
 

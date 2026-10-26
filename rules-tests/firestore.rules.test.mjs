@@ -317,7 +317,36 @@ test("ismeretlen kategória és túl hosszú keresőlista elutasítva", async ()
       category: "event",
       text: "Szombati verseny.",
       searchKeywords: ["szombati", "verseny"],
+      eventStartsAt: Timestamp.fromDate(new Date("2026-11-01T17:00:00Z")),
     }),
+  );
+});
+
+test("esemény dátum nélkül elutasítva, dátummal sikerül", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  const posts = coach.firestore();
+  await assertFails(
+    setDoc(doc(posts, "posts", "event-missing"), postDoc({ category: "event" })),
+  );
+  await assertSucceeds(
+    setDoc(
+      doc(posts, "posts", "event-ok"),
+      postDoc({
+        category: "event",
+        eventStartsAt: Timestamp.fromDate(new Date("2026-11-01T17:00:00Z")),
+        eventEndsAt: Timestamp.fromDate(new Date("2026-11-01T19:00:00Z")),
+      }),
+    ),
   );
 });
 

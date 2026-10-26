@@ -30,6 +30,8 @@ abstract class PostRepository {
     required PostCategory category,
     List<PostMedia> media = const [],
     String? postId,
+    DateTime? eventStartsAt,
+    DateTime? eventEndsAt,
   });
 
   Future<void> updatePost({
@@ -38,6 +40,8 @@ abstract class PostRepository {
     required bool pinned,
     required PostCategory category,
     required List<PostMedia> media,
+    DateTime? eventStartsAt,
+    DateTime? eventEndsAt,
   });
 
   Future<void> deletePost(String postId);

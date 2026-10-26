@@ -103,6 +103,34 @@ void main() {
     expect(find.text('Új bejegyzés'), findsNothing);
   });
 
+  testWidgets('eseménynél naptárból kell dátumot adni', (tester) async {
+    await _openComposer(tester, ThemeMode.light);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('composer-sheet')),
+        matching: find.text('Esemény'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Az esemény időpontja'), findsOneWidget);
+    expect(find.text('Válassz dátumot'), findsOneWidget);
+    expect(find.text('Koppints, és add meg a napot.'), findsOneWidget);
+    expect(find.text('Hol lesz, és mit hozzanak magukkal…'), findsOneWidget);
+
+    await tester.enterText(_composerField, 'Szombati edzőtábor');
+    await tester.pump();
+    expect(_publishButton(tester).onTap, isNull);
+
+    await tester.tap(find.byKey(const Key('event-pick-date')));
+    await tester.pumpAndSettle();
+    expect(find.text('Az esemény napja'), findsOneWidget);
+    await tester.tap(find.text('Mégse'));
+    await tester.pumpAndSettle();
+    expect(find.text('Válassz dátumot'), findsOneWidget);
+  });
+
   testWidgets('a piszkozatot újranyitáskor felajánlja', (tester) async {
     await _openComposer(tester, ThemeMode.light, draft: 'Tegnapi piszkozat');
 

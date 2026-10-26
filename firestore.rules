@@ -270,6 +270,8 @@ service cloud.firestore {
 
     function validPostShape() {
       let data = request.resource.data;
+      let authorName = data.get('authorName', null);
+      let body = data.get('text', null);
       return data.keys().hasOnly([
           'authorId',
           'authorName',
@@ -281,19 +283,21 @@ service cloud.firestore {
           'category',
           'searchKeywords',
           'media',
+          'eventStartsAt',
+          'eventEndsAt',
         ])
         && data.get('authorId', null) is string
-        && data.get('authorName', null) is string
-        && data.get('authorName', '').size() > 0
-        && data.get('authorName', '').size() <= 120
+        && authorName is string
+        && authorName.size() > 0
+        && authorName.size() <= 120
         && (
           data.get('authorPhotoUrl', null) == null
           || data.get('authorPhotoUrl', null) is string
         )
-        && data.get('text', null) is string
-        && data.get('text', '').size() <= 5000
+        && body is string
+        && body.size() <= 5000
         && (
-          data.get('text', '').size() > 0
+          body.size() > 0
           || data.get('media', []).size() > 0
         )
         && validMediaList(data.get('media', []))
@@ -308,7 +312,13 @@ service cloud.firestore {
           'event',
         ]
         && data.get('searchKeywords', null) is list
-        && data.get('searchKeywords', []).size() <= 200;
+        && data.get('searchKeywords', []).size() <= 200
+        // Az esemény kezdete kötelező. A vége sorrendjét a kliens ellenőrzi,
+        // mert a dokumentumos frissítés már a kifejezéshatár közelében van.
+        && (
+          data.get('category', '') != 'event'
+          || data.get('eventStartsAt', null) is timestamp
+        );
     }
 
     function validCommentShape() {

@@ -1,7 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastroyal_karate_app/features/feed/domain/event_time.dart';
+import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/search_keywords.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('hu');
+  });
+
   test('a keresőszavak kisbetűsek, ékezet nélkül, egyediek', () {
     expect(searchKeywords('Holnap közös edzés! Edzés és a torna.'), [
       'holnap',
@@ -30,6 +37,25 @@ void main() {
       matchesExtraTerms('Holnap közös edzés', searchTerms('és holnap edzés')),
       isTrue,
     );
+  });
+
+  test('a dokumentum neve és az esemény napja is keresőszó', () {
+    final keywords = postSearchKeywords(
+      text: 'Nevezés',
+      media: const [
+        PostMedia(
+          type: PostMediaType.document,
+          url: 'https://example.com/oklevel.pdf',
+          name: 'oklevel-2026.pdf',
+          sizeBytes: 1200,
+          mimeType: 'application/pdf',
+        ),
+      ],
+      extra: eventSearchText(DateTime(2026, 10, 25)),
+    );
+
+    expect(keywords, containsAll(['nevezes', 'oklevel', '2026', 'oktober']));
+    expect(keywords, contains('vasarnap'));
   });
 
   test('a kiemelés ékezetfüggetlen és nem lóg össze', () {

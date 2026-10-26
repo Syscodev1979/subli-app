@@ -3,10 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gastroyal_karate_app/app/constants.dart';
 import 'package:gastroyal_karate_app/app/theme.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
+import 'package:gastroyal_karate_app/features/feed/domain/post_category.dart';
 import 'package:gastroyal_karate_app/features/feed/domain/reaction.dart';
 import 'package:gastroyal_karate_app/features/feed/presentation/post_card.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('hu');
+  });
+
   testWidgets('a kitűzött bejegyzésen a Like zöld, a kártya fehér', (
     tester,
   ) async {
@@ -68,5 +74,50 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('az esemény kártyáján a naptárnap és az időtartam látszik', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: PostCard(
+            post: Post(
+              id: 'event-1',
+              authorId: 'coach-1',
+              authorName: 'Kovács Anna',
+              authorPhotoUrl: null,
+              text: 'Edzőtábor a teremben.',
+              createdAt: DateTime(2026, 10, 20, 12),
+              updatedAt: DateTime(2026, 10, 20, 12),
+              pinned: false,
+              category: PostCategory.event,
+              eventStartsAt: DateTime(2026, 10, 25, 18),
+              eventEndsAt: DateTime(2026, 10, 25, 20),
+            ),
+            timeLabel: 'tegnap 12:00',
+            reactionCount: 0,
+            reactionTypes: const [],
+            commentCount: 0,
+            myReaction: null,
+            canManage: false,
+            recentComments: const [],
+            onToggleLike: () {},
+            onPickReaction: (_) {},
+            onShowReactions: () {},
+            onOpenComments: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('event-when')), findsOneWidget);
+    expect(find.text('Vasárnap'), findsOneWidget);
+    expect(find.text('25'), findsOneWidget);
+    expect(find.textContaining('18:00'), findsOneWidget);
+    expect(find.textContaining('20:00'), findsOneWidget);
+    expect(find.textContaining('@'), findsNothing);
   });
 }

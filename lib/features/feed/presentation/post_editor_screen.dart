@@ -20,12 +20,14 @@ import '../../auth/domain/auth_session.dart';
 import '../data/feed_providers.dart';
 import '../data/media_prep.dart';
 import '../data/post_media_storage.dart';
+import '../domain/event_time.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
 import '../domain/post_category.dart';
 import 'author_avatar.dart';
 import 'category_style.dart';
 import 'document_card.dart';
+import 'event_when.dart';
 import 'feed_chrome.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
@@ -60,6 +62,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   _MediaDraft? _video;
   var _pinned = false;
   var _category = PostCategory.news;
+  DateTime? _eventStartsAt;
+  DateTime? _eventEndsAt;
   var _submitting = false;
   var _preparing = false;
   var _succeeded = false;
@@ -74,6 +78,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   String _originalText = '';
   var _originalPinned = false;
   var _originalCategory = PostCategory.news;
+  DateTime? _originalEventStartsAt;
+  DateTime? _originalEventEndsAt;
   List<String?> _originalImageUrls = const [];
   String? _originalVideoUrl;
   List<String?> _originalDocumentUrls = const [];
@@ -186,6 +192,10 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     final hasMedia = _mediaCount > 0;
     if (text.isEmpty && !hasMedia) return false;
     if (_textController.text.length > PostLimits.postText) return false;
+    if (_category == PostCategory.event) {
+      if (_eventStartsAt == null) return false;
+      if (eventEndsBeforeStart(_eventStartsAt!, _eventEndsAt)) return false;
+    }
     if (_images.length > PostLimits.maxImages ||
         _documents.length > PostLimits.maxDocuments ||
         _mediaCount > PostLimits.maxMedia) {
@@ -200,11 +210,16 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           _images.isNotEmpty ||
           _video != null ||
           _documents.isNotEmpty ||
-          _category != PostCategory.news;
+          _category != PostCategory.news ||
+          (_category == PostCategory.event && _eventStartsAt != null);
     }
     if (_textController.text != _originalText ||
         _pinned != _originalPinned ||
         _category != _originalCategory) {
+      return true;
+    }
+    if (!sameEventMinute(_eventStartsAt, _originalEventStartsAt) ||
+        !sameEventMinute(_eventEndsAt, _originalEventEndsAt)) {
       return true;
     }
     if (_video?.prepared != null ||
@@ -289,9 +304,13 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     _applying = false;
     _pinned = post.pinned;
     _category = post.category;
+    _eventStartsAt = post.eventStartsAt;
+    _eventEndsAt = post.eventEndsAt;
     _originalText = post.text;
     _originalPinned = post.pinned;
     _originalCategory = post.category;
+    _originalEventStartsAt = post.eventStartsAt;
+    _originalEventEndsAt = post.eventEndsAt;
     _images
       ..clear()
       ..addAll(post.images.map(_MediaDraft.remote));
@@ -330,6 +349,17 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
                   setState(() => _category = category);
                 },
               ),
+              if (_category == PostCategory.event) ...[
+                const SizedBox(height: 12),
+                EventScheduleEditor(
+                  startsAt: _eventStartsAt,
+                  endsAt: _eventEndsAt,
+                  onPickDate: () => unawaited(_pickEventDate()),
+                  onPickStart: () => unawaited(_pickEventStart()),
+                  onPickEnd: () => unawaited(_pickEventEnd()),
+                  onClearEnd: () => setState(() => _eventEndsAt = null),
+                ),
+              ],
               const SizedBox(height: 16),
               TextField(
                 controller: _textController,
@@ -344,8 +374,9 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
                 decoration: InputDecoration(
-                  hintText:
-                      'Oszd meg a klub híreit, eredményeit, gondolataidat…',
+                  hintText: _category == PostCategory.event
+                      ? 'Hol lesz, és mit hozzanak magukkal…'
+                      : 'Oszd meg a klub híreit, eredményeit, gondolataidat…',
                   hintStyle: TextStyle(
                     fontSize: _largeText ? 24 : 18,
                     height: 1.4,
@@ -603,10 +634,111 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     context.pop();
   }
 
+  DateTime? get _savedEventStart =>
+      _category == PostCategory.event ? _eventStartsAt : null;
+
+  DateTime? get _savedEventEnd =>
+      _category == PostCategory.event ? _eventEndsAt : null;
+
+  Future<void> _pickEventDate() async {
+    final now = DateTime.now();
+    final current = _eventStartsAt;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current ?? now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2, 12, 31),
+      helpText: 'Az esemény napja',
+      cancelText: 'Mégse',
+      confirmText: 'Rendben',
+      locale: const Locale('hu'),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      final hour = current?.hour ?? 18;
+      final minute = current?.minute ?? 0;
+      _eventStartsAt = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        hour,
+        minute,
+      );
+      final end = _eventEndsAt;
+      if (end != null) {
+        _eventEndsAt = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          end.hour,
+          end.minute,
+        );
+      }
+    });
+  }
+
+  Future<void> _pickEventStart() async {
+    final current = _eventStartsAt;
+    if (current == null) {
+      await _pickEventDate();
+      return;
+    }
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+      helpText: 'Kezdés',
+      cancelText: 'Mégse',
+      confirmText: 'Rendben',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _eventStartsAt = DateTime(
+        current.year,
+        current.month,
+        current.day,
+        picked.hour,
+        picked.minute,
+      );
+    });
+  }
+
+  Future<void> _pickEventEnd() async {
+    final start = _eventStartsAt;
+    if (start == null) return;
+    final current = _eventEndsAt ?? start.add(const Duration(hours: 2));
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+      helpText: 'Vége',
+      cancelText: 'Mégse',
+      confirmText: 'Rendben',
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _eventEndsAt = DateTime(
+        start.year,
+        start.month,
+        start.day,
+        picked.hour,
+        picked.minute,
+      );
+    });
+  }
+
   Future<void> _save(AppUser user, {required bool isNew}) async {
     final text = _textController.text.trim();
     final hasMedia = _mediaCount > 0;
     if (text.isEmpty && !hasMedia) return;
+    if (_category == PostCategory.event && _eventStartsAt == null) {
+      setState(() => _error = 'Add meg az esemény dátumát.');
+      return;
+    }
+    if (_category == PostCategory.event &&
+        _eventStartsAt != null &&
+        eventEndsBeforeStart(_eventStartsAt!, _eventEndsAt)) {
+      setState(() => _error = 'A vége nem lehet a kezdés előtt.');
+      return;
+    }
     if (_textController.text.length > PostLimits.postText) {
       setState(() => _error = 'A bejegyzés legfeljebb 5000 karakter lehet.');
       return;
@@ -650,6 +782,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           pinned: _pinned,
           category: _category,
           media: media,
+          eventStartsAt: _savedEventStart,
+          eventEndsAt: _savedEventEnd,
         );
       } else {
         await repository.updatePost(
@@ -658,6 +792,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           pinned: _pinned,
           category: _category,
           media: media,
+          eventStartsAt: _savedEventStart,
+          eventEndsAt: _savedEventEnd,
         );
         await storage?.deleteExcept(postId, [
           for (final item in media) ...[item.url, ?item.thumbUrl],

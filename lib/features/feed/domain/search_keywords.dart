@@ -79,13 +79,18 @@ String foldAccents(String value) {
 List<String> postSearchKeywords({
   required String text,
   List<PostMedia> media = const [],
+  String extra = '',
   int maxWords = 200,
 }) {
   final names = [
     for (final item in media)
       if (item.type == PostMediaType.document && item.name != null) item.name!,
   ];
-  final combined = names.isEmpty ? text : '$text ${names.join(' ')}';
+  final combined = [
+    text,
+    if (names.isNotEmpty) names.join(' '),
+    if (extra.isNotEmpty) extra,
+  ].join(' ');
   return searchKeywords(combined, maxWords: maxWords);
 }
 

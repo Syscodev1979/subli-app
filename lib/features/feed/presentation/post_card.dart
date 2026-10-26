@@ -9,11 +9,13 @@ import '../../auth/domain/app_user.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
+import '../domain/post_category.dart';
 import '../domain/post_repository.dart';
 import '../domain/reaction.dart';
 import '../../profile/presentation/profile_navigation.dart';
 import 'author_avatar.dart';
 import 'category_style.dart';
+import 'event_when.dart';
 import 'feed_controller.dart';
 import 'feed_error_message.dart';
 import 'feed_palette.dart';
@@ -286,6 +288,11 @@ class PostCard extends StatelessWidget {
               ],
             ),
           ),
+          if (post.category == PostCategory.event && post.eventStartsAt != null)
+            EventWhenBanner(
+              startsAt: post.eventStartsAt!,
+              endsAt: post.eventEndsAt,
+            ),
           if (post.text.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),

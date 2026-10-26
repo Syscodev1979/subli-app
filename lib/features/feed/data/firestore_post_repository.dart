@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../domain/event_time.dart';
 import '../domain/post.dart';
 import '../domain/post_category.dart';
 import '../domain/post_repository.dart';
@@ -127,9 +128,17 @@ class FirestorePostRepository implements PostRepository {
     required PostCategory category,
     List<PostMedia> media = const [],
     String? postId,
+    DateTime? eventStartsAt,
+    DateTime? eventEndsAt,
   }) async {
     final ref = postId == null ? _posts.doc() : _posts.doc(postId);
     final now = Timestamp.fromDate(DateTime.now());
+    final schedule = _eventFields(
+      category: category,
+      eventStartsAt: eventStartsAt,
+      eventEndsAt: eventEndsAt,
+      deleting: false,
+    );
     await ref.set({
       'authorId': authorId,
       'authorName': authorName,
@@ -139,12 +148,14 @@ class FirestorePostRepository implements PostRepository {
       'updatedAt': now,
       'pinned': pinned,
       'category': category.name,
-      'searchKeywords': postSearchKeywords(
+      'searchKeywords': _keywords(
         text: text,
         media: media,
-        maxWords: PostLimits.maxSearchKeywords,
+        category: category,
+        eventStartsAt: eventStartsAt,
       ),
       'media': [for (final item in media) item.toMap()],
+      ...schedule,
     });
     return ref.id;
   }
@@ -156,19 +167,75 @@ class FirestorePostRepository implements PostRepository {
     required bool pinned,
     required PostCategory category,
     required List<PostMedia> media,
+    DateTime? eventStartsAt,
+    DateTime? eventEndsAt,
   }) {
     return _posts.doc(postId).update({
       'text': text,
       'pinned': pinned,
       'category': category.name,
-      'searchKeywords': postSearchKeywords(
+      'searchKeywords': _keywords(
         text: text,
         media: media,
-        maxWords: PostLimits.maxSearchKeywords,
+        category: category,
+        eventStartsAt: eventStartsAt,
       ),
       'updatedAt': Timestamp.fromDate(DateTime.now()),
       'media': [for (final item in media) item.toMap()],
+      ..._eventFields(
+        category: category,
+        eventStartsAt: eventStartsAt,
+        eventEndsAt: eventEndsAt,
+        deleting: true,
+      ),
     });
+  }
+
+  List<String> _keywords({
+    required String text,
+    required List<PostMedia> media,
+    required PostCategory category,
+    required DateTime? eventStartsAt,
+  }) {
+    return postSearchKeywords(
+      text: text,
+      media: media,
+      extra: category == PostCategory.event && eventStartsAt != null
+          ? eventSearchText(eventStartsAt)
+          : '',
+      maxWords: PostLimits.maxSearchKeywords,
+    );
+  }
+
+  /// Létrehozáskor csak a meglévő időpontok kerülnek a dokumentumba.
+  /// Módosításkor a hiányzó mezők törlődnek, ha a bejegyzés már nem esemény.
+  Map<String, Object> _eventFields({
+    required PostCategory category,
+    required DateTime? eventStartsAt,
+    required DateTime? eventEndsAt,
+    required bool deleting,
+  }) {
+    final start = eventStartsAt;
+    final end = eventEndsAt;
+    if (category != PostCategory.event || start == null) {
+      if (!deleting) return const {};
+      return {
+        'eventStartsAt': FieldValue.delete(),
+        'eventEndsAt': FieldValue.delete(),
+      };
+    }
+    if (!deleting) {
+      return {
+        'eventStartsAt': Timestamp.fromDate(start),
+        if (end != null) 'eventEndsAt': Timestamp.fromDate(end),
+      };
+    }
+    return {
+      'eventStartsAt': Timestamp.fromDate(start),
+      'eventEndsAt': end == null
+          ? FieldValue.delete()
+          : Timestamp.fromDate(end),
+    };
   }
 
   @override

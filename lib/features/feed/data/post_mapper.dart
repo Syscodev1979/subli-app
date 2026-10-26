@@ -28,6 +28,8 @@ class PostMapper {
           if (word is String) word,
       ],
       media: PostMedia.listFrom(data['media']),
+      eventStartsAt: _optionalDate(data['eventStartsAt']),
+      eventEndsAt: _optionalDate(data['eventEndsAt']),
     );
   }
 
@@ -85,5 +87,10 @@ class PostMapper {
   static DateTime _date(Object? value) {
     if (value is Timestamp) return value.toDate();
     return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  static DateTime? _optionalDate(Object? value) {
+    if (value is Timestamp) return value.toDate();
+    return null;
   }
 }
