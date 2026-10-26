@@ -4,6 +4,7 @@ import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/auth_session.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
+import '../domain/post_audience.dart';
 import '../domain/post_category.dart';
 import '../domain/search_keywords.dart';
 import 'feed_query.dart';
@@ -41,7 +42,11 @@ class FeedController extends AsyncNotifier<FeedView> {
     if (session is! AuthSignedIn) {
       return const FeedView(posts: [], hasMore: false);
     }
-    return _load(category: category, search: search);
+    return _load(
+      category: category,
+      search: search,
+      audience: PostAudience.queryFor(session.user.role),
+    );
   }
 
   Future<void> refresh() async {
@@ -53,6 +58,7 @@ class FeedController extends AsyncNotifier<FeedView> {
       await _load(
         category: ref.read(feedCategoryProvider),
         search: ref.read(feedSearchProvider),
+        audience: _audience,
       ),
     );
   }
@@ -65,6 +71,7 @@ class FeedController extends AsyncNotifier<FeedView> {
       final page = await _load(
         category: ref.read(feedCategoryProvider),
         search: ref.read(feedSearchProvider),
+        audience: _audience,
         previous: current.posts,
         cursor: current.cursor,
       );
@@ -75,9 +82,16 @@ class FeedController extends AsyncNotifier<FeedView> {
     }
   }
 
+  List<String>? get _audience {
+    final session = ref.read(authGateProvider).asData?.value;
+    if (session is! AuthSignedIn) return null;
+    return PostAudience.queryFor(session.user.role);
+  }
+
   Future<FeedView> _load({
     required PostCategory? category,
     required String search,
+    required List<String>? audience,
     List<Post> previous = const [],
     Object? cursor,
   }) async {
@@ -85,6 +99,9 @@ class FeedController extends AsyncNotifier<FeedView> {
     if (search.trim().isNotEmpty && terms.isEmpty) {
       return const FeedView(posts: [], hasMore: false);
     }
+    final serverKeyword = audience == null && terms.isNotEmpty
+        ? terms.first
+        : null;
     var posts = previous;
     var start = cursor;
     var hasMore = true;
@@ -96,11 +113,15 @@ class FeedController extends AsyncNotifier<FeedView> {
             startAfter: start,
             limit: PostLimits.pageSize,
             category: category,
-            keyword: terms.isEmpty ? null : terms.first,
+            keyword: serverKeyword,
+            audience: audience,
           );
       final matched = [
         for (final post in page.posts)
-          if (matchesExtraTerms(post.searchText, terms)) post,
+          if (serverKeyword == null
+              ? matchesAllTerms(post.searchText, terms)
+              : matchesExtraTerms(post.searchText, terms))
+            post,
       ];
       posts = [...posts, ...matched];
       hasMore = page.hasMore;

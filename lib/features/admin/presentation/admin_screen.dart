@@ -141,7 +141,8 @@ class _BackfillCardState extends ConsumerState<_BackfillCard> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'A kategória nélküli bejegyzések hírré válnak, és kereshetővé.',
+                'A kategória nélküli bejegyzések hírré válnak, és kereshetővé. '
+                'A célközönség nélküliek minden tagnak szólnak.',
               ),
               const SizedBox(height: 12),
               FilledButton(

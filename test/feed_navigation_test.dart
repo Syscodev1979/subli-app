@@ -39,12 +39,14 @@ void main() {
   testWidgets('a kategória és a keresés a lekérdezésbe kerül', (tester) async {
     PostCategory? category;
     String? keyword;
+    List<String>? audience;
     await _pump(
       tester,
       PostPage(posts: [_post], hasMore: false),
-      onFetch: (nextCategory, nextKeyword) {
+      onFetch: (nextCategory, nextKeyword, nextAudience) {
         category = nextCategory;
         keyword = nextKeyword;
+        audience = nextAudience;
       },
     );
 
@@ -61,7 +63,8 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
-    expect(keyword, 'edzes');
+    expect(keyword, isNull);
+    expect(audience, ['all', 'athletes']);
     expect(find.text('Nincs találat erre: edzés holnap'), findsNothing);
   });
 }
@@ -82,7 +85,12 @@ final _post = Post(
 Future<void> _pump(
   WidgetTester tester,
   PostPage page, {
-  void Function(PostCategory? category, String? keyword)? onFetch,
+  void Function(
+    PostCategory? category,
+    String? keyword,
+    List<String>? audience,
+  )?
+  onFetch,
 }) async {
   SharedPreferences.setMockInitialValues({});
   await tester.pumpWidget(

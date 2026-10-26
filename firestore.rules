@@ -201,12 +201,10 @@ service cloud.firestore {
         );
     }
 
-    // A kifejezéshatár miatt a fájlnév, a méret és a típus ellenőrzése tömör.
+    // A kifejezéshatár miatt a méret a Storage szabályon és a kliensen múlik.
     // A letöltési cím hosszát a kliens és a Storage szabály tartja kordában.
     function documentMediaOk(item) {
       return item.get('name', '').size() > 0
-        && item.get('sizeBytes', 0) > 0
-        && item.get('sizeBytes', 0) <= 20971520
         && (
           item.get('mimeType', '') == 'application/pdf'
           || officeMime(item.get('mimeType', ''))
@@ -285,6 +283,7 @@ service cloud.firestore {
           'media',
           'eventStartsAt',
           'eventEndsAt',
+          'audience',
         ])
         && data.get('authorId', null) is string
         && authorName is string
@@ -318,7 +317,35 @@ service cloud.firestore {
         && (
           data.get('category', '') != 'event'
           || data.get('eventStartsAt', null) is timestamp
+        )
+        && audienceOk();
+    }
+
+    function audienceOk() {
+      let audience = request.resource.data.get('audience', []);
+      return audience.hasOnly(['all', 'staff', 'parents', 'athletes'])
+        && audience.size() > 0
+        && (audience.size() == 1 || !audience.hasAny(['all']));
+    }
+
+    // Admin és edző mindig. Más aktív tag csak az „all” vagy a saját szerepe
+    // szerint olvas. Hiányzó audience minden tagnak szól.
+    function canReadPostData(data) {
+      let role = caller().get('role', '');
+      return caller().get('status', '') == 'active'
+        && (
+          role == 'admin'
+          || role == 'coach'
+          || data.get('audience', ['all']).hasAny(['all'])
+          || (role == 'athlete' && data.get('audience', ['all']).hasAny(['athletes']))
+          || (role == 'parent' && data.get('audience', ['all']).hasAny(['parents']))
         );
+    }
+
+    function canReadPost(postId) {
+      return canReadPostData(
+        get(/databases/$(database)/documents/posts/$(postId)).data
+      );
     }
 
     function validCommentShape() {
@@ -371,7 +398,7 @@ service cloud.firestore {
     }
 
     match /posts/{postId} {
-      allow read: if isActive();
+      allow read: if canReadPostData(resource.data);
 
       allow create: if (isAdmin() || isCoach())
         && request.resource.data.get('authorId', null) == request.auth.uid
@@ -409,8 +436,8 @@ service cloud.firestore {
       }
 
       match /reactions/{userId} {
-        allow read: if isActive();
-        allow create, update: if isActive()
+        allow read: if canReadPost(postId);
+        allow create, update: if canReadPost(postId)
           && isSelf(userId)
           && request.resource.data.keys().hasOnly(['userName', 'type', 'createdAt'])
           && request.resource.data.get('userName', null) is string
@@ -420,7 +447,7 @@ service cloud.firestore {
             'like', 'heart', 'haha', 'wow', 'sad', 'osu',
           ]
           && request.resource.data.get('createdAt', null) is timestamp;
-        allow delete: if isActive()
+        allow delete: if canReadPost(postId)
           && (
             isSelf(userId)
             || isAdmin()
@@ -429,10 +456,10 @@ service cloud.firestore {
       }
 
       match /comments/{commentId} {
-        allow read: if isActive();
-        allow create: if isActive() && validCommentShape();
+        allow read: if canReadPost(postId);
+        allow create: if canReadPost(postId) && validCommentShape();
         allow update: if false;
-        allow delete: if isActive()
+        allow delete: if canReadPost(postId)
           && (
             resource.data.get('authorId', null) == request.auth.uid
             || isAdmin()

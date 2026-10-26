@@ -6,11 +6,16 @@ import {
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import {
+  collection,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  orderBy,
+  query,
   setDoc,
   updateDoc,
+  where,
   Timestamp,
 } from "firebase/firestore";
 import { deleteObject, getBytes, ref, uploadBytes, uploadString } from "firebase/storage";
@@ -233,6 +238,7 @@ function postDoc(overrides = {}) {
     pinned: false,
     category: "news",
     searchKeywords: ["holnap", "edzes"],
+    audience: ["all"],
     ...overrides,
   };
 }
@@ -1142,4 +1148,172 @@ test("a hatodik dokumentum elutasítva", async () => {
       media: documents.slice(0, 5),
     }),
   );
+});
+
+async function seedAudienceClub() {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    parent1: userDoc({
+      id: "parent1",
+      name: "Szülő",
+      email: "parent@example.com",
+      role: "parent",
+      status: "active",
+      birthDate: null,
+    }),
+  });
+}
+
+test("sportoló nem olvashat vezetőségi bejegyzést, hozzászólást, reakciót és fájlt", async () => {
+  await seedAudienceClub();
+  await seedDoc(
+    ["posts", "staff-post"],
+    postDoc({ audience: ["staff"], text: "Vezetőségi körlevél." }),
+  );
+  await seedDoc(["posts", "staff-post", "comments", "c1"], {
+    authorId: "coach1",
+    authorName: "Edző",
+    authorPhotoUrl: null,
+    text: "Belső megjegyzés.",
+    createdAt,
+  });
+  await seedDoc(["posts", "staff-post", "reactions", "coach1"], {
+    userName: "Edző",
+    type: "like",
+    createdAt,
+  });
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await uploadString(
+      ref(context.storage(), "posts/staff-post/a.jpg"),
+      "img",
+      "raw",
+      { contentType: "image/jpeg" },
+    );
+  });
+
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(getDoc(doc(athlete.firestore(), "posts", "staff-post")));
+  await assertFails(
+    getDoc(doc(athlete.firestore(), "posts", "staff-post", "comments", "c1")),
+  );
+  await assertFails(
+    getDoc(doc(athlete.firestore(), "posts", "staff-post", "reactions", "coach1")),
+  );
+  await assertFails(
+    setDoc(doc(athlete.firestore(), "posts", "staff-post", "comments", "c2"), {
+      authorId: "athlete1",
+      authorName: "Sportoló",
+      authorPhotoUrl: null,
+      text: "Nem láthatom.",
+      createdAt,
+    }),
+  );
+  await assertFails(getBytes(ref(athlete.storage(), "posts/staff-post/a.jpg")));
+
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertSucceeds(getDoc(doc(coach.firestore(), "posts", "staff-post")));
+  await assertSucceeds(getBytes(ref(coach.storage(), "posts/staff-post/a.jpg")));
+});
+
+test("szülő olvashat szülői bejegyzést, sportoló nem", async () => {
+  await seedAudienceClub();
+  await seedDoc(
+    ["posts", "parent-post"],
+    postDoc({ audience: ["parents"], text: "Szülői értekezlet." }),
+  );
+
+  const parent = testEnv.authenticatedContext("parent1", {
+    email: "parent@example.com",
+  });
+  await assertSucceeds(getDoc(doc(parent.firestore(), "posts", "parent-post")));
+
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(getDoc(doc(athlete.firestore(), "posts", "parent-post")));
+
+  const parentList = await getDocs(
+    query(
+      collection(parent.firestore(), "posts"),
+      where("audience", "array-contains-any", ["all", "parents"]),
+      orderBy("pinned", "desc"),
+      orderBy("createdAt", "desc"),
+    ),
+  );
+  if (parentList.size !== 1) {
+    throw new Error(`a szülő lekérdezése ${parentList.size} bejegyzést adott`);
+  }
+
+  const athleteList = await getDocs(
+    query(
+      collection(athlete.firestore(), "posts"),
+      where("audience", "array-contains-any", ["all", "athletes"]),
+      orderBy("pinned", "desc"),
+      orderBy("createdAt", "desc"),
+    ),
+  );
+  if (athleteList.size !== 0) {
+    throw new Error(`a sportoló lekérdezése ${athleteList.size} bejegyzést adott`);
+  }
+});
+
+test("minden tag mellé más célközönség nem írható", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "mixed"),
+      postDoc({ audience: ["all", "parents"] }),
+    ),
+  );
+  await assertFails(
+    setDoc(doc(coach.firestore(), "posts", "empty"), postDoc({ audience: [] })),
+  );
+  await assertSucceeds(
+    setDoc(
+      doc(coach.firestore(), "posts", "both"),
+      postDoc({ audience: ["parents", "athletes"] }),
+    ),
+  );
+});
+
+test("célközönség nélküli régi bejegyzés minden aktív tagnak látszik", async () => {
+  await seedAudienceClub();
+  const legacy = postDoc({ text: "Régi hír." });
+  delete legacy.audience;
+  await seedDoc(["posts", "legacy"], legacy);
+
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertSucceeds(getDoc(doc(athlete.firestore(), "posts", "legacy")));
+
+  const parent = testEnv.authenticatedContext("parent1", {
+    email: "parent@example.com",
+  });
+  await assertSucceeds(getDoc(doc(parent.firestore(), "posts", "legacy")));
 });

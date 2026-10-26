@@ -26,15 +26,20 @@ class FirestorePostRepository implements PostRepository {
     int limit = PostLimits.pageSize,
     PostCategory? category,
     String? keyword,
+    List<String>? audience,
   }) async {
-    Query<Map<String, dynamic>> query = _posts;
+    Query<Map<String, dynamic>> query = _scoped(_posts, audience);
     if (category != null) {
       query = query.where('category', isEqualTo: category.name);
     }
-    if (keyword != null && keyword.isNotEmpty) {
+    // A szerep szűrője már tömbfeltétel. A Firestore egy lekérdezésben
+    // csak egyet enged, ezért a keresőszót ilyenkor a kliens szűri.
+    if (audience == null && keyword != null && keyword.isNotEmpty) {
       query = query
           .where('searchKeywords', arrayContains: keyword)
           .orderBy('createdAt', descending: true);
+    } else if (keyword != null && keyword.isNotEmpty) {
+      query = query.orderBy('createdAt', descending: true);
     } else {
       query = query
           .orderBy('pinned', descending: true)
@@ -64,8 +69,11 @@ class FirestorePostRepository implements PostRepository {
   }
 
   @override
-  Stream<String?> watchNewestPostId({PostCategory? category}) {
-    Query<Map<String, dynamic>> query = _posts;
+  Stream<String?> watchNewestPostId({
+    PostCategory? category,
+    List<String>? audience,
+  }) {
+    Query<Map<String, dynamic>> query = _scoped(_posts, audience);
     if (category != null) {
       query = query.where('category', isEqualTo: category.name);
     }
@@ -91,14 +99,19 @@ class FirestorePostRepository implements PostRepository {
       var writes = 0;
       for (final document in snapshot.docs) {
         final data = document.data();
-        if (data['category'] is String) continue;
+        final hasCategory = data['category'] is String;
+        final hasAudience =
+            data['audience'] is List && (data['audience'] as List).isNotEmpty;
+        if (hasCategory && hasAudience) continue;
         final text = data['text'] is String ? data['text'] as String : '';
         batch.update(document.reference, {
-          'category': PostCategory.news.name,
-          'searchKeywords': postSearchKeywords(
-            text: text,
-            maxWords: PostLimits.maxSearchKeywords,
-          ),
+          if (!hasCategory) 'category': PostCategory.news.name,
+          if (!hasCategory)
+            'searchKeywords': postSearchKeywords(
+              text: text,
+              maxWords: PostLimits.maxSearchKeywords,
+            ),
+          if (!hasAudience) 'audience': const ['all'],
         });
         writes++;
         updated++;
@@ -130,6 +143,7 @@ class FirestorePostRepository implements PostRepository {
     String? postId,
     DateTime? eventStartsAt,
     DateTime? eventEndsAt,
+    List<String> audience = const ['all'],
   }) async {
     final ref = postId == null ? _posts.doc() : _posts.doc(postId);
     final now = Timestamp.fromDate(DateTime.now());
@@ -155,6 +169,7 @@ class FirestorePostRepository implements PostRepository {
         eventStartsAt: eventStartsAt,
       ),
       'media': [for (final item in media) item.toMap()],
+      'audience': audience,
       ...schedule,
     });
     return ref.id;
@@ -169,6 +184,7 @@ class FirestorePostRepository implements PostRepository {
     required List<PostMedia> media,
     DateTime? eventStartsAt,
     DateTime? eventEndsAt,
+    List<String> audience = const ['all'],
   }) {
     return _posts.doc(postId).update({
       'text': text,
@@ -182,6 +198,7 @@ class FirestorePostRepository implements PostRepository {
       ),
       'updatedAt': Timestamp.fromDate(DateTime.now()),
       'media': [for (final item in media) item.toMap()],
+      'audience': audience,
       ..._eventFields(
         category: category,
         eventStartsAt: eventStartsAt,
@@ -189,6 +206,15 @@ class FirestorePostRepository implements PostRepository {
         deleting: true,
       ),
     });
+  }
+
+  Query<Map<String, dynamic>> _scoped(
+    Query<Map<String, dynamic>> query,
+    List<String>? audience,
+  ) {
+    final values = audience;
+    if (values == null || values.isEmpty) return query;
+    return query.where('audience', arrayContainsAny: values);
   }
 
   List<String> _keywords({

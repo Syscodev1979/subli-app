@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/post.dart';
+import '../domain/post_audience.dart';
 import '../domain/post_category.dart';
 import '../domain/reaction.dart';
 
@@ -30,6 +31,7 @@ class PostMapper {
       media: PostMedia.listFrom(data['media']),
       eventStartsAt: _optionalDate(data['eventStartsAt']),
       eventEndsAt: _optionalDate(data['eventEndsAt']),
+      audience: PostAudience.listFrom(data['audience']),
     );
   }
 

@@ -9,12 +9,17 @@ abstract class PostRepository {
     int limit = PostLimits.pageSize,
     PostCategory? category,
     String? keyword,
+    List<String>? audience,
   });
 
   /// A legújabb bejegyzés azonosítója, kategórián belül is.
-  Stream<String?> watchNewestPostId({PostCategory? category});
+  Stream<String?> watchNewestPostId({
+    PostCategory? category,
+    List<String>? audience,
+  });
 
-  /// A kategória nélküli bejegyzések `news` kategóriát és keresőszavakat kapnak.
+  /// A kategória nélküli bejegyzések hírré válnak. A célközönség nélküliek
+  /// minden tagnak szólnak.
   Future<int> backfillLegacyPosts();
 
   Stream<Post?> watchPost(String postId);
@@ -32,6 +37,7 @@ abstract class PostRepository {
     String? postId,
     DateTime? eventStartsAt,
     DateTime? eventEndsAt,
+    List<String> audience = const ['all'],
   });
 
   Future<void> updatePost({
@@ -42,6 +48,7 @@ abstract class PostRepository {
     required List<PostMedia> media,
     DateTime? eventStartsAt,
     DateTime? eventEndsAt,
+    List<String> audience = const ['all'],
   });
 
   Future<void> deletePost(String postId);

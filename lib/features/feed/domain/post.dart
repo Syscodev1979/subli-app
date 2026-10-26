@@ -1,4 +1,5 @@
 import 'event_time.dart';
+import 'post_audience.dart';
 import 'post_category.dart';
 
 enum PostMediaType { image, video, document }
@@ -97,6 +98,7 @@ class Post {
     this.media = const [],
     this.eventStartsAt,
     this.eventEndsAt,
+    this.audience = PostAudience.everyone,
   });
 
   final String id;
@@ -116,6 +118,13 @@ class Post {
 
   /// Eseménynél a vége, ha megadták.
   final DateTime? eventEndsAt;
+
+  /// Ki olvashatja. Üres vagy hiányzó érték minden tagnak szól.
+  final List<PostAudience> audience;
+
+  bool get audienceIsPublic => PostAudience.isPublic(audience);
+
+  List<String> get audienceKeys => [for (final item in audience) item.value];
 
   List<PostMedia> get images => [
     for (final item in media)

@@ -115,11 +115,26 @@ List<String> searchKeywords(String text, {int maxWords = 200}) {
 List<String> searchTerms(String query) => searchKeywords(query);
 
 /// A [terms] második szavától a szövegben kell szerepelniük.
-/// Az első szót a Firestore `array-contains` szűri.
+/// Az első szót a Firestore `array-contains` szűri, ha a lekérdezés megteheti.
 bool matchesExtraTerms(String text, List<String> terms) {
-  if (terms.length < 2) return true;
+  return _containsTerms(text, terms, skipFirst: true);
+}
+
+/// Minden keresőszó a szövegben kell. Sportolónál és szülőnél a szerep
+/// szűrője foglalja a tömbmezőt, ezért az első szó is itt ellenőrződik.
+bool matchesAllTerms(String text, List<String> terms) {
+  return _containsTerms(text, terms, skipFirst: false);
+}
+
+bool _containsTerms(
+  String text,
+  List<String> terms, {
+  required bool skipFirst,
+}) {
+  final start = skipFirst ? 1 : 0;
+  if (terms.length <= start) return true;
   final folded = foldAccents(text.toLowerCase());
-  for (final term in terms.skip(1)) {
+  for (final term in terms.skip(start)) {
     if (!folded.contains(term)) return false;
   }
   return true;

@@ -28,6 +28,24 @@ service firebase.storage {
         && firestore.get(postPath(postId)).data.authorId == request.auth.uid;
     }
 
+    function canReadPostFile(postId) {
+      return isAdmin() || isCoach() || (
+        activeUser()
+        && firestore.exists(postPath(postId))
+        && (
+          firestore.get(postPath(postId)).data.get('audience', ['all']).hasAny(['all'])
+          || (
+            firestore.get(userPath()).data.role == 'athlete'
+            && firestore.get(postPath(postId)).data.get('audience', ['all']).hasAny(['athletes'])
+          )
+          || (
+            firestore.get(userPath()).data.role == 'parent'
+            && firestore.get(postPath(postId)).data.get('audience', ['all']).hasAny(['parents'])
+          )
+        )
+      );
+    }
+
     function coachMayWritePost(postId) {
       return isCoach()
         && (
@@ -86,14 +104,14 @@ service firebase.storage {
     }
 
     match /posts/{postId}/docs/{fileName} {
-      allow read: if activeUser();
+      allow read: if canReadPostFile(postId);
       allow create, update: if allowedDocument()
         && (isAdmin() || coachMayWritePost(postId));
       allow delete: if activeUser() && (isAdmin() || isPostAuthor(postId));
     }
 
     match /posts/{postId}/{fileName} {
-      allow read: if activeUser();
+      allow read: if canReadPostFile(postId);
       allow create, update: if allowedUpload()
         && (isAdmin() || coachMayWritePost(postId));
       allow delete: if activeUser() && (isAdmin() || isPostAuthor(postId));

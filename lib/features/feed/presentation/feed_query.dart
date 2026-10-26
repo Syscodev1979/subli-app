@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/data/auth_providers.dart';
+import '../../auth/domain/auth_session.dart';
 import '../data/feed_providers.dart';
+import '../domain/post_audience.dart';
 import '../domain/post_category.dart';
 
 /// A hírfolyam kategóriaszűrője. A munkamenet végéig megmarad.
@@ -33,8 +36,13 @@ class FeedSearchController extends Notifier<String> {
 final newestPostIdProvider = StreamProvider<String?>((ref) {
   final search = ref.watch(feedSearchProvider);
   if (search.trim().isNotEmpty) return Stream<String?>.value(null);
+  final session = ref.watch(authGateProvider).asData?.value;
+  if (session is! AuthSignedIn) return Stream<String?>.value(null);
   final category = ref.watch(feedCategoryProvider);
   return ref
       .watch(postRepositoryProvider)
-      .watchNewestPostId(category: category);
+      .watchNewestPostId(
+        category: category,
+        audience: PostAudience.queryFor(session.user.role),
+      );
 });

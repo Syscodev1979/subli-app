@@ -11,7 +11,12 @@ class FakePostRepository implements PostRepository {
   });
 
   final PostPage page;
-  final void Function(PostCategory? category, String? keyword)? onFetch;
+  final void Function(
+    PostCategory? category,
+    String? keyword,
+    List<String>? audience,
+  )?
+  onFetch;
 
   @override
   Future<PostPage> fetchPosts({
@@ -19,13 +24,17 @@ class FakePostRepository implements PostRepository {
     int limit = PostLimits.pageSize,
     PostCategory? category,
     String? keyword,
+    List<String>? audience,
   }) async {
-    onFetch?.call(category, keyword);
+    onFetch?.call(category, keyword, audience);
     return page;
   }
 
   @override
-  Stream<String?> watchNewestPostId({PostCategory? category}) {
+  Stream<String?> watchNewestPostId({
+    PostCategory? category,
+    List<String>? audience,
+  }) {
     return Stream<String?>.value(null);
   }
 
@@ -50,6 +59,7 @@ class FakePostRepository implements PostRepository {
     String? postId,
     DateTime? eventStartsAt,
     DateTime? eventEndsAt,
+    List<String> audience = const ['all'],
   }) async {
     return postId ?? 'new-post';
   }
@@ -63,6 +73,7 @@ class FakePostRepository implements PostRepository {
     required List<PostMedia> media,
     DateTime? eventStartsAt,
     DateTime? eventEndsAt,
+    List<String> audience = const ['all'],
   }) async {}
 
   @override
