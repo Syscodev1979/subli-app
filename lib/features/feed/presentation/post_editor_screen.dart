@@ -22,8 +22,10 @@ import '../data/media_prep.dart';
 import '../data/post_media_storage.dart';
 import '../domain/event_time.dart';
 import '../domain/post.dart';
+import '../domain/post_audience.dart';
 import '../domain/post_access.dart';
 import '../domain/post_category.dart';
+import 'audience_sheet.dart';
 import 'author_avatar.dart';
 import 'category_style.dart';
 import 'document_card.dart';
@@ -64,6 +66,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   var _category = PostCategory.news;
   DateTime? _eventStartsAt;
   DateTime? _eventEndsAt;
+  List<PostAudience> _audience = PostAudience.everyone;
   var _submitting = false;
   var _preparing = false;
   var _succeeded = false;
@@ -80,6 +83,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   var _originalCategory = PostCategory.news;
   DateTime? _originalEventStartsAt;
   DateTime? _originalEventEndsAt;
+  List<PostAudience> _originalAudience = PostAudience.everyone;
   List<String?> _originalImageUrls = const [];
   String? _originalVideoUrl;
   List<String?> _originalDocumentUrls = const [];
@@ -211,7 +215,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           _video != null ||
           _documents.isNotEmpty ||
           _category != PostCategory.news ||
-          (_category == PostCategory.event && _eventStartsAt != null);
+          (_category == PostCategory.event && _eventStartsAt != null) ||
+          !PostAudience.same(_audience, PostAudience.everyone);
     }
     if (_textController.text != _originalText ||
         _pinned != _originalPinned ||
@@ -222,6 +227,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
         !sameEventMinute(_eventEndsAt, _originalEventEndsAt)) {
       return true;
     }
+    if (!PostAudience.same(_audience, _originalAudience)) return true;
     if (_video?.prepared != null ||
         _images.any((item) => item.prepared != null) ||
         _documents.any((item) => item.file != null)) {
@@ -311,6 +317,8 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     _originalCategory = post.category;
     _originalEventStartsAt = post.eventStartsAt;
     _originalEventEndsAt = post.eventEndsAt;
+    _audience = post.audience;
+    _originalAudience = post.audience;
     _images
       ..clear()
       ..addAll(post.images.map(_MediaDraft.remote));
@@ -339,7 +347,11 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
             children: [
-              _AuthorBlock(user: user),
+              _AuthorBlock(
+                user: user,
+                audience: _audience,
+                onAudience: (value) => setState(() => _audience = value),
+              ),
               const SizedBox(height: 12),
               CategoryChipRow(
                 selected: _category,
@@ -784,6 +796,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           media: media,
           eventStartsAt: _savedEventStart,
           eventEndsAt: _savedEventEnd,
+          audience: [for (final item in _audience) item.value],
         );
       } else {
         await repository.updatePost(
@@ -794,6 +807,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           media: media,
           eventStartsAt: _savedEventStart,
           eventEndsAt: _savedEventEnd,
+          audience: [for (final item in _audience) item.value],
         );
         await storage?.deleteExcept(postId, [
           for (final item in media) ...[item.url, ?item.thumbUrl],
@@ -1306,13 +1320,18 @@ class _PublishButton extends StatelessWidget {
 }
 
 class _AuthorBlock extends StatelessWidget {
-  const _AuthorBlock({required this.user});
+  const _AuthorBlock({
+    required this.user,
+    required this.audience,
+    required this.onAudience,
+  });
 
   final AppUser user;
+  final List<PostAudience> audience;
+  final ValueChanged<List<PostAudience>> onAudience;
 
   @override
   Widget build(BuildContext context) {
-    final colors = ClubColors.of(context);
     return Row(
       children: [
         _GoldRing(
@@ -1338,39 +1357,13 @@ class _AuthorBlock extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.goldSurface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.groups_outlined,
-                        size: 16,
-                        color: colors.onGoldSurface,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${AppInfo.clubName} · minden tag',
-                          maxLines: 2,
-                          style: TextStyle(
-                            color: colors.onGoldSurface,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              AudienceChip(
+                audience: audience,
+                onTap: () async {
+                  final picked = await showAudienceSheet(context, audience);
+                  if (picked == null) return;
+                  onAudience(picked);
+                },
               ),
             ],
           ),

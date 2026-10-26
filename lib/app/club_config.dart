@@ -209,6 +209,76 @@ abstract final class ClubConfig {
     }
     return null;
   }
+
+  /// A bejegyzés célközönsége. A [AudienceOption.key] kerül a `posts.audience` listába.
+  static const List<AudienceOption> audiences = [
+    AudienceOption(
+      key: 'all',
+      emoji: '🌐',
+      label: 'Minden tag',
+      description: 'A klub minden aktív tagja',
+    ),
+    AudienceOption(
+      key: 'staff',
+      emoji: '🥋',
+      label: 'Edzők és adminok',
+      description: 'Csak a vezetőség',
+    ),
+    AudienceOption(
+      key: 'parents',
+      emoji: '👨‍👩‍👧',
+      label: 'Szülők',
+      description: 'A szülők és a vezetőség',
+    ),
+    AudienceOption(
+      key: 'athletes',
+      emoji: '🏃',
+      label: 'Sportolók',
+      description: 'A sportolók és a vezetőség',
+    ),
+  ];
+
+  static AudienceOption? audienceByKey(String key) {
+    for (final option in audiences) {
+      if (option.key == key) return option;
+    }
+    return null;
+  }
+
+  /// A szerkesztő címkéje, például „🥋 Edzők és adminok”.
+  static String audienceChipLabel(List<String> keys) {
+    if (keys.isEmpty || keys.contains('all')) {
+      return '🌐 Minden tag';
+    }
+    return [
+      for (final option in audiences)
+        if (option.key != 'all' && keys.contains(option.key))
+          '${option.emoji} ${option.label}',
+    ].join(', ');
+  }
+
+  /// A kártya lakatfelirata, például „Edzők és adminok”.
+  static String audienceLockLabel(List<String> keys) {
+    return [
+      for (final option in audiences)
+        if (option.key != 'all' && keys.contains(option.key)) option.label,
+    ].join(', ');
+  }
+}
+
+/// Egy választható célközönség a szerkesztő lapján.
+class AudienceOption {
+  const AudienceOption({
+    required this.key,
+    required this.emoji,
+    required this.label,
+    required this.description,
+  });
+
+  final String key;
+  final String emoji;
+  final String label;
+  final String description;
 }
 
 /// Egy övfokozat. A [key] kerül a `users.beltRank` mezőbe.

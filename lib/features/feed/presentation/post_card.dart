@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../../core/utils/hungarian_relative_time.dart';
 import '../../auth/domain/app_user.dart';
@@ -247,6 +248,30 @@ class PostCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             CategoryLabel(category: post.category),
+                            if (!post.audienceIsPublic) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.lock,
+                                size: 14,
+                                color: AppColors.burgundy,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  ClubConfig.audienceLockLabel(
+                                    post.audienceKeys,
+                                  ),
+                                  key: const Key('audience-lock'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.burgundy,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (post.pinned) ...[
                               const SizedBox(width: 8),
                               Icon(

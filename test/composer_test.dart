@@ -29,7 +29,7 @@ void main() {
       find.text('Oszd meg a klub híreit, eredményeit, gondolataidat…'),
       findsOneWidget,
     );
-    expect(find.text('Gastroyal Karate SE · minden tag'), findsOneWidget);
+    expect(find.text('🌐 Minden tag'), findsOneWidget);
     expect(find.text('5000'), findsOneWidget);
     expect(_publishButton(tester).onTap, isNull);
     expect(_field(tester).style?.fontSize, 24);
