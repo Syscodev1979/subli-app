@@ -1,5 +1,17 @@
 # Változásnapló
 
+## 0.9.0
+
+### Hozzáadva
+
+- Bejegyzésnél megadható, ki láthatja: minden tag, edzők és adminok, szülők vagy sportolók. A minden tag kizárólagos, a többiből több is választható. A vezetőség mindig látja.
+- A szűkebb bejegyzés a szerkesztőben bordó kerettel és lakattal, a hírfolyamon a célközönség feliratával jelenik meg. Szerkesztéskor a célközönség módosítható.
+- Sportoló a mindenkihez és a sportolókhoz szóló híreket látja, szülő a mindenkihez és a szülőkhöz szólókat. Edző és admin mindent lát, a hozzászólással, a reakcióval és a csatolt fájllal együtt.
+
+### Változtatva
+
+- A célközönség nélküli régi bejegyzés minden tagnak számít. Az Adminisztráció / Karbantartás „Adatok frissítése” kitölti a mezőt.
+
 ## 0.8.1
 
 ### Hozzáadva
