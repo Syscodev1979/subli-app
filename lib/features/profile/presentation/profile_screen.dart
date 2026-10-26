@@ -22,6 +22,7 @@ import '../data/avatar_storage.dart';
 import '../data/member_repository.dart';
 import 'avatar_flow.dart';
 import 'belt_badge.dart';
+import 'profile_footer.dart';
 
 /// A bejelentkezett tag saját profilja.
 class ProfileScreen extends ConsumerWidget {
@@ -223,6 +224,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
             onTap: () => ref.read(authRepositoryProvider).signOut(),
           ),
         ),
+        const ProfileFooter(),
       ],
     );
   }
