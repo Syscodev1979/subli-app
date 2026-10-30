@@ -172,7 +172,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         isUnder18(_birthDate!);
 
     return AuthFrame(
-      logoSize: 88,
       title: 'Regisztráció',
       onBack: _submitting ? null : () => context.pop(),
       child: Form(

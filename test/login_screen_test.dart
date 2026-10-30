@@ -10,11 +10,11 @@ import 'package:gastroyal_karate_app/features/auth/domain/auth_repository.dart';
 import 'package:gastroyal_karate_app/features/auth/presentation/login_screen.dart';
 
 void main() {
-  testWidgets('a logó és a köszöntés megjelenik', (tester) async {
+  testWidgets('a logó és a klubnév megjelenik', (tester) async {
     await _surface(tester, const Size(390, 844));
     await _pump(tester, _FakeAuth());
     expect(find.text('Gastroyal Karate SE'), findsOneWidget);
-    expect(find.text('Üdv a klub zárt közösségében!'), findsOneWidget);
+    expect(find.text('Regisztráció'), findsOneWidget);
     expect(find.bySemanticsLabel('Klublogó'), findsOneWidget);
     final image = tester.widget<Image>(
       find.byWidgetPredicate(
@@ -146,10 +146,6 @@ class _FakeAuth implements AuthRepository {
   Stream<String?> watchUserId() => const Stream.empty();
 
   @override
-  Stream<({String id, String? email, bool emailVerified})?> watchIdentity() =>
-      const Stream.empty();
-
-  @override
   Future<void> signOut() async {}
 
   @override
@@ -165,10 +161,4 @@ class _FakeAuth implements AuthRepository {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {}
-
-  @override
-  Future<void> sendEmailVerification() async {}
-
-  @override
-  Future<void> reloadCurrentUser() async {}
 }

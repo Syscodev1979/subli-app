@@ -76,7 +76,6 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AuthFrame(
-      logoSize: 88,
       title: 'Elfelejtett jelszó',
       subtitle: 'A visszaállító levelet erre a címre küldjük.',
       onBack: _submitting ? null : () => context.pop(),

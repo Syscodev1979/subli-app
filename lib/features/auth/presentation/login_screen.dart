@@ -60,7 +60,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return AuthFrame(
       screenKey: const Key('login-screen'),
       title: AppInfo.clubName,
-      subtitle: 'Üdv a klub zárt közösségében!',
       child: AutofillGroup(
         child: Form(
           key: _formKey,
@@ -118,7 +117,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: _submitting
                     ? null
                     : () => context.push(AppRoutes.register),
-                child: const Text('Még nincs fiókod? Regisztráció'),
+                child: const Text('Regisztráció'),
               ),
             ],
           ),
