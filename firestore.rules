@@ -34,14 +34,12 @@ service cloud.firestore {
       return 'info@sarosigyorgy.hu';
     }
 
-    function isVerifiedAdminIdentity() {
-      return signedIn()
-        && request.auth.token.email == adminEmail()
-        && request.auth.token.email_verified == true;
+    function isDesignatedAdmin() {
+      return signedIn() && request.auth.token.email == adminEmail();
     }
 
     function isAdmin() {
-      return isActiveRole('admin') && isVerifiedAdminIdentity();
+      return isActiveRole('admin') && isDesignatedAdmin();
     }
 
     function isCoach() {

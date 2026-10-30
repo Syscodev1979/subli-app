@@ -13,18 +13,6 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Stream<({String id, String? email, bool emailVerified})?> watchIdentity() {
-    return _auth.userChanges().map((user) {
-      if (user == null) return null;
-      return (
-        id: user.uid,
-        email: user.email,
-        emailVerified: user.emailVerified,
-      );
-    });
-  }
-
-  @override
   Future<void> signIn({required String email, required String password}) {
     return _auth.signInWithEmailAndPassword(
       email: email.trim(),
@@ -62,15 +50,5 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> sendPasswordResetEmail(String email) {
     return _auth.sendPasswordResetEmail(email: email.trim());
-  }
-
-  @override
-  Future<void> sendEmailVerification() async {
-    await _auth.currentUser?.sendEmailVerification();
-  }
-
-  @override
-  Future<void> reloadCurrentUser() async {
-    await _auth.currentUser?.reload();
   }
 }

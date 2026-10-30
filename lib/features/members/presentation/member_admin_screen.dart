@@ -19,7 +19,6 @@ import '../../feed/presentation/feed_error_message.dart';
 import '../data/group_repository.dart';
 import '../data/member_admin_actions.dart';
 import '../domain/training_group.dart';
-import 'admin_email_banner.dart';
 
 /// Admin adatlap egy tagról.
 class MemberAdminScreen extends ConsumerWidget {
@@ -30,18 +29,6 @@ class MemberAdminScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(authGateProvider).asData?.value;
-    if (sessionNeedsAdminVerification(session)) {
-      return Scaffold(
-        appBar: ClubAppBar(
-          leading: IconButton(
-            tooltip: 'Vissza',
-            onPressed: () => context.pop(),
-            icon: const Icon(Icons.arrow_back),
-          ),
-        ),
-        body: const AdminEmailBanner(),
-      );
-    }
     final users = ref.watch(allUsersProvider);
     final groups = ref.watch(groupsProvider);
     final actor = session is AuthSignedIn ? session.user : null;

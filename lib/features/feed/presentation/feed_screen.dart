@@ -20,7 +20,6 @@ import 'feed_chrome.dart';
 import 'feed_controller.dart';
 import 'feed_end.dart';
 import 'feed_error_message.dart';
-import '../../members/presentation/admin_email_banner.dart';
 import 'feed_palette.dart';
 import 'feed_query.dart';
 import 'feed_search_bar.dart';
@@ -186,9 +185,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     final session = ref.watch(authGateProvider).asData?.value;
     final user = session is AuthSignedIn ? session.user : null;
-    final verifyBanner = sessionNeedsAdminVerification(session)
-        ? const AdminEmailBanner()
-        : null;
     final feed = ref.watch(feedControllerProvider);
     final search = ref.watch(feedSearchProvider);
     final category = ref.watch(feedCategoryProvider);
@@ -230,7 +226,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               controller: _scrollController,
               onRefresh: _refresh,
               user: user,
-              banner: verifyBanner,
               header: header,
               slivers: const [SliverToBoxAdapter(child: FeedSkeleton())],
             ),
@@ -238,7 +233,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               controller: _scrollController,
               onRefresh: _refresh,
               user: user,
-              banner: verifyBanner,
               header: header,
               slivers: [
                 SliverToBoxAdapter(
@@ -253,7 +247,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               controller: _scrollController,
               onRefresh: _refresh,
               user: user,
-              banner: verifyBanner,
               header: header,
               slivers: [
                 if (view.posts.isEmpty)
@@ -357,7 +350,6 @@ class _FeedFrame extends StatelessWidget {
     required this.controller,
     required this.onRefresh,
     required this.user,
-    required this.banner,
     required this.header,
     required this.slivers,
   });
@@ -365,7 +357,6 @@ class _FeedFrame extends StatelessWidget {
   final ScrollController controller;
   final Future<void> Function() onRefresh;
   final AppUser? user;
-  final Widget? banner;
   final Widget header;
   final List<Widget> slivers;
 
@@ -377,7 +368,6 @@ class _FeedFrame extends StatelessWidget {
         controller: controller,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          if (banner != null) SliverToBoxAdapter(child: banner),
           SliverToBoxAdapter(child: header),
           if (user case final current? when current.role.canWritePosts)
             SliverToBoxAdapter(child: ComposerBar(user: current)),

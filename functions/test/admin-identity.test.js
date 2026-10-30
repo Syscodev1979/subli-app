@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const {
   ADMIN_EMAIL,
   DELETED_NAME,
-  tokenIsVerifiedAdmin,
+  tokenIsAdmin,
   userRecordIsAdmin,
   memberAuditPlan,
   deletionGuard,
@@ -11,10 +11,10 @@ const {
   withoutMember,
 } = require("../admin-identity");
 
-test("admin csak a megerősített kijelölt címmel igaz", () => {
-  assert.equal(tokenIsVerifiedAdmin({ email: ADMIN_EMAIL, email_verified: true }), true);
-  assert.equal(tokenIsVerifiedAdmin({ email: ADMIN_EMAIL, email_verified: false }), false);
-  assert.equal(tokenIsVerifiedAdmin({ email: "mas@example.com", email_verified: true }), false);
+test("admin csak a kijelölt címmel igaz", () => {
+  assert.equal(tokenIsAdmin({ email: ADMIN_EMAIL, email_verified: false }), true);
+  assert.equal(tokenIsAdmin({ email: ADMIN_EMAIL }), true);
+  assert.equal(tokenIsAdmin({ email: "mas@example.com", email_verified: true }), false);
   assert.equal(
     userRecordIsAdmin({ role: "admin", status: "active", email: ADMIN_EMAIL }),
     true,

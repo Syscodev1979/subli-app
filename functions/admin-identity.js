@@ -1,9 +1,9 @@
 const ADMIN_EMAIL = "info@sarosigyorgy.hu";
 const DELETED_NAME = "Törölt tag";
 
-function tokenIsVerifiedAdmin(token) {
+function tokenIsAdmin(token) {
   if (!token || typeof token !== "object") return false;
-  return token.email === ADMIN_EMAIL && token.email_verified === true;
+  return token.email === ADMIN_EMAIL;
 }
 
 function userRecordIsAdmin(data) {
@@ -67,7 +67,7 @@ function withoutMember(ids, targetId) {
 module.exports = {
   ADMIN_EMAIL,
   DELETED_NAME,
-  tokenIsVerifiedAdmin,
+  tokenIsAdmin,
   userRecordIsAdmin,
   memberAuditPlan,
   deletionGuard,

@@ -4,25 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
-import '../../auth/data/auth_providers.dart';
 import '../../auth/presentation/auth_error_message.dart';
 import '../../feed/presentation/feed_error_message.dart';
 import '../data/group_repository.dart';
 import '../domain/training_group.dart';
-import 'admin_email_banner.dart';
 
 class GroupsScreen extends ConsumerWidget {
   const GroupsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(authGateProvider).asData?.value;
-    if (sessionNeedsAdminVerification(session)) {
-      return Scaffold(
-        appBar: _bar(context),
-        body: const AdminEmailBanner(),
-      );
-    }
     final groups = ref.watch(groupsProvider);
     return Scaffold(
       appBar: _bar(context),

@@ -13,7 +13,7 @@ const {
 const { authorPropagationPlan, chunk } = require("./profile-sync");
 const {
   DELETED_NAME,
-  tokenIsVerifiedAdmin,
+  tokenIsAdmin,
   userRecordIsAdmin,
   memberAuditPlan,
   deletionGuard,
@@ -72,8 +72,8 @@ async function assertAdmin(request) {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Bejelentkezés szükséges.");
   }
-  if (!tokenIsVerifiedAdmin(request.auth.token)) {
-    throw new HttpsError("permission-denied", "Az admin e-mail nincs megerősítve.");
+  if (!tokenIsAdmin(request.auth.token)) {
+    throw new HttpsError("permission-denied", "Csak az admin futtathatja.");
   }
   const caller = await db.collection("users").doc(request.auth.uid).get();
   if (!userRecordIsAdmin(caller.data())) {

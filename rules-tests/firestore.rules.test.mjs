@@ -1376,7 +1376,7 @@ test("senki nem állíthat be admin szerepet, az admin sem", async () => {
   );
 });
 
-test("más e-mail vagy meg nem erősített cím nem kap admin jogot", async () => {
+test("más e-mail címmel nem lehet admin", async () => {
   await seed({
     fake: userDoc({
       id: "fake",
@@ -1384,23 +1384,11 @@ test("más e-mail vagy meg nem erősített cím nem kap admin jogot", async () =
       role: "admin",
       status: "active",
     }),
-    pendingAdmin: userDoc({
-      id: "pendingAdmin",
-      email: "info@sarosigyorgy.hu",
-      role: "admin",
-      status: "active",
-    }),
   });
   const fake = testEnv.authenticatedContext("fake", {
     email: "mas@example.com",
-    email_verified: true,
-  });
-  const unverified = testEnv.authenticatedContext("pendingAdmin", {
-    email: "info@sarosigyorgy.hu",
-    email_verified: false,
   });
   await assertFails(setDoc(doc(fake.firestore(), "groups", "g1"), groupDoc()));
-  await assertFails(setDoc(doc(unverified.firestore(), "groups", "g1"), groupDoc()));
   await assertFails(getDoc(doc(fake.firestore(), "adminLog", "missing")));
 });
 
@@ -1444,7 +1432,7 @@ test("felfüggesztett tag nem olvas bejegyzést", async () => {
   await assertSucceeds(getDoc(doc(suspended.firestore(), "users", "suspended1")));
 });
 
-test("adminLog-ot a kliens nem írhat, a megerősített admin olvashatja", async () => {
+test("adminLog-ot a kliens nem írhat, az admin olvashatja", async () => {
   await seed({
     admin1: userDoc({
       id: "admin1",

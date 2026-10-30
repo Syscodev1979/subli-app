@@ -29,17 +29,13 @@ final authGateProvider = StreamProvider<AuthSession>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   final userRepository = ref.watch(userRepositoryProvider);
 
-  return authRepository.watchIdentity().asyncExpand((identity) {
-    if (identity == null) {
+  return authRepository.watchUserId().asyncExpand((id) {
+    if (id == null) {
       return Stream<AuthSession>.value(const AuthSignedOut());
     }
-    return userRepository.watchUser(identity.id).map((user) {
+    return userRepository.watchUser(id).map((user) {
       if (user == null) return const AuthProfileMissing();
-      return AuthSignedIn(
-        user,
-        emailVerified: identity.emailVerified,
-        authEmail: identity.email,
-      );
+      return AuthSignedIn(user);
     });
   });
 });

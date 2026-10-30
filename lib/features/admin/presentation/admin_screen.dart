@@ -17,7 +17,6 @@ import '../../auth/presentation/user_labels.dart';
 import '../../chat/data/chat_providers.dart';
 import '../../feed/data/feed_providers.dart';
 import '../../feed/presentation/feed_error_message.dart';
-import '../../members/presentation/admin_email_banner.dart';
 import 'admin_providers.dart';
 
 /// Jóváhagyásra váró fiókok. Admin és edző éri el.
@@ -27,18 +26,6 @@ class AdminScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(authGateProvider).asData?.value;
-    if (sessionNeedsAdminVerification(session)) {
-      return Scaffold(
-        appBar: ClubAppBar(
-          leading: IconButton(
-            tooltip: 'Vissza a hírfolyamra',
-            onPressed: () => context.go(AppRoutes.feed),
-            icon: const Icon(Icons.arrow_back),
-          ),
-        ),
-        body: const AdminEmailBanner(),
-      );
-    }
     final pending = ref.watch(pendingUsersProvider);
     final athletes = ref.watch(activeAthletesProvider);
     final reviewer = session is AuthSignedIn ? session.user : null;

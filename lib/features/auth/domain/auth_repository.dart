@@ -1,9 +1,7 @@
 /// E-mail és jelszó alapú belépés. A profiladat a [UserRepository]-ban van.
 abstract class AuthRepository {
+  /// A bejelentkezett fiók azonosítója. Kijelentkezve null.
   Stream<String?> watchUserId();
-
-  /// A bejelentkezett fiók, tokenfrissítéskor is. Kijelentkezve null.
-  Stream<({String id, String? email, bool emailVerified})?> watchIdentity();
 
   Future<void> signIn({required String email, required String password});
 
@@ -19,9 +17,4 @@ abstract class AuthRepository {
   Future<void> deleteCurrentAccount();
 
   Future<void> sendPasswordResetEmail(String email);
-
-  Future<void> sendEmailVerification();
-
-  /// Újratölti a felhasználót, hogy az e-mail-megerősítés látszódjon.
-  Future<void> reloadCurrentUser();
 }

@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
-import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/age.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/user_role.dart';
@@ -18,7 +17,6 @@ import '../data/group_repository.dart';
 import '../data/member_admin_actions.dart';
 import '../domain/member_directory.dart';
 import '../domain/training_group.dart';
-import 'admin_email_banner.dart';
 import 'member_chips.dart';
 
 /// Az összes regisztrált tag. Csak a kijelölt admin éri el.
@@ -27,13 +25,6 @@ class MembersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(authGateProvider).asData?.value;
-    if (sessionNeedsAdminVerification(session)) {
-      return Scaffold(
-        appBar: _bar(context),
-        body: const AdminEmailBanner(),
-      );
-    }
     final users = ref.watch(allUsersProvider);
     final groups = ref.watch(groupsProvider);
     return Scaffold(
