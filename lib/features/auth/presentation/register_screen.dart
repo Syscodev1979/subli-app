@@ -8,6 +8,7 @@ import '../domain/age.dart';
 import '../domain/child_request.dart';
 import '../domain/user_role.dart';
 import 'auth_error_message.dart';
+import 'auth_frame.dart';
 import 'auth_validators.dart';
 import 'password_field.dart';
 
@@ -22,12 +23,16 @@ class RegisterScreen extends ConsumerStatefulWidget {
 enum _RegistrationKind { athlete, parent, coach }
 
 class _ChildDraft {
-  _ChildDraft() : name = TextEditingController();
+  _ChildDraft() : name = TextEditingController(), focus = FocusNode();
 
   final TextEditingController name;
+  final FocusNode focus;
   DateTime? birthDate;
 
-  void dispose() => name.dispose();
+  void dispose() {
+    name.dispose();
+    focus.dispose();
+  }
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
@@ -36,6 +41,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
   final _children = <_ChildDraft>[_ChildDraft()];
 
   _RegistrationKind _kind = _RegistrationKind.athlete;
@@ -50,6 +58,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     for (final child in _children) {
       child.dispose();
     }
@@ -74,6 +85,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _submit() async {
+    if (_submitting) return;
     final formOk = _formKey.currentState?.validate() ?? false;
     final extraError = _extraError();
     if (!formOk || extraError != null) {
@@ -159,60 +171,75 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _birthDate != null &&
         isUnder18(_birthDate!);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Regisztráció'),
-        leading: IconButton(
-          tooltip: 'Vissza a bejelentkezéshez',
-          onPressed: _submitting ? null : () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+    return AuthFrame(
+      logoSize: 88,
+      title: 'Regisztráció',
+      onBack: _submitting ? null : () => context.pop(),
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                     TextFormField(
                       controller: _nameController,
                       textInputAction: TextInputAction.next,
                       textCapitalization: TextCapitalization.words,
+                      autofillHints: const [AutofillHints.name],
                       decoration: const InputDecoration(
                         labelText: 'Teljes név',
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
                       validator: validateName,
+                      onFieldSubmitted: (_) => _emailFocus.requestFocus(),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _emailController,
+                      focusNode: _emailFocus,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(labelText: 'E-mail'),
+                      decoration: const InputDecoration(
+                        labelText: 'E-mail',
+                        prefixIcon: Icon(Icons.mail_outline),
+                      ),
                       validator: validateEmail,
+                      onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                     ),
                     const SizedBox(height: 12),
                     PasswordField(
                       controller: _passwordController,
+                      focusNode: _passwordFocus,
                       label: 'Jelszó',
                       textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.newPassword],
+                      prefixIcon: const Icon(Icons.lock_outline),
                       validator: validatePassword,
+                      onFieldSubmitted: (_) => _confirmFocus.requestFocus(),
                     ),
                     const SizedBox(height: 12),
                     PasswordField(
                       controller: _confirmController,
+                      focusNode: _confirmFocus,
                       label: 'Jelszó újra',
+                      textInputAction: _kind == _RegistrationKind.parent
+                          ? TextInputAction.next
+                          : TextInputAction.done,
+                      autofillHints: const [AutofillHints.newPassword],
+                      prefixIcon: const Icon(Icons.lock_outline),
                       validator: (value) {
                         if (value != _passwordController.text) {
                           return 'A két jelszó nem egyezik.';
                         }
                         return validatePassword(value);
+                      },
+                      onFieldSubmitted: (_) {
+                        if (_kind == _RegistrationKind.parent) {
+                          _children.first.focus.requestFocus();
+                        } else {
+                          _submit();
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
@@ -276,6 +303,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           index: index,
                           draft: _children[index],
                           canRemove: _children.length > 1 && !_submitting,
+                          isLast: index == _children.length - 1,
+                          onSubmitted: () {
+                            if (index == _children.length - 1) {
+                              _submit();
+                            } else {
+                              _children[index + 1].focus.requestFocus();
+                            }
+                          },
                           onRemove: () {
                             setState(() {
                               _children.removeAt(index).dispose();
@@ -336,23 +371,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: _submitting ? null : _submit,
-                      child: _submitting
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Regisztráció'),
+                    AuthPrimaryButton(
+                      label: 'Regisztráció',
+                      busy: _submitting,
+                      onPressed: _submit,
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -387,6 +414,8 @@ class _ChildFields extends StatelessWidget {
     required this.index,
     required this.draft,
     required this.canRemove,
+    required this.isLast,
+    required this.onSubmitted,
     required this.onRemove,
     required this.onPickDate,
   });
@@ -394,6 +423,8 @@ class _ChildFields extends StatelessWidget {
   final int index;
   final _ChildDraft draft;
   final bool canRemove;
+  final bool isLast;
+  final VoidCallback onSubmitted;
   final VoidCallback onRemove;
   final VoidCallback? onPickDate;
 
@@ -421,9 +452,14 @@ class _ChildFields extends StatelessWidget {
           ),
           TextFormField(
             controller: draft.name,
+            focusNode: draft.focus,
+            textInputAction: isLast
+                ? TextInputAction.done
+                : TextInputAction.next,
             textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(labelText: 'Teljes név'),
             validator: validateName,
+            onFieldSubmitted: (_) => onSubmitted(),
           ),
           const SizedBox(height: 8),
           _DateField(

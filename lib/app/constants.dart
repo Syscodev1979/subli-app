@@ -107,6 +107,7 @@ abstract final class AppColors {
 abstract final class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
+  static const String resetPassword = '/login/reset';
   static const String register = '/register';
   static const String pending = '/pending';
   static const String feed = '/feed';

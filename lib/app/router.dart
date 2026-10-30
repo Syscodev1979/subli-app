@@ -6,6 +6,7 @@ import '../core/widgets/splash_screen.dart';
 import '../features/admin/presentation/admin_screen.dart';
 import '../features/auth/data/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/auth/presentation/password_reset_screen.dart';
 import '../features/auth/presentation/pending_screen.dart';
 import '../features/members/presentation/groups_screen.dart';
 import '../features/members/presentation/member_admin_screen.dart';
@@ -52,6 +53,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
+        routes: [
+          GoRoute(
+            path: 'reset',
+            builder: (context, state) => const PasswordResetScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.register,

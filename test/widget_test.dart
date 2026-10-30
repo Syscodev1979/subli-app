@@ -72,8 +72,8 @@ void main() {
   testWidgets('Kijelentkezve a bejelentkezés látszik', (tester) async {
     await _pumpApp(tester, const AuthSignedOut());
 
-    expect(find.text('Bejelentkezés'), findsWidgets);
-    expect(find.text('Elfelejtett jelszó'), findsOneWidget);
+    expect(find.text('Belépés'), findsOneWidget);
+    expect(find.text('Elfelejtett jelszó?'), findsOneWidget);
   });
 }
 

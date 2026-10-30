@@ -7,6 +7,10 @@ class PasswordField extends StatefulWidget {
     required this.label,
     this.validator,
     this.textInputAction = TextInputAction.done,
+    this.focusNode,
+    this.onFieldSubmitted,
+    this.prefixIcon,
+    this.autofillHints = const [AutofillHints.password],
     super.key,
   });
 
@@ -14,6 +18,10 @@ class PasswordField extends StatefulWidget {
   final String label;
   final FormFieldValidator<String>? validator;
   final TextInputAction textInputAction;
+  final FocusNode? focusNode;
+  final ValueChanged<String>? onFieldSubmitted;
+  final Widget? prefixIcon;
+  final Iterable<String> autofillHints;
 
   @override
   State<PasswordField> createState() => _PasswordFieldState();
@@ -26,18 +34,23 @@ class _PasswordFieldState extends State<PasswordField> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
+      focusNode: widget.focusNode,
       obscureText: _obscure,
       textInputAction: widget.textInputAction,
-      autofillHints: const [AutofillHints.password],
+      autofillHints: widget.autofillHints,
+      onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(
         labelText: widget.label,
-        suffixIcon: IconButton(
-          tooltip: _obscure ? 'Jelszó mutatása' : 'Jelszó elrejtése',
-          onPressed: () => setState(() => _obscure = !_obscure),
-          icon: Icon(
-            _obscure
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: ExcludeFocus(
+          child: IconButton(
+            tooltip: _obscure ? 'Jelszó mutatása' : 'Jelszó elrejtése',
+            onPressed: () => setState(() => _obscure = !_obscure),
+            icon: Icon(
+              _obscure
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+            ),
           ),
         ),
       ),

@@ -59,7 +59,9 @@ String? authRedirect({
     case AuthPhase.profileMissing:
       return location == AppRoutes.splash ? null : AppRoutes.splash;
     case AuthPhase.signedOut:
-      if (location == AppRoutes.login || location == AppRoutes.register) {
+      if (location == AppRoutes.login ||
+          location == AppRoutes.register ||
+          location == AppRoutes.resetPassword) {
         return null;
       }
       return AppRoutes.login;
@@ -72,6 +74,7 @@ String? authRedirect({
       const awayFromApp = {
         AppRoutes.login,
         AppRoutes.register,
+        AppRoutes.resetPassword,
         AppRoutes.pending,
         AppRoutes.splash,
         AppRoutes.suspended,
