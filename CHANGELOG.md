@@ -4,7 +4,7 @@
 
 ### Hozzáadva
 
-- Egyetlen admin: csak a megerősített `info@sarosigyorgy.hu` fiók kap admin jogot. A szerep az appból nem adható ki és nem vehető el.
+- Egyetlen admin: csak az `info@sarosigyorgy.hu` fiók kap admin jogot. A szerep az appból nem adható ki és nem vehető el.
 - Tagok oldal a menüben: keresés, szűrés, összesítő, és a tag adatlapja. Szerep, státusz, öv, csoport és szülő–gyermek kapcsolat szerkeszthető.
 - Felfüggesztés és végleges törlés. A törölt tag bejegyzései megmaradnak, a neve „Törölt tag” lesz. A felfüggesztett fiók csak egy tájékoztató képernyőt lát.
 - Edzéscsoportok. Az admin kezeli őket, a profilokon címkeként látszanak.
@@ -13,10 +13,8 @@
 ### Változtatva
 
 - Az edző továbbra is jóváhagyhat sportolót és szülőt, és állíthat övet. Tagot nem töröl, szerepet és csoportot nem módosít, a Tagok oldalt nem látja.
-- Ha az admin e-mailje még nincs megerősítve, a hírfolyam tetején bordó sáv kéri a megerősítést.
-- A bejelentkezés klublogóval, bordó háttérrel és kártyás űrlappal nyílik. Az e-mail mezőből az Enter a jelszóra lép, a jelszó mezőből beléptet. Belépés közben a gomb nem indul újra.
-- A regisztráció és az elfelejtett jelszó ugyanezt a fejlécet használja. Enterrel végig lehet lépni a mezőkön, az utolsó mező elküldi az űrlapot.
-- A belépő űrlapok felajánlják a telefon jelszókezelőjében mentett adatokat.
+- Az admin joghoz a szerep és a kijelölt e-mail elég. A megerősítés nem kell, a hírfolyam és az adminfelületek megerősítő sávja kikerült.
+- A bejelentkezés, a regisztráció és az elfelejtett jelszó egyszerű fehér oldalon van, sötét módban egyszínű sötét háttéren. Az e-mail mezőből az Enter a jelszóra lép, a jelszó mezőből beléptet, és a jelszókezelő felajánlhatja a mentett adatokat.
 
 ### Tesztelői kiadás
 
