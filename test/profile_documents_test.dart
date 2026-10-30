@@ -190,6 +190,23 @@ class _FakeUsers implements UserRepository {
     required String userId,
     required String? beltRank,
   }) async {}
+
+  @override
+  Stream<List<AppUser>> watchAll() => const Stream.empty();
+
+  @override
+  Future<void> saveMember({
+    required String actorId,
+    required AppUser before,
+    required String name,
+    required UserRole role,
+    required UserStatus status,
+    required String? beltRank,
+    required List<String> groupIds,
+    required DateTime? birthDate,
+    required List<String> childIds,
+    required List<String> parentIds,
+  }) async {}
 }
 
 class _FakeMembers implements MemberRepository {

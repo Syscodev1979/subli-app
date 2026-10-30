@@ -2,6 +2,7 @@
 enum UserStatus {
   pending('pending'),
   active('active'),
+  suspended('suspended'),
   rejected('rejected');
 
   const UserStatus(this.value);

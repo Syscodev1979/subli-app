@@ -20,6 +20,7 @@ class AppUserMapper {
       'status': user.status.value,
       'childIds': user.childIds,
       'parentIds': user.parentIds,
+      'groupIds': user.groupIds,
       'childRequests': user.childRequests
           .map(
             (request) => {
@@ -56,6 +57,7 @@ class AppUserMapper {
       requestedRole: data['requestedRole'] is String
           ? data['requestedRole'] as String
           : null,
+      groupIds: _stringList(data['groupIds']),
     );
   }
 

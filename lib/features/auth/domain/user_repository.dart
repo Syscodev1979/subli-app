@@ -41,4 +41,21 @@ abstract class UserRepository {
 
   /// Övfokozat. A [beltRank] null törli a mezőt.
   Future<void> setBeltRank({required String userId, required String? beltRank});
+
+  /// Minden regisztrált fiók. Csak admin olvashatja.
+  Stream<List<AppUser>> watchAll();
+
+  /// Admin mentése. Szerep, státusz vagy csoport változásakor [actorId] kerül a naplóba.
+  Future<void> saveMember({
+    required String actorId,
+    required AppUser before,
+    required String name,
+    required UserRole role,
+    required UserStatus status,
+    required String? beltRank,
+    required List<String> groupIds,
+    required DateTime? birthDate,
+    required List<String> childIds,
+    required List<String> parentIds,
+  });
 }

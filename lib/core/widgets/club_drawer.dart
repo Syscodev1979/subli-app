@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/constants.dart';
 import '../../features/auth/data/auth_providers.dart';
 import 'appearance_section.dart';
+import '../../features/auth/domain/admin_identity.dart';
 import '../../features/auth/domain/auth_session.dart';
 
 /// A hírfolyam jobb oldali menüje.
@@ -22,6 +23,7 @@ class ClubDrawer extends ConsumerWidget {
     final session = ref.watch(authGateProvider).asData?.value;
     final user = session is AuthSignedIn ? session.user : null;
     final showAdmin = user?.role.canReviewMembers ?? false;
+    final showMembers = user != null && isDesignatedAdmin(user);
 
     return Drawer(
       child: ListView(
@@ -41,6 +43,12 @@ class ClubDrawer extends ConsumerWidget {
               ),
             ),
           ),
+          if (showMembers)
+            ListTile(
+              leading: const Icon(Icons.groups_outlined),
+              title: const Text('Tagok'),
+              onTap: () => _go(context, AppRoutes.members),
+            ),
           if (showAdmin)
             ListTile(
               leading: const Icon(Icons.admin_panel_settings_outlined),

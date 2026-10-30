@@ -21,6 +21,7 @@ import '../../feed/presentation/feed_palette.dart';
 import '../data/avatar_storage.dart';
 import '../data/member_repository.dart';
 import 'avatar_flow.dart';
+import '../../members/presentation/member_chips.dart';
 import 'belt_badge.dart';
 import 'profile_footer.dart';
 
@@ -197,7 +198,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                 )
               : null,
         ),
-        const _InfoCard(label: 'Edzéscsoport', value: 'Még nincs megadva'),
+        if (user.groupIds.isEmpty)
+          const _InfoCard(label: 'Edzéscsoport', value: 'Még nincs megadva')
+        else
+          AssignedGroups(groupIds: user.groupIds),
         if (user.role == UserRole.parent && user.childIds.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(

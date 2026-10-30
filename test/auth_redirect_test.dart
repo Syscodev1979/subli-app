@@ -91,4 +91,45 @@ void main() {
       AppRoutes.feed,
     );
   });
+
+  test('felfüggesztett fiók csak a felfüggesztés képernyőjét látja', () {
+    expect(
+      authRedirect(
+        phase: AuthPhase.suspended,
+        canReviewMembers: false,
+        location: AppRoutes.feed,
+      ),
+      AppRoutes.suspended,
+    );
+    expect(
+      authRedirect(
+        phase: AuthPhase.suspended,
+        canReviewMembers: true,
+        canManageMembers: true,
+        location: AppRoutes.suspended,
+      ),
+      isNull,
+    );
+  });
+
+  test('edző nem nyitja meg a tagkezelést', () {
+    expect(
+      authRedirect(
+        phase: AuthPhase.active,
+        canReviewMembers: true,
+        canManageMembers: false,
+        location: AppRoutes.members,
+      ),
+      AppRoutes.feed,
+    );
+    expect(
+      authRedirect(
+        phase: AuthPhase.active,
+        canReviewMembers: true,
+        canManageMembers: true,
+        location: AppRoutes.groups,
+      ),
+      isNull,
+    );
+  });
 }

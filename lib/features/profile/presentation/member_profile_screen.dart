@@ -7,6 +7,7 @@ import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
 import '../../auth/data/auth_providers.dart';
+import '../../auth/domain/admin_identity.dart';
 import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
 import '../../auth/presentation/auth_error_message.dart';
@@ -15,6 +16,7 @@ import '../../chat/domain/club_member.dart';
 import '../../feed/presentation/author_avatar.dart';
 import '../../feed/presentation/feed_error_message.dart';
 import '../../feed/presentation/feed_palette.dart';
+import '../../members/presentation/member_chips.dart';
 import '../data/avatar_storage.dart';
 import '../data/member_repository.dart';
 import 'avatar_flow.dart';
@@ -69,7 +71,7 @@ class MemberProfileScreen extends ConsumerWidget {
               viewer.childIds.contains(person.id);
           final canSetBelt =
               viewer != null &&
-              (viewer.role == UserRole.admin ||
+              (isDesignatedAdmin(viewer) ||
                   (viewer.role == UserRole.coach &&
                       (person.role == UserRole.athlete ||
                           person.role == UserRole.parent)));
@@ -255,6 +257,10 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
         ),
         const SizedBox(height: 8),
         Center(child: _RoleChip(label: person.roleLabel)),
+        if (person.groupIds.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          AssignedGroups(groupIds: person.groupIds),
+        ],
         if (belt != null) ...[
           const SizedBox(height: 10),
           Center(child: BeltBadge(belt: belt)),

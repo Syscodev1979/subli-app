@@ -9,6 +9,7 @@ import '../../../core/utils/hungarian_date.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/age.dart';
 import '../../auth/domain/app_user.dart';
+import '../../auth/domain/admin_identity.dart';
 import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
 import '../../auth/presentation/auth_error_message.dart';
@@ -16,6 +17,7 @@ import '../../auth/presentation/user_labels.dart';
 import '../../chat/data/chat_providers.dart';
 import '../../feed/data/feed_providers.dart';
 import '../../feed/presentation/feed_error_message.dart';
+import '../../members/presentation/admin_email_banner.dart';
 import 'admin_providers.dart';
 
 /// Jóváhagyásra váró fiókok. Admin és edző éri el.
@@ -24,10 +26,23 @@ class AdminScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(authGateProvider).asData?.value;
+    if (sessionNeedsAdminVerification(session)) {
+      return Scaffold(
+        appBar: ClubAppBar(
+          leading: IconButton(
+            tooltip: 'Vissza a hírfolyamra',
+            onPressed: () => context.go(AppRoutes.feed),
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ),
+        body: const AdminEmailBanner(),
+      );
+    }
     final pending = ref.watch(pendingUsersProvider);
     final athletes = ref.watch(activeAthletesProvider);
-    final session = ref.watch(authGateProvider).asData?.value;
     final reviewer = session is AuthSignedIn ? session.user : null;
+    final designated = reviewer != null && isDesignatedAdmin(reviewer);
 
     return Scaffold(
       appBar: ClubAppBar(
@@ -39,7 +54,7 @@ class AdminScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          if (reviewer?.role == UserRole.admin) const _BackfillCard(),
+          if (designated) const _BackfillCard(),
           Expanded(
             child: pending.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -63,7 +78,7 @@ class AdminScreen extends ConsumerWidget {
                       user: user,
                       athletes: athleteList,
                       athletesLoading: athletes.isLoading,
-                      canAssignRoles: reviewer?.role.canAssignRoles ?? false,
+                      canAssignRoles: designated,
                       canSetBelt: reviewer?.role.canReviewMembers ?? false,
                     );
                   },
@@ -396,7 +411,7 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
                 initialValue: _role,
                 decoration: const InputDecoration(labelText: 'Szerepkör'),
                 items: [
-                  for (final role in UserRole.values)
+                  for (final role in UserRole.assignable)
                     DropdownMenuItem(value: role, child: Text(role.labelHu)),
                 ],
                 onChanged: _submitting

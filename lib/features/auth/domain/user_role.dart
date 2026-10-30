@@ -23,6 +23,13 @@ enum UserRole {
   /// Bejegyzést admin és edző írhat.
   bool get canWritePosts => canReviewMembers;
 
-  /// Edzői vagy admin szerep kiosztása.
+  /// Edzői szerep kiosztása. Az admin szerep az appból nem adható.
   bool get canAssignRoles => this == UserRole.admin;
+
+  /// A felületen választható szerepek. Az admin nincs köztük.
+  static const List<UserRole> assignable = [
+    UserRole.athlete,
+    UserRole.parent,
+    UserRole.coach,
+  ];
 }

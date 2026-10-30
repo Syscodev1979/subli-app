@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../domain/app_user.dart';
 import '../domain/user_repository.dart';
@@ -63,6 +64,7 @@ class FirestoreUserRepository implements UserRepository {
       if (assignedRole != null) 'role': assignedRole.value,
       if (resultingRole == UserRole.parent) 'childIds': linkedChildIds,
       'requestedRole': FieldValue.delete(),
+      'auditBy': FirebaseAuth.instance.currentUser?.uid,
     });
     for (final childId in linkedChildIds) {
       batch.update(_users.doc(childId), {
@@ -74,7 +76,10 @@ class FirestoreUserRepository implements UserRepository {
 
   @override
   Future<void> rejectUser(String userId) {
-    return _users.doc(userId).update({'status': UserStatus.rejected.value});
+    return _users.doc(userId).update({
+      'status': UserStatus.rejected.value,
+      'auditBy': FirebaseAuth.instance.currentUser?.uid,
+    });
   }
 
   @override
@@ -110,4 +115,76 @@ class FirestoreUserRepository implements UserRepository {
       'beltRank': beltRank ?? FieldValue.delete(),
     });
   }
+
+  @override
+  Stream<List<AppUser>> watchAll() {
+    return _users.snapshots().map((query) {
+      final users = query.docs.map(AppUserMapper.fromDoc).toList();
+      users.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      return users;
+    });
+  }
+
+  @override
+  Future<void> saveMember({
+    required String actorId,
+    required AppUser before,
+    required String name,
+    required UserRole role,
+    required UserStatus status,
+    required String? beltRank,
+    required List<String> groupIds,
+    required DateTime? birthDate,
+    required List<String> childIds,
+    required List<String> parentIds,
+  }) async {
+    final sameGroups = _sameIds(before.groupIds, groupIds);
+    final sensitive =
+        before.role != role || before.status != status || !sameGroups;
+    final batch = _firestore.batch();
+    batch.update(_users.doc(before.id), {
+      'name': name.trim(),
+      'role': role.value,
+      'status': status.value,
+      'beltRank': beltRank ?? FieldValue.delete(),
+      'groupIds': groupIds,
+      'birthDate': birthDate == null
+          ? FieldValue.delete()
+          : Timestamp.fromDate(birthDate),
+      'childIds': childIds,
+      'parentIds': parentIds,
+      if (sensitive) 'auditBy': actorId,
+    });
+    for (final id in before.childIds.where((id) => !childIds.contains(id))) {
+      batch.update(_users.doc(id), {
+        'parentIds': FieldValue.arrayRemove([before.id]),
+      });
+    }
+    for (final id in childIds.where((id) => !before.childIds.contains(id))) {
+      batch.update(_users.doc(id), {
+        'parentIds': FieldValue.arrayUnion([before.id]),
+      });
+    }
+    for (final id in before.parentIds.where((id) => !parentIds.contains(id))) {
+      batch.update(_users.doc(id), {
+        'childIds': FieldValue.arrayRemove([before.id]),
+      });
+    }
+    for (final id in parentIds.where((id) => !before.parentIds.contains(id))) {
+      batch.update(_users.doc(id), {
+        'childIds': FieldValue.arrayUnion([before.id]),
+      });
+    }
+    await batch.commit();
+  }
+}
+
+bool _sameIds(List<String> left, List<String> right) {
+  if (left.length != right.length) return false;
+  final a = [...left]..sort();
+  final b = [...right]..sort();
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }

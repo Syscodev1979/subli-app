@@ -2,6 +2,9 @@
 abstract class AuthRepository {
   Stream<String?> watchUserId();
 
+  /// A bejelentkezett fiók, tokenfrissítéskor is. Kijelentkezve null.
+  Stream<({String id, String? email, bool emailVerified})?> watchIdentity();
+
   Future<void> signIn({required String email, required String password});
 
   Future<void> signOut();
@@ -16,4 +19,9 @@ abstract class AuthRepository {
   Future<void> deleteCurrentAccount();
 
   Future<void> sendPasswordResetEmail(String email);
+
+  Future<void> sendEmailVerification();
+
+  /// Újratölti a felhasználót, hogy az e-mail-megerősítés látszódjon.
+  Future<void> reloadCurrentUser();
 }

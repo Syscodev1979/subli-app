@@ -67,7 +67,7 @@ class MessageBubble extends StatelessWidget {
                       ? ProfileTap(
                           userId: message.senderId,
                           child: AuthorAvatar(
-                            name: author?.name ?? '?',
+                            name: author?.name ?? 'Törölt tag',
                             photoUrl: author?.photoUrl,
                             radius: 12,
                           ),

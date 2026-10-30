@@ -7,6 +7,10 @@ import '../features/admin/presentation/admin_screen.dart';
 import '../features/auth/data/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/pending_screen.dart';
+import '../features/members/presentation/groups_screen.dart';
+import '../features/members/presentation/member_admin_screen.dart';
+import '../features/members/presentation/members_screen.dart';
+import '../features/members/presentation/suspended_screen.dart';
 import '../features/auth/presentation/register_screen.dart';
 import '../features/calendar/presentation/calendar_screen.dart';
 import '../features/chat/presentation/chat_screen.dart';
@@ -36,6 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return authRedirect(
         phase: authPhaseOf(session),
         canReviewMembers: canReviewMembersOf(session),
+        canManageMembers: canManageMembersOf(session),
         location: state.matchedLocation,
       );
     },
@@ -132,6 +137,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.admin,
         builder: (context, state) => const AdminScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.members,
+        builder: (context, state) => const MembersScreen(),
+        routes: [
+          GoRoute(
+            path: ':uid',
+            builder: (context, state) {
+              return MemberAdminScreen(userId: state.pathParameters['uid']!);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.groups,
+        builder: (context, state) => const GroupsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.suspended,
+        builder: (context, state) => const SuspendedScreen(),
       ),
     ],
   );

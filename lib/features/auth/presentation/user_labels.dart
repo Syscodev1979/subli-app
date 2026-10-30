@@ -14,6 +14,7 @@ extension UserStatusLabel on UserStatus {
   String get labelHu => switch (this) {
     UserStatus.pending => 'Jóváhagyásra vár',
     UserStatus.active => 'Aktív',
+    UserStatus.suspended => 'Felfüggesztve',
     UserStatus.rejected => 'Elutasítva',
   };
 }

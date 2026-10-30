@@ -10,6 +10,7 @@ class ClubMember {
     required this.isMinor,
     required this.parentIds,
     this.beltRank,
+    this.groupIds = const [],
   });
 
   final String id;
@@ -19,6 +20,7 @@ class ClubMember {
   final bool isMinor;
   final List<String> parentIds;
   final String? beltRank;
+  final List<String> groupIds;
 
   /// A tagkereső címkéje.
   String get roleLabel => switch (role) {

@@ -18,6 +18,7 @@ class AppUser {
     required this.createdAt,
     this.beltRank,
     this.requestedRole,
+    this.groupIds = const [],
   });
 
   final String id;
@@ -39,6 +40,9 @@ class AppUser {
 
   /// Jelentkezéskor kért szerep. Jelenleg csak `coach` lehet, és csak létrehozáskor.
   final String? requestedRole;
+
+  /// Edzéscsoportok azonosítói. Csak admin írhatja.
+  final List<String> groupIds;
 
   bool get requestedCoach => requestedRole == 'coach';
 }

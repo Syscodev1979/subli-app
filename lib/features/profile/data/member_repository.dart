@@ -27,6 +27,7 @@ class FirestoreMemberRepository implements MemberRepository {
       if (role == null) return null;
       final photo = data['photoUrl'];
       final parents = data['parentIds'];
+      final groups = data['groupIds'];
       return ClubMember(
         id: doc.id,
         name: data['name'] is String ? data['name'] as String : '',
@@ -39,6 +40,9 @@ class FirestoreMemberRepository implements MemberRepository {
         beltRank: data['beltRank'] is String
             ? data['beltRank'] as String
             : null,
+        groupIds: groups is List
+            ? groups.map((item) => item.toString()).toList()
+            : const [],
       );
     });
   }
