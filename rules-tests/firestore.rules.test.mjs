@@ -193,11 +193,13 @@ test("admin módosíthatja egy edző státuszát", async () => {
   });
 
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "admin@example.com",
+    email: "info@sarosigyorgy.hu",
+    email_verified: true,
   });
   await assertSucceeds(
     updateDoc(doc(admin.firestore(), "users", "coach1"), {
       status: "rejected",
+      auditBy: "admin1",
     }),
   );
 });
@@ -223,6 +225,7 @@ test("edző jóváhagyhat egy pending sportolót", async () => {
   await assertSucceeds(
     updateDoc(doc(coach.firestore(), "users", "athlete1"), {
       status: "active",
+      auditBy: "coach1",
     }),
   );
 });
@@ -543,7 +546,8 @@ test("a szerző és az admin törölheti az idegen pipát", async () => {
     createdAt,
   });
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "admin@example.com",
+    email: "info@sarosigyorgy.hu",
+    email_verified: true,
   });
   await assertSucceeds(
     deleteDoc(doc(admin.firestore(), "posts", "post-1", "checks", "athlete1")),
@@ -704,7 +708,8 @@ test("sportoló nem tölthet fel, edző igen, a szerző törölheti a fájlt", a
     }),
   );
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "admin@example.com",
+    email: "info@sarosigyorgy.hu",
+    email_verified: true,
   });
   await assertSucceeds(
     deleteObject(ref(admin.storage(), "posts/post-1/b.jpg")),
@@ -761,7 +766,8 @@ test("edző csak a saját vagy még nem létező bejegyzéshez tölthet fel", as
   );
 
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "admin@example.com",
+    email: "info@sarosigyorgy.hu",
+    email_verified: true,
   });
   await assertSucceeds(
     uploadString(ref(admin.storage(), "posts/post-1/c.jpg"), "img", "raw", {
@@ -1316,4 +1322,151 @@ test("célközönség nélküli régi bejegyzés minden aktív tagnak látszik",
     email: "parent@example.com",
   });
   await assertSucceeds(getDoc(doc(parent.firestore(), "posts", "legacy")));
+});
+
+const adminToken = { email: "info@sarosigyorgy.hu", email_verified: true };
+
+function groupDoc() {
+  return {
+    name: "Kezdők",
+    color: "#2E7D32",
+    description: "Alap csoport",
+    createdAt,
+  };
+}
+
+test("senki nem állíthat be admin szerepet, az admin sem", async () => {
+  await seed({
+    admin1: userDoc({
+      id: "admin1",
+      email: "info@sarosigyorgy.hu",
+      role: "admin",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      status: "active",
+    }),
+  });
+  const admin = testEnv.authenticatedContext("admin1", adminToken);
+  await assertFails(
+    updateDoc(doc(admin.firestore(), "users", "athlete1"), {
+      role: "admin",
+      auditBy: "admin1",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(admin.firestore(), "users", "admin1"), {
+      role: "coach",
+      auditBy: "admin1",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(admin.firestore(), "users", "admin1"), {
+      status: "suspended",
+      auditBy: "admin1",
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(admin.firestore(), "users", "athlete1"), {
+      role: "coach",
+      auditBy: "admin1",
+    }),
+  );
+});
+
+test("más e-mail vagy meg nem erősített cím nem kap admin jogot", async () => {
+  await seed({
+    fake: userDoc({
+      id: "fake",
+      email: "mas@example.com",
+      role: "admin",
+      status: "active",
+    }),
+    pendingAdmin: userDoc({
+      id: "pendingAdmin",
+      email: "info@sarosigyorgy.hu",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  const fake = testEnv.authenticatedContext("fake", {
+    email: "mas@example.com",
+    email_verified: true,
+  });
+  const unverified = testEnv.authenticatedContext("pendingAdmin", {
+    email: "info@sarosigyorgy.hu",
+    email_verified: false,
+  });
+  await assertFails(setDoc(doc(fake.firestore(), "groups", "g1"), groupDoc()));
+  await assertFails(setDoc(doc(unverified.firestore(), "groups", "g1"), groupDoc()));
+  await assertFails(getDoc(doc(fake.firestore(), "adminLog", "missing")));
+});
+
+test("edző nem írhat csoportot és nem módosíthat szerepet", async () => {
+  await seed({
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", { email: "coach@example.com" });
+  await assertFails(setDoc(doc(coach.firestore(), "groups", "g1"), groupDoc()));
+  await assertFails(
+    updateDoc(doc(coach.firestore(), "users", "athlete1"), {
+      role: "coach",
+      auditBy: "coach1",
+    }),
+  );
+});
+
+test("felfüggesztett tag nem olvas bejegyzést", async () => {
+  await seed({
+    suspended1: userDoc({
+      id: "suspended1",
+      email: "stop@example.com",
+      status: "suspended",
+    }),
+  });
+  await seedDoc(["posts", "news"], postDoc());
+  const suspended = testEnv.authenticatedContext("suspended1", {
+    email: "stop@example.com",
+  });
+  await assertFails(getDoc(doc(suspended.firestore(), "posts", "news")));
+  await assertSucceeds(getDoc(doc(suspended.firestore(), "users", "suspended1")));
+});
+
+test("adminLog-ot a kliens nem írhat, a megerősített admin olvashatja", async () => {
+  await seed({
+    admin1: userDoc({
+      id: "admin1",
+      email: "info@sarosigyorgy.hu",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  await seedDoc(["adminLog", "log1"], {
+    actorId: "admin1",
+    targetId: "athlete1",
+    action: "status",
+    createdAt,
+  });
+  const admin = testEnv.authenticatedContext("admin1", adminToken);
+  await assertSucceeds(getDoc(doc(admin.firestore(), "adminLog", "log1")));
+  await assertFails(
+    setDoc(doc(admin.firestore(), "adminLog", "log2"), {
+      actorId: "admin1",
+      action: "delete",
+      createdAt,
+    }),
+  );
+  await assertSucceeds(setDoc(doc(admin.firestore(), "groups", "g1"), groupDoc()));
 });

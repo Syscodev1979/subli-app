@@ -16,7 +16,10 @@ service firebase.storage {
     }
 
     function isAdmin() {
-      return activeUser() && firestore.get(userPath()).data.role == 'admin';
+      return activeUser()
+        && firestore.get(userPath()).data.role == 'admin'
+        && request.auth.token.email == 'info@sarosigyorgy.hu'
+        && request.auth.token.email_verified == true;
     }
 
     function isCoach() {

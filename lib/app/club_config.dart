@@ -19,6 +19,11 @@ abstract final class ClubConfig {
   /// A profil „Visszajelzés küldése” sora ide nyit e-mailt.
   static const String feedbackEmail = 'info@gastroyalkarate.hu';
 
+  /// Az egyetlen admin e-mail címe. Ugyanez a szöveg szerepel a Firestore és
+  /// a Storage szabályokban, valamint a Cloud Functionsben. Új klubnál mind
+  /// a négy helyen cserélni kell. Lásd a docs/UJ_KLUB.md fájlt.
+  static const String adminEmail = 'info@sarosigyorgy.hu';
+
   /// Az iOS alkalmazás minimum verziója.
   static const String iosMinimumVersion = '15.0';
 

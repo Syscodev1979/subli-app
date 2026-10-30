@@ -11,6 +11,15 @@ const {
   nameKeywords,
 } = require("./conversation-logic");
 const { authorPropagationPlan, chunk } = require("./profile-sync");
+const {
+  DELETED_NAME,
+  tokenIsVerifiedAdmin,
+  userRecordIsAdmin,
+  memberAuditPlan,
+  deletionGuard,
+  unlinkPlan,
+  withoutMember,
+} = require("./admin-identity");
 
 setGlobalOptions({ region: "europe-west3" });
 initializeApp();
@@ -55,7 +64,21 @@ function memberFromUser(id, data, today) {
     searchKeywords: nameKeywords(typeof data.name === "string" ? data.name : ""),
     status: "active",
     beltRank: typeof data.beltRank === "string" && data.beltRank ? data.beltRank : null,
+    groupIds: Array.isArray(data.groupIds) ? data.groupIds.filter((id) => typeof id === "string") : [],
   };
+}
+
+async function assertAdmin(request) {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Bejelentkezés szükséges.");
+  }
+  if (!tokenIsVerifiedAdmin(request.auth.token)) {
+    throw new HttpsError("permission-denied", "Az admin e-mail nincs megerősítve.");
+  }
+  const caller = await db.collection("users").doc(request.auth.uid).get();
+  if (!userRecordIsAdmin(caller.data())) {
+    throw new HttpsError("permission-denied", "Csak az admin futtathatja.");
+  }
 }
 
 async function propagateAuthor(uid, plan) {
@@ -93,6 +116,21 @@ async function loadActiveUser(id, today) {
   person.parentIds = await activeParents(person.parentIds, today);
   return person;
 }
+
+exports.auditMemberChange = onDocumentWritten("users/{uid}", async (event) => {
+  const before = event.data?.before?.data() || null;
+  const after = event.data?.after?.data() || null;
+  const plan = memberAuditPlan(before, after);
+  if (!plan || !plan.actorId) return;
+  await db.collection("adminLog").add({
+    actorId: plan.actorId,
+    targetId: event.params.uid,
+    action: plan.action,
+    before: plan.before,
+    after: plan.after,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+});
 
 exports.syncMember = onDocumentWritten("users/{uid}", async (event) => {
   const uid = event.params.uid;
@@ -208,14 +246,7 @@ exports.onMessageUpdated = onDocumentUpdated(
 );
 
 exports.backfillMembers = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "Bejelentkezés szükséges.");
-  }
-  const caller = await db.collection("users").doc(request.auth.uid).get();
-  const callerData = caller.data();
-  if (!caller.exists || callerData.status !== "active" || callerData.role !== "admin") {
-    throw new HttpsError("permission-denied", "Csak admin futtathatja.");
-  }
+  await assertAdmin(request);
   const today = budapestToday();
   const users = await db.collection("users").where("status", "==", "active").get();
   let count = 0;
@@ -233,4 +264,112 @@ exports.backfillMembers = onCall(async (request) => {
   }
   if (writes > 0) await batch.commit();
   return { count };
+});
+
+async function commitInChunks(docs, apply) {
+  for (const group of chunk(docs, 400)) {
+    const batch = db.batch();
+    for (const doc of group) apply(batch, doc);
+    await batch.commit();
+  }
+}
+
+exports.deleteMember = onCall(async (request) => {
+  await assertAdmin(request);
+  const targetId = request.data?.uid;
+  if (typeof targetId !== "string" || !targetId) {
+    throw new HttpsError("invalid-argument", "Hiányzó tag.");
+  }
+  const targetRef = db.collection("users").doc(targetId);
+  const targetSnap = await targetRef.get();
+  const guard = deletionGuard({
+    callerId: request.auth.uid,
+    targetId,
+    target: targetSnap.exists ? targetSnap.data() : null,
+  });
+  if (!guard.ok) {
+    throw new HttpsError(
+      guard.reason === "self" || guard.reason === "admin" ? "failed-precondition" : "not-found",
+      guard.reason === "self"
+        ? "A saját fiók nem törölhető."
+        : guard.reason === "admin"
+          ? "Az admin fiók nem törölhető."
+          : "A tag nem található.",
+    );
+  }
+  const target = targetSnap.data();
+  await propagateAuthor(targetId, { authorName: DELETED_NAME, authorPhotoUrl: null });
+
+  const byMember = await db.collection("conversations")
+    .where("memberIds", "array-contains", targetId)
+    .get();
+  const byGuardian = await db.collection("conversations")
+    .where("guardianIds", "array-contains", targetId)
+    .get();
+  const conversations = new Map();
+  for (const doc of [...byMember.docs, ...byGuardian.docs]) {
+    conversations.set(doc.id, doc);
+  }
+  await commitInChunks([...conversations.values()], (batch, doc) => {
+    const data = doc.data();
+    batch.update(doc.ref, {
+      memberIds: withoutMember(data.memberIds, targetId),
+      guardianIds: withoutMember(data.guardianIds, targetId),
+    });
+  });
+
+  const links = unlinkPlan(target);
+  for (const childId of links.childIds) {
+    await db.collection("users").doc(childId).update({
+      parentIds: FieldValue.arrayRemove(targetId),
+    }).catch(() => {});
+  }
+  for (const parentId of links.parentIds) {
+    await db.collection("users").doc(parentId).update({
+      childIds: FieldValue.arrayRemove(targetId),
+    }).catch(() => {});
+  }
+
+  await db.collection("members").doc(targetId).delete().catch(() => {});
+  await targetRef.delete();
+  const { getAuth } = require("firebase-admin/auth");
+  await getAuth().deleteUser(targetId).catch((error) => {
+    if (error?.code !== "auth/user-not-found") throw error;
+  });
+  const { getStorage } = require("firebase-admin/storage");
+  await getStorage().bucket().file(`users/${targetId}/avatar.jpg`).delete({ ignoreNotFound: true }).catch(() => {});
+  await db.collection("adminLog").add({
+    actorId: request.auth.uid,
+    targetId,
+    action: "delete",
+    targetName: typeof target.name === "string" ? target.name : "",
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  return { deleted: true };
+});
+
+exports.deleteGroup = onCall(async (request) => {
+  await assertAdmin(request);
+  const groupId = request.data?.groupId;
+  if (typeof groupId !== "string" || !groupId) {
+    throw new HttpsError("invalid-argument", "Hiányzó csoport.");
+  }
+  const groupRef = db.collection("groups").doc(groupId);
+  const group = await groupRef.get();
+  if (!group.exists) {
+    throw new HttpsError("not-found", "A csoport nem található.");
+  }
+  const users = await db.collection("users").where("groupIds", "array-contains", groupId).get();
+  await commitInChunks(users.docs, (batch, doc) => {
+    batch.update(doc.ref, { groupIds: FieldValue.arrayRemove(groupId) });
+  });
+  await groupRef.delete();
+  await db.collection("adminLog").add({
+    actorId: request.auth.uid,
+    targetId: groupId,
+    action: "delete-group",
+    targetName: typeof group.data().name === "string" ? group.data().name : "",
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  return { deleted: true };
 });

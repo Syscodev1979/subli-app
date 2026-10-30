@@ -30,8 +30,18 @@ service cloud.firestore {
         && caller().get('role', null) == role;
     }
 
+    function adminEmail() {
+      return 'info@sarosigyorgy.hu';
+    }
+
+    function isVerifiedAdminIdentity() {
+      return signedIn()
+        && request.auth.token.email == adminEmail()
+        && request.auth.token.email_verified == true;
+    }
+
     function isAdmin() {
-      return isActiveRole('admin');
+      return isActiveRole('admin') && isVerifiedAdminIdentity();
     }
 
     function isCoach() {
@@ -62,6 +72,8 @@ service cloud.firestore {
         'createdAt',
         'beltRank',
         'requestedRole',
+        'groupIds',
+        'auditBy',
       ]);
     }
 
@@ -97,8 +109,54 @@ service cloud.firestore {
         && unchanged('createdAt')
         && unchanged('childRequests')
         && unchanged('requestedRole')
+        && unchanged('groupIds')
         && resource.data.get('requestedRole', null) != 'coach'
-        && validBeltRank(request.resource.data.get('beltRank', null));
+        && resource.data.get('role', null) != 'admin'
+        && request.resource.data.get('status', null) != 'suspended'
+        && validBeltRank(request.resource.data.get('beltRank', null))
+        && (
+          unchanged('status')
+          || request.resource.data.get('auditBy', null) == request.auth.uid
+        );
+    }
+
+    // Az admin szerep nem hozható létre és nem vehető el az appból.
+    function adminRoleFrozen() {
+      return resource.data.get('role', null) == 'admin'
+        ? request.resource.data.get('role', null) == 'admin'
+        : request.resource.data.get('role', null) != 'admin';
+    }
+
+    function adminAccountStaysActive() {
+      return resource.data.get('role', null) != 'admin'
+        || (
+          request.resource.data.get('status', null) == 'active'
+          && request.resource.data.get('email', null) == resource.data.get('email', null)
+        );
+    }
+
+    function sensitiveMemberChange() {
+      return !unchanged('role') || !unchanged('status') || !unchanged('groupIds');
+    }
+
+    function adminMayUpdate() {
+      return isAdmin()
+        && hasAllowedKeys()
+        && adminRoleFrozen()
+        && adminAccountStaysActive()
+        && request.resource.data.get('id', null) == resource.data.get('id', null)
+        && request.resource.data.get('email', null) == resource.data.get('email', null)
+        && unchanged('createdAt')
+        && request.resource.data.get('status', null) in [
+          'pending', 'active', 'suspended', 'rejected',
+        ]
+        && request.resource.data.get('groupIds', []) is list
+        && request.resource.data.get('groupIds', []).size() <= 20
+        && validBeltRank(request.resource.data.get('beltRank', null))
+        && (
+          !sensitiveMemberChange()
+          || request.resource.data.get('auditBy', null) == request.auth.uid
+        );
     }
 
     // A szülő a gyermeke dokumentumában csak a profilképet cserélheti.
@@ -123,6 +181,8 @@ service cloud.firestore {
         && unchanged('email')
         && unchanged('beltRank')
         && unchanged('requestedRole')
+        && unchanged('groupIds')
+        && unchanged('auditBy')
         && request.resource.data.get('name', '') is string
         && request.resource.data.get('name', '').size() >= 2
         && request.resource.data.get('name', '').size() <= 120
@@ -150,6 +210,7 @@ service cloud.firestore {
         && data.get('email', null) == request.auth.token.email
         && data.get('createdAt', null) is timestamp
         && data.get('beltRank', null) == null
+        && data.get('groupIds', []).size() == 0
         && validRequestedRole(data)
         && (
           data.get('role', null) == 'parent'
@@ -334,7 +395,7 @@ service cloud.firestore {
       let role = caller().get('role', '');
       return caller().get('status', '') == 'active'
         && (
-          role == 'admin'
+          isAdmin()
           || role == 'coach'
           || data.get('audience', ['all']).hasAny(['all'])
           || (role == 'athlete' && data.get('audience', ['all']).hasAny(['athletes']))
@@ -389,7 +450,7 @@ service cloud.firestore {
       allow create: if isSelf(userId) && validCreate(userId);
 
       // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat.
-      allow update: if isAdmin()
+      allow update: if adminMayUpdate()
         || coachMayUpdate()
         || parentMayUpdatePhoto()
         || (isSelf(userId) && hasAllowedKeys() && protectedFieldsUnchanged());
@@ -409,7 +470,7 @@ service cloud.firestore {
       allow update: if validPostShape()
         && isActive()
         && (
-          caller().get('role', null) == 'admin'
+          isAdmin()
           || (
             resource.data.get('authorId', null) == request.auth.uid
             && unchanged('authorId')
@@ -494,6 +555,33 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastReadAt'])
         && after.diff(before).affectedKeys().hasOnly([request.auth.uid])
         && after[request.auth.uid] is timestamp;
+    }
+
+    function validGroup() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['name', 'color', 'description', 'createdAt'])
+        && data.get('name', null) is string
+        && data.get('name', '').size() > 0
+        && data.get('name', '').size() <= 80
+        && data.get('color', null) is string
+        && data.get('color', '').size() == 7
+        && (
+          data.get('description', null) == null
+          || data.get('description', null) is string
+        )
+        && data.get('createdAt', null) is timestamp;
+    }
+
+    match /groups/{groupId} {
+      allow read: if isActive();
+      allow create: if isAdmin() && validGroup();
+      allow update: if isAdmin() && validGroup() && unchanged('createdAt');
+      allow delete: if false;
+    }
+
+    match /adminLog/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     match /members/{memberId} {
