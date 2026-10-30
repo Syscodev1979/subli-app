@@ -14,6 +14,9 @@
 
 - Az edző továbbra is jóváhagyhat sportolót és szülőt, és állíthat övet. Tagot nem töröl, szerepet és csoportot nem módosít, a Tagok oldalt nem látja.
 - Ha az admin e-mailje még nincs megerősítve, a hírfolyam tetején bordó sáv kéri a megerősítést.
+- A bejelentkezés klublogóval, bordó háttérrel és kártyás űrlappal nyílik. Az e-mail mezőből az Enter a jelszóra lép, a jelszó mezőből beléptet. Belépés közben a gomb nem indul újra.
+- A regisztráció és az elfelejtett jelszó ugyanezt a fejlécet használja. Enterrel végig lehet lépni a mezőkön, az utolsó mező elküldi az űrlapot.
+- A belépő űrlapok felajánlják a telefon jelszókezelőjében mentett adatokat.
 
 ### Tesztelői kiadás
 
