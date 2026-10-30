@@ -2,6 +2,21 @@
 
 ## 1.0.0
 
+### Hozzáadva
+
+- Egyetlen admin: csak a megerősített `info@sarosigyorgy.hu` fiók kap admin jogot. A szerep az appból nem adható ki és nem vehető el.
+- Tagok oldal a menüben: keresés, szűrés, összesítő, és a tag adatlapja. Szerep, státusz, öv, csoport és szülő–gyermek kapcsolat szerkeszthető.
+- Felfüggesztés és végleges törlés. A törölt tag bejegyzései megmaradnak, a neve „Törölt tag” lesz. A felfüggesztett fiók csak egy tájékoztató képernyőt lát.
+- Edzéscsoportok. Az admin kezeli őket, a profilokon címkeként látszanak.
+- Adminnapló a szerep-, státusz-, csoport- és törlésműveletekről. A kliens nem írhatja.
+
+### Változtatva
+
+- Az edző továbbra is jóváhagyhat sportolót és szülőt, és állíthat övet. Tagot nem töröl, szerepet és csoportot nem módosít, a Tagok oldalt nem látja.
+- Ha az admin e-mailje még nincs megerősítve, a hírfolyam tetején bordó sáv kéri a megerősítést.
+
+### Tesztelői kiadás
+
 Az első tesztelői kiadás.
 
 ### Hozzáadva
