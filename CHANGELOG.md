@@ -1,5 +1,12 @@
 # Subli
 
+## 0.2.3
+
+### Változtatva
+
+- Az alkalmazásikon a teljes Subli logó, a PAARDENVOEDERS felirattal. A fejlesztői ikonon a DEV sáv megmarad. Az iOS és az Android ikonok mindkét flavorra újragenerálva.
+- A verzió `0.2.3+5`.
+
 ## 0.2.2
 
 ### Változtatva
