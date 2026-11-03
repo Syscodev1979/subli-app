@@ -5,6 +5,9 @@ import '../../../core/utils/hungarian_relative_time.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
+import '../../safety/data/safety_repository.dart';
+import '../../safety/domain/content_report.dart';
+import '../../safety/presentation/report_sheet.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
@@ -118,12 +121,29 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                         )
                       else
                         for (final comment in items)
-                          _CommentBubble(
-                            comment: comment,
-                            canDelete:
-                                user != null && canDeleteComment(user, comment),
-                            onDelete: () => _deleteComment(comment.id),
-                          ),
+                          if (!comment.hidden &&
+                              !(ref.watch(blockedIdsProvider).asData?.value ??
+                                      const <String>{})
+                                  .contains(comment.authorId))
+                            _CommentBubble(
+                              comment: comment,
+                              canDelete:
+                                  user != null &&
+                                  canDeleteComment(user, comment),
+                              canReport:
+                                  user != null && comment.authorId != user.id,
+                              onDelete: () => _deleteComment(comment.id),
+                              onReport: () => showReportSheet(
+                                context,
+                                ref,
+                                targetType: ReportTargetType.comment,
+                                targetId: comment.id,
+                                targetAuthorId: comment.authorId,
+                                targetPath:
+                                    'posts/${value.id}/comments/${comment.id}',
+                                snapshot: comment.text,
+                              ),
+                            ),
                     ],
                   ),
                 );
@@ -257,12 +277,16 @@ class _CommentBubble extends StatelessWidget {
   const _CommentBubble({
     required this.comment,
     required this.canDelete,
+    required this.canReport,
     required this.onDelete,
+    required this.onReport,
   });
 
   final PostComment comment;
   final bool canDelete;
+  final bool canReport;
   final VoidCallback onDelete;
+  final VoidCallback onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -318,7 +342,9 @@ class _CommentBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                  onLongPress: canDelete ? () => _askDelete(context) : null,
+                  onLongPress: canDelete || canReport
+                      ? () => _ask(context)
+                      : null,
                   child: bubble,
                 ),
                 const SizedBox(height: 4),
@@ -337,20 +363,33 @@ class _CommentBubble extends StatelessWidget {
     );
   }
 
-  Future<void> _askDelete(BuildContext context) async {
+  Future<void> _ask(BuildContext context) async {
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (context) {
         return SafeArea(
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('Törlés'),
-            onTap: () => Navigator.of(context).pop('delete'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (canReport)
+                ListTile(
+                  leading: const Icon(Icons.flag_outlined),
+                  title: const Text('Jelentés'),
+                  onTap: () => Navigator.of(context).pop('report'),
+                ),
+              if (canDelete)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline),
+                  title: const Text('Törlés'),
+                  onTap: () => Navigator.of(context).pop('delete'),
+                ),
+            ],
           ),
         );
       },
     );
     if (action == 'delete') onDelete();
+    if (action == 'report') onReport();
   }
 }

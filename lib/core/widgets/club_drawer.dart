@@ -56,6 +56,12 @@ class ClubDrawer extends ConsumerWidget {
               title: const Text('Adminisztráció'),
               onTap: () => _go(context, AppRoutes.admin),
             ),
+          if (showMembers)
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: const Text('Jelentések'),
+              onTap: () => _go(context, AppRoutes.reports),
+            ),
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Profil'),

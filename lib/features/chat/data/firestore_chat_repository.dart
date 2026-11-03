@@ -178,6 +178,7 @@ class FirestoreChatRepository implements ChatRepository {
       text: data['text'] is String ? data['text'] as String : '',
       createdAt: _date(data['createdAt']),
       deleted: data['deleted'] == true,
+      hidden: data['hidden'] == true,
     );
   }
 

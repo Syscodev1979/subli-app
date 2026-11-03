@@ -99,6 +99,7 @@ class Post {
     this.eventStartsAt,
     this.eventEndsAt,
     this.audience = PostAudience.everyone,
+    this.hidden = false,
   });
 
   final String id;
@@ -118,6 +119,9 @@ class Post {
 
   /// Eseménynél a vége, ha megadták.
   final DateTime? eventEndsAt;
+
+  /// Az admin elrejtette. A hírfolyam nem mutatja.
+  final bool hidden;
 
   /// Ki olvashatja. Üres vagy hiányzó érték minden tagnak szól.
   final List<PostAudience> audience;
@@ -177,6 +181,7 @@ class PostComment {
     required this.authorPhotoUrl,
     required this.text,
     required this.createdAt,
+    this.hidden = false,
   });
 
   final String id;
@@ -185,6 +190,9 @@ class PostComment {
   final String? authorPhotoUrl;
   final String text;
   final DateTime createdAt;
+
+  /// Az admin elrejtette.
+  final bool hidden;
 }
 
 /// Egy lap a hírfolyamból. A [cursor] a következő lap kiinduló pontja.

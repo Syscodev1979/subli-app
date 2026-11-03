@@ -43,6 +43,12 @@ class AdminScreen extends ConsumerWidget {
       body: Column(
         children: [
           if (designated) const _BackfillCard(),
+          if (designated)
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: const Text('Jelentések'),
+              onTap: () => context.push(AppRoutes.reports),
+            ),
           Expanded(
             child: pending.when(
               loading: () => const Center(child: CircularProgressIndicator()),

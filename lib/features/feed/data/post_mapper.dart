@@ -32,6 +32,7 @@ class PostMapper {
       eventStartsAt: _optionalDate(data['eventStartsAt']),
       eventEndsAt: _optionalDate(data['eventEndsAt']),
       audience: PostAudience.listFrom(data['audience']),
+      hidden: data['hidden'] == true,
     );
   }
 
@@ -76,6 +77,7 @@ class PostMapper {
       authorPhotoUrl: _photo(data['authorPhotoUrl']),
       text: data['text'] as String? ?? '',
       createdAt: _date(data['createdAt']),
+      hidden: data['hidden'] == true,
     );
   }
 

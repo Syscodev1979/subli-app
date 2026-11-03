@@ -1674,3 +1674,131 @@ test("adminLog-ot a kliens nem írhat, az admin olvashatja", async () => {
   );
   await assertSucceeds(setDoc(doc(admin.firestore(), "groups", "g1"), groupDoc()));
 });
+
+function reportDoc(overrides = {}) {
+  return {
+    reporterId: "athlete1",
+    targetType: "post",
+    targetId: "post-1",
+    targetAuthorId: "coach1",
+    targetPath: "posts/post-1",
+    reason: "offensive",
+    details: "Sértő szöveg.",
+    snapshot: "Holnap edzés.",
+    status: "open",
+    createdAt,
+    ...overrides,
+  };
+}
+
+test("a config/app mindenkié, írni csak az admin tudja", async () => {
+  await seed({
+    admin1: userDoc({
+      id: "admin1",
+      email: "info@sarosigyorgy.hu",
+      role: "admin",
+      status: "active",
+    }),
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "member",
+      status: "active",
+    }),
+  });
+  const guest = testEnv.unauthenticatedContext();
+  await assertSucceeds(getDoc(doc(guest.firestore(), "config", "app")));
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertFails(
+    setDoc(doc(athlete.firestore(), "config", "app"), {
+      minVersion: "0.5.0",
+    }),
+  );
+  const admin = testEnv.authenticatedContext("admin1", adminToken);
+  await assertSucceeds(
+    setDoc(doc(admin.firestore(), "config", "app"), {
+      minVersion: "0.5.0",
+      latestVersion: "0.5.0",
+    }),
+  );
+});
+
+test("jelentést a beküldő hoz létre, olvasni csak az admin tudja", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "member",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      email: "athlete2@example.com",
+      role: "member",
+      status: "active",
+    }),
+    admin1: userDoc({
+      id: "admin1",
+      email: "info@sarosigyorgy.hu",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  const athlete = testEnv.authenticatedContext("athlete1", {
+    email: "athlete@example.com",
+  });
+  await assertSucceeds(
+    setDoc(doc(athlete.firestore(), "reports", "r1"), reportDoc()),
+  );
+  await assertFails(getDoc(doc(athlete.firestore(), "reports", "r1")));
+  const other = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(getDoc(doc(other.firestore(), "reports", "r1")));
+  const admin = testEnv.authenticatedContext("admin1", adminToken);
+  await assertSucceeds(getDoc(doc(admin.firestore(), "reports", "r1")));
+});
+
+test("letiltás után a chatüzenet elutasítva", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "member",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      email: "athlete2@example.com",
+      role: "member",
+      status: "active",
+    }),
+  });
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "conversations", "c-block"), {
+      memberIds: ["athlete1", "athlete2"],
+      type: "direct",
+      createdAt,
+      updatedAt: createdAt,
+      lastReadAt: {},
+      hasMinor: false,
+      guardianIds: [],
+    });
+    await setDoc(doc(context.firestore(), "users", "athlete1", "blocks", "athlete2"), {
+      createdAt,
+    });
+  });
+  const sender = testEnv.authenticatedContext("athlete2", {
+    email: "athlete2@example.com",
+  });
+  await assertFails(
+    setDoc(doc(sender.firestore(), "conversations", "c-block", "messages", "m2"), {
+      senderId: "athlete2",
+      text: "Szia",
+      createdAt,
+      deleted: false,
+    }),
+  );
+});

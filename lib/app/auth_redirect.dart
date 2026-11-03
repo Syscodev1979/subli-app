@@ -83,7 +83,8 @@ String? authRedirect({
       if (location == AppRoutes.admin && !canReviewMembers) {
         return AppRoutes.feed;
       }
-      if (isMemberAdminRoute(location) && !canManageMembers) {
+      if ((isMemberAdminRoute(location) || location == AppRoutes.reports) &&
+          !canManageMembers) {
         return AppRoutes.feed;
       }
       return null;

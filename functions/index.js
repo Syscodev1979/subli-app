@@ -22,6 +22,11 @@ const {
   unlinkPlan,
   withoutMember,
 } = require("./admin-identity");
+const {
+  DELETED_USER_NAME,
+  selfDeleteAllowed,
+  reportActionAllowed,
+} = require("./account-deletion");
 
 setGlobalOptions({ region: "europe-west3" });
 initializeApp();
@@ -360,6 +365,112 @@ exports.deleteMember = onCall(async (request) => {
     createdAt: FieldValue.serverTimestamp(),
   });
   return { deleted: true };
+});
+
+exports.deleteOwnAccount = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Bejelentkezés szükséges.");
+  }
+  const uid = request.auth.uid;
+  const targetRef = db.collection("users").doc(uid);
+  const targetSnap = await targetRef.get();
+  const user = targetSnap.exists ? targetSnap.data() : null;
+  const guard = selfDeleteAllowed(user);
+  if (!guard.ok) {
+    throw new HttpsError(
+      "failed-precondition",
+      guard.reason === "admin"
+        ? "Az admin fiók nem törölhető."
+        : "A fiók nem található.",
+    );
+  }
+  await propagateAuthor(uid, { authorName: DELETED_USER_NAME, authorPhotoUrl: null });
+  const posts = await db.collection("posts").where("authorId", "==", uid).get();
+  await commitInChunks(posts.docs, (batch, doc) => {
+    batch.update(doc.ref, { media: [] });
+  });
+  const { getStorage } = require("firebase-admin/storage");
+  const bucket = getStorage().bucket();
+  await bucket.file(`users/${uid}/avatar.jpg`).delete({ ignoreNotFound: true }).catch(() => {});
+  for (const doc of posts.docs) {
+    await bucket.deleteFiles({ prefix: `posts/${doc.id}/` }).catch(() => {});
+  }
+
+  const byMember = await db.collection("conversations")
+    .where("memberIds", "array-contains", uid)
+    .get();
+  await commitInChunks(byMember.docs, (batch, doc) => {
+    const data = doc.data();
+    batch.update(doc.ref, {
+      memberIds: withoutMember(data.memberIds, uid),
+      guardianIds: withoutMember(data.guardianIds, uid),
+    });
+  });
+
+  await db.collection("members").doc(uid).delete().catch(() => {});
+  await targetRef.delete();
+  const { getAuth } = require("firebase-admin/auth");
+  await getAuth().deleteUser(uid).catch((error) => {
+    if (error?.code !== "auth/user-not-found") throw error;
+  });
+  return { deleted: true, anonymizedAs: DELETED_USER_NAME };
+});
+
+function reportTargetRef(report) {
+  const path = typeof report.targetPath === "string" ? report.targetPath : "";
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length < 2 || parts.length % 2 !== 0) return null;
+  let ref = db;
+  for (let i = 0; i < parts.length; i += 2) {
+    ref = ref.collection(parts[i]).doc(parts[i + 1]);
+  }
+  return ref;
+}
+
+exports.resolveReport = onCall(async (request) => {
+  await assertAdmin(request);
+  const reportId = request.data?.reportId;
+  const action = request.data?.action;
+  if (typeof reportId !== "string" || !reportId || !reportActionAllowed(action)) {
+    throw new HttpsError("invalid-argument", "Hiányzó jelentés vagy művelet.");
+  }
+  const reportRef = db.collection("reports").doc(reportId);
+  const reportSnap = await reportRef.get();
+  if (!reportSnap.exists) {
+    throw new HttpsError("not-found", "A jelentés nem található.");
+  }
+  const report = reportSnap.data();
+  const target = reportTargetRef(report);
+  if (action === "hide" && target && report.targetType !== "profile") {
+    await target.update({ hidden: true }).catch(() => {});
+  }
+  if (action === "delete" && target && report.targetType !== "profile") {
+    if (report.targetType === "message") {
+      await target.update({ deleted: true, text: "", hidden: true }).catch(() => {});
+    } else {
+      await target.delete().catch(() => {});
+    }
+  }
+  if (action === "suspend") {
+    const authorId = report.targetAuthorId;
+    if (typeof authorId === "string" && authorId) {
+      await db.collection("users").doc(authorId).update({
+        status: "suspended",
+        auditBy: request.auth.uid,
+      }).catch(() => {});
+      await db.collection("members").doc(authorId).update({
+        status: "suspended",
+      }).catch(() => {});
+    }
+  }
+  if (action === "close") {
+    await reportRef.update({
+      status: "closed",
+      closedAt: FieldValue.serverTimestamp(),
+      closedBy: request.auth.uid,
+    });
+  }
+  return { ok: true };
 });
 
 exports.deleteGroup = onCall(async (request) => {

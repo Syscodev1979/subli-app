@@ -378,6 +378,7 @@ service cloud.firestore {
           'eventStartsAt',
           'eventEndsAt',
           'audience',
+          'hidden',
         ])
         && data.get('authorId', null) is string
         && authorName is string
@@ -397,6 +398,7 @@ service cloud.firestore {
         && data.get('createdAt', null) is timestamp
         && data.get('updatedAt', null) is timestamp
         && data.get('pinned', null) is bool
+        && data.get('hidden', false) is bool
         && data.get('category', '') in [
           'post',
           'announcement',
@@ -654,7 +656,9 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read: if inConversation(conversationId);
-        allow create: if inConversation(conversationId) && messageShape();
+        allow create: if inConversation(conversationId)
+          && messageShape()
+          && !messagesBlocked(conversationId);
         allow update: if inConversation(conversationId)
           && resource.data.senderId == request.auth.uid
           && request.resource.data.keys().hasOnly(['senderId', 'text', 'createdAt', 'deleted'])
@@ -664,6 +668,82 @@ service cloud.firestore {
           && request.resource.data.text == '';
         allow delete: if false;
       }
+    }
+
+    function messagesBlocked(conversationId) {
+      let members = get(conversationPath(conversationId)).data.get('memberIds', []);
+      return members.size() == 2
+        && (
+          exists(/databases/$(database)/documents/users/$(members[0])/blocks/$(members[1]))
+          || exists(/databases/$(database)/documents/users/$(members[1])/blocks/$(members[0]))
+        );
+    }
+
+    match /config/{docId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && docId == 'app'
+        && request.resource.data.keys().hasOnly(['minVersion', 'latestVersion'])
+        && request.resource.data.minVersion is string
+        && request.resource.data.minVersion.size() > 0
+        && request.resource.data.minVersion.size() <= 20
+        && (
+          !('latestVersion' in request.resource.data)
+          || (
+            request.resource.data.latestVersion is string
+            && request.resource.data.latestVersion.size() <= 20
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow create: if validReport();
+      allow read: if isAdmin();
+      allow update, delete: if false;
+
+      function validReport() {
+        let data = request.resource.data;
+        return isActive()
+          && data.keys().hasOnly([
+            'reporterId',
+            'targetType',
+            'targetId',
+            'targetAuthorId',
+            'targetPath',
+            'reason',
+            'details',
+            'snapshot',
+            'status',
+            'createdAt',
+          ])
+          && data.reporterId == request.auth.uid
+          && data.targetType in ['post', 'comment', 'message', 'profile']
+          && data.targetId is string
+          && data.targetId.size() > 0
+          && data.targetId.size() <= 200
+          && data.targetAuthorId is string
+          && data.targetAuthorId.size() <= 128
+          && data.targetPath is string
+          && data.targetPath.size() <= 300
+          && data.reason in ['offensive', 'spam', 'offtopic', 'other']
+          && data.details is string
+          && data.details.size() <= 500
+          && data.snapshot is string
+          && data.snapshot.size() <= 500
+          && data.status == 'open'
+          && data.createdAt is timestamp;
+      }
+    }
+
+    match /users/{userId}/blocks/{blockedId} {
+      allow read: if isSelf(userId) || isAdmin();
+      allow create: if isSelf(userId)
+        && blockedId != userId
+        && request.resource.data.keys().hasOnly(['createdAt'])
+        && request.resource.data.createdAt is timestamp;
+      allow delete: if isSelf(userId);
+      allow update: if false;
     }
 
     match /{document=**} {

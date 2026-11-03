@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/club_config.dart';
+import '../../../core/utils/external_link.dart';
 import '../../feed/presentation/feed_palette.dart';
 
 /// A profil alján a verzió és a visszajelző e-mail.
@@ -73,6 +74,16 @@ class _ProfileFooterState extends State<ProfileFooter> {
           leading: const Icon(Icons.mail_outline),
           title: const Text('Visszajelzés küldése'),
           onTap: _sendFeedback,
+        ),
+        ListTile(
+          leading: const Icon(Icons.privacy_tip_outlined),
+          title: const Text('Adatvédelmi tájékoztató'),
+          onTap: () => openExternal(ClubConfig.privacyPolicyUrl),
+        ),
+        ListTile(
+          leading: const Icon(Icons.description_outlined),
+          title: const Text('Felhasználási feltételek'),
+          onTap: () => openExternal(ClubConfig.termsOfUseUrl),
         ),
         if (_version.isNotEmpty)
           Padding(

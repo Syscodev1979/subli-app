@@ -8,6 +8,7 @@ class ChatMessage {
     required this.text,
     required this.createdAt,
     required this.deleted,
+    this.hidden = false,
     this.delivery = MessageDelivery.sent,
   });
 
@@ -16,15 +17,22 @@ class ChatMessage {
   final String text;
   final DateTime createdAt;
   final bool deleted;
+  final bool hidden;
   final MessageDelivery delivery;
 
-  ChatMessage copyWith({MessageDelivery? delivery, String? text, bool? deleted}) {
+  ChatMessage copyWith({
+    MessageDelivery? delivery,
+    String? text,
+    bool? deleted,
+    bool? hidden,
+  }) {
     return ChatMessage(
       id: id,
       senderId: senderId,
       text: text ?? this.text,
       createdAt: createdAt,
       deleted: deleted ?? this.deleted,
+      hidden: hidden ?? this.hidden,
       delivery: delivery ?? this.delivery,
     );
   }

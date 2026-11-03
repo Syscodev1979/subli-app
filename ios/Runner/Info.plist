@@ -50,11 +50,11 @@
 			</dict>
 		</dict>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>A klubhírekhez fotót választhatsz a galériából.</string>
+		<string>A fotótárból képet választhatsz a posztjaidhoz és a profilodhoz.</string>
 		<key>NSCameraUsageDescription</key>
-		<string>A klubhírekhez fotót vagy videót készíthetsz a kamerával.</string>
+		<string>A kamerával fotót készíthetsz a posztjaidhoz.</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>A videó hangjához a mikrofon szükséges.</string>
+		<string>A posztokhoz készített videó hangját a mikrofon veszi fel.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UILaunchStoryboardName</key>

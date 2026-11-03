@@ -94,7 +94,9 @@ void main() {
       expect(find.text(ClubConfig.loginCredit!), findsOneWidget);
 
       final title = tester.widget<Text>(find.byKey(const Key('login-title')));
-      final theme = Theme.of(tester.element(find.byKey(const Key('login-title'))));
+      final theme = Theme.of(
+        tester.element(find.byKey(const Key('login-title'))),
+      );
       expect(title.textAlign, TextAlign.center);
       expect(title.style?.fontWeight, FontWeight.bold);
       expect(title.style?.fontSize, theme.textTheme.titleLarge?.fontSize);
@@ -131,7 +133,9 @@ void main() {
     await _surface(tester, const Size(390, 844));
     await _pump(tester, _FakeAuth(), dark: true);
     final title = tester.widget<Text>(find.byKey(const Key('login-title')));
-    final theme = Theme.of(tester.element(find.byKey(const Key('login-title'))));
+    final theme = Theme.of(
+      tester.element(find.byKey(const Key('login-title'))),
+    );
     expect(theme.brightness, Brightness.dark);
     expect(title.style?.color, theme.colorScheme.onSurface);
     expect(
@@ -222,10 +226,7 @@ void main() {
           authRepositoryProvider.overrideWithValue(auth),
           emulatorOfflineProvider.overrideWithValue(true),
         ],
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(),
-        ),
+        child: MaterialApp(theme: AppTheme.light, home: const LoginScreen()),
       ),
     );
     await tester.pumpAndSettle();
@@ -298,6 +299,9 @@ class _FakeAuth implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> reauthenticate({required String password}) async {}
 
   @override
   Future<({String id, String email})> createAccount({

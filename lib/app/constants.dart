@@ -141,6 +141,7 @@ abstract final class AppRoutes {
   static String member(String id) => '/members/$id';
   static const String calendar = '/calendar';
   static const String admin = '/admin';
+  static const String reports = '/admin/reports';
   static const String members = '/admin/members';
   static const String groups = '/admin/groups';
   static const String suspended = '/suspended';

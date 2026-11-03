@@ -15,6 +15,7 @@ import 'app/router.dart';
 import 'app/theme.dart';
 import 'app/theme_controller.dart';
 import 'app/theme_preference.dart';
+import 'features/app_update/presentation/version_gate.dart';
 import 'features/auth/data/auth_providers.dart';
 import 'features/auth/domain/auth_session.dart';
 
@@ -92,12 +93,13 @@ class SubliApp extends ConsumerWidget {
             child: child ?? const SizedBox.shrink(),
           ),
         );
-        if (!useFirebaseEmulator) return app;
+        final gated = VersionGate(child: app);
+        if (!useFirebaseEmulator) return gated;
         return Banner(
           message: 'EMULÁTOR',
           location: BannerLocation.topStart,
           color: const Color(0xFFB45309),
-          child: app,
+          child: gated,
         );
       },
       routerConfig: router,

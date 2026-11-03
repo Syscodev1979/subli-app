@@ -341,6 +341,11 @@ async function main() {
       });
   }
 
+  await db.collection('config').doc('app').set({
+    minVersion: '0.5.0',
+    latestVersion: '0.5.0',
+  });
+
   console.log('Mintaadat kész: 5 fiók, 4 csoport, 5 bejegyzés, 2 beszélgetés.');
 }
 

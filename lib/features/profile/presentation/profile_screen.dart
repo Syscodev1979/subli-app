@@ -9,6 +9,7 @@ import '../../../core/utils/hungarian_date.dart';
 import '../../../core/widgets/appearance_section.dart';
 import '../../../core/widgets/club_app_bar.dart';
 import '../../auth/data/auth_providers.dart';
+import '../../auth/domain/admin_identity.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
@@ -18,6 +19,7 @@ import '../../auth/presentation/auth_validators.dart';
 import '../../chat/domain/club_member.dart';
 import '../../feed/presentation/author_avatar.dart';
 import '../../feed/presentation/feed_palette.dart';
+import '../../safety/data/safety_repository.dart';
 import '../data/avatar_storage.dart';
 import '../data/member_repository.dart';
 import 'avatar_flow.dart';
@@ -107,6 +109,60 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Profil frissítve')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    if (isDesignatedAdmin(widget.user)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Az admin fiók nem törölhető.')),
+      );
+      return;
+    }
+    final controller = TextEditingController();
+    final password = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Fiókom törlése'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'A profilod, a belépésed és a feltöltött képeid törlődnek. A bejegyzéseid és a hozzászólásaid megmaradnak, „Törölt felhasználó” néven.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Jelszó'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Mégse'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+              child: const Text('Törlés'),
+            ),
+          ],
+        );
+      },
+    );
+    final typed = password;
+    controller.dispose();
+    if (typed == null || typed.isEmpty || !mounted) return;
+    try {
+      await ref.read(authRepositoryProvider).reauthenticate(password: typed);
+      await ref.read(safetyRepositoryProvider).deleteOwnAccount();
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -221,6 +277,18 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
           child: const AppearanceSection(),
         ),
         const SizedBox(height: 8),
+        Card(
+          color: FeedPalette.card(context),
+          elevation: 0,
+          child: ListTile(
+            leading: Icon(
+              Icons.delete_forever,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: const Text('Fiókom törlése'),
+            onTap: _deleteAccount,
+          ),
+        ),
         Card(
           color: FeedPalette.card(context),
           elevation: 0,

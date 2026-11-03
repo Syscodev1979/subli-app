@@ -12,6 +12,7 @@ import '../../auth/data/auth_providers.dart';
 import '../../chat/data/chat_providers.dart';
 import '../../chat/presentation/chat_button.dart';
 import '../../auth/domain/app_user.dart';
+import '../../safety/data/safety_repository.dart';
 import '../../auth/domain/auth_session.dart';
 import '../domain/post_category.dart';
 import '../domain/search_keywords.dart';
@@ -245,51 +246,66 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 ),
               ],
             ),
-            data: (view) => _FeedFrame(
-              controller: _scrollController,
-              onRefresh: _refresh,
-              user: user,
-              header: header,
-              slivers: [
-                if (view.posts.isEmpty)
-                  SliverToBoxAdapter(
-                    child: _EmptyFeed(
-                      message: _emptyMessage(
-                        search: search,
-                        category: category,
+            data: (view) {
+              final blocked =
+                  ref.watch(blockedIdsProvider).asData?.value ??
+                  const <String>{};
+              final posts = [
+                for (final post in view.posts)
+                  if (!post.hidden && !blocked.contains(post.authorId)) post,
+              ];
+              final visible = FeedView(
+                posts: posts,
+                hasMore: view.hasMore,
+                loadingMore: view.loadingMore,
+                cursor: view.cursor,
+              );
+              return _FeedFrame(
+                controller: _scrollController,
+                onRefresh: _refresh,
+                user: user,
+                header: header,
+                slivers: [
+                  if (visible.posts.isEmpty)
+                    SliverToBoxAdapter(
+                      child: _EmptyFeed(
+                        message: _emptyMessage(
+                          search: search,
+                          category: category,
+                        ),
                       ),
-                    ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final currentUser = user;
-                      if (currentUser == null) return const SizedBox.shrink();
-                      if (index >= view.posts.length) {
-                        if (view.loadingMore) {
-                          return const FeedSkeleton(cards: 1);
+                    )
+                  else
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final currentUser = user;
+                        if (currentUser == null) return const SizedBox.shrink();
+                        if (index >= visible.posts.length) {
+                          if (visible.loadingMore) {
+                            return const FeedSkeleton(cards: 1);
+                          }
+                          return const FeedEndMark();
                         }
-                        return const FeedEndMark();
-                      }
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom:
-                              index == view.posts.length - 1 &&
-                                  !view.loadingMore &&
-                                  view.hasMore
-                              ? 24
-                              : 8,
-                        ),
-                        child: PostTile(
-                          post: view.posts[index],
-                          user: currentUser,
-                          highlights: highlights,
-                        ),
-                      );
-                    }, childCount: view.posts.length + _tail(view)),
-                  ),
-              ],
-            ),
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom:
+                                index == visible.posts.length - 1 &&
+                                    !visible.loadingMore &&
+                                    visible.hasMore
+                                ? 24
+                                : 8,
+                          ),
+                          child: PostTile(
+                            post: visible.posts[index],
+                            user: currentUser,
+                            highlights: highlights,
+                          ),
+                        );
+                      }, childCount: visible.posts.length + _tail(visible)),
+                    ),
+                ],
+              );
+            },
           ),
           Positioned(
             top: 8,

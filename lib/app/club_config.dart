@@ -106,6 +106,21 @@ abstract final class ClubConfig {
   /// TODO_SUBLI: a visszajelző cím. Addig senki nem kap levelet.
   static const String feedbackEmail = 'visszajelzes-beallitando@invalid';
 
+  /// TODO_SUBLI: az App Store oldal. A Frissítés gomb addig ezt nyitja.
+  static const String appStoreUrl =
+      'https://example.invalid/TODO_SUBLI/app-store';
+
+  /// TODO_SUBLI: a Google Play oldal. A Frissítés gomb addig ezt nyitja.
+  static const String playStoreUrl = 'https://example.invalid/TODO_SUBLI/play';
+
+  /// TODO_SUBLI: adatvédelmi tájékoztató. Külső böngészőben nyílik.
+  static const String privacyPolicyUrl =
+      'https://example.invalid/TODO_SUBLI/adatvedelem';
+
+  /// TODO_SUBLI: felhasználási feltételek. Külső böngészőben nyílik.
+  static const String termsOfUseUrl =
+      'https://example.invalid/TODO_SUBLI/feltetelek';
+
   /// Az egyetlen admin e-mail, kisbetűsen tárolva. Az összehasonlítás a
   /// bejövő címet is kisbetűsíti. Ugyanez a szöveg szerepel a Firestore és a
   /// Storage szabályokban, valamint a Cloud Functionsben.

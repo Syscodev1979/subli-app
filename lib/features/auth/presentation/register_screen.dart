@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/club_config.dart';
+import '../../../core/utils/external_link.dart';
 import '../../../core/utils/hungarian_date.dart';
 import '../data/auth_providers.dart';
 import '../domain/age.dart';
@@ -167,24 +168,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return null;
   }
 
-  void _showPrivacyNotice() {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Adatkezelési tájékoztató'),
-          content: const Text(
-            'A tájékoztató szövege később kerül ide. A regisztrációhoz a jelölőnégyzet bejelölése kötelező. A klub a megadott adatokat a tagság és az edzések szervezéséhez használja.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Bezárás'),
-            ),
-          ],
-        );
-      },
-    );
+  void _openLegal(String url) {
+    openExternal(url);
   }
 
   @override
@@ -372,12 +357,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 title: const Text('Elfogadom az adatkezelési tájékoztatót.'),
-                subtitle: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: _showPrivacyNotice,
-                    child: const Text('Tájékoztató megnyitása'),
-                  ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'A sértő tartalom és viselkedés tilos, és ilyenkor a fiók felfüggeszthető.',
+                    ),
+                    TextButton(
+                      onPressed: () => _openLegal(ClubConfig.privacyPolicyUrl),
+                      child: const Text('Adatvédelmi tájékoztató'),
+                    ),
+                    TextButton(
+                      onPressed: () => _openLegal(ClubConfig.termsOfUseUrl),
+                      child: const Text('Felhasználási feltételek'),
+                    ),
+                  ],
                 ),
               ),
               if (_error != null) ...[

@@ -7,6 +7,9 @@ import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../../core/utils/hungarian_relative_time.dart';
 import '../../auth/domain/app_user.dart';
+import '../../safety/data/safety_repository.dart';
+import '../../safety/domain/content_report.dart';
+import '../../safety/presentation/report_sheet.dart';
 import '../data/feed_providers.dart';
 import '../domain/post.dart';
 import '../domain/post_access.dart';
@@ -164,6 +167,7 @@ class PostCard extends StatelessWidget {
     required this.onOpenComments,
     this.onEdit,
     this.onDelete,
+    this.onReport,
     this.expanded = false,
     this.showPreview = true,
     this.highlights = const [],
@@ -184,6 +188,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback onOpenComments;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onReport;
   final bool expanded;
   final bool showPreview;
   final List<String> highlights;
@@ -294,7 +299,7 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (canManage)
+                if (canManage || onReport != null)
                   PopupMenuButton<String>(
                     tooltip: 'Műveletek',
                     icon: Icon(
@@ -304,10 +309,24 @@ class PostCard extends StatelessWidget {
                     onSelected: (value) {
                       if (value == 'edit') onEdit?.call();
                       if (value == 'delete') onDelete?.call();
+                      if (value == 'report') onReport?.call();
                     },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Szerkesztés')),
-                      PopupMenuItem(value: 'delete', child: Text('Törlés')),
+                    itemBuilder: (context) => [
+                      if (canManage)
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Szerkesztés'),
+                        ),
+                      if (canManage)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Törlés'),
+                        ),
+                      if (onReport != null)
+                        const PopupMenuItem(
+                          value: 'report',
+                          child: Text('Jelentés'),
+                        ),
                     ],
                   ),
               ],
@@ -810,6 +829,12 @@ class _PostTileState extends ConsumerState<PostTile> {
     final reaction = _hasReactionOverride ? _reactionOverride : serverReaction;
     final serverCount = reactions.asData?.value;
     final commentCount = comments.asData?.value;
+    final blocked =
+        ref.watch(blockedIdsProvider).asData?.value ?? const <String>{};
+    final preview = [
+      for (final comment in recent.asData?.value ?? const <PostComment>[])
+        if (!comment.hidden && !blocked.contains(comment.authorId)) comment,
+    ];
 
     ref.listen(myReactionProvider(post.id), (previous, next) {
       final value = next.asData?.value;
@@ -832,9 +857,7 @@ class _PostTileState extends ConsumerState<PostTile> {
       commentCount: commentCount,
       myReaction: reaction,
       canManage: canManagePost(widget.user, post),
-      recentComments: (commentCount ?? 0) > 0
-          ? (recent.asData?.value ?? const <PostComment>[])
-          : const <PostComment>[],
+      recentComments: (commentCount ?? 0) > 0 ? preview : const <PostComment>[],
       expanded: widget.expanded,
       showPreview: widget.showPreview,
       highlights: widget.highlights,
@@ -855,6 +878,17 @@ class _PostTileState extends ConsumerState<PostTile> {
           () => context.push(AppRoutes.feedPost(post.id)),
       onEdit: () => context.push(AppRoutes.editPost(post.id)),
       onDelete: () => deletePostFlow(context, ref, post.id),
+      onReport: post.authorId == widget.user.id
+          ? null
+          : () => showReportSheet(
+              context,
+              ref,
+              targetType: ReportTargetType.post,
+              targetId: post.id,
+              targetAuthorId: post.authorId,
+              targetPath: 'posts/${post.id}',
+              snapshot: post.text,
+            ),
     );
   }
 

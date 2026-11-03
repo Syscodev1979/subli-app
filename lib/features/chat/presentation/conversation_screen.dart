@@ -9,6 +9,9 @@ import '../../../app/constants.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
+import '../../safety/data/safety_repository.dart';
+import '../../safety/domain/content_report.dart';
+import '../../safety/presentation/report_sheet.dart';
 import '../../feed/presentation/author_avatar.dart';
 import '../../feed/presentation/feed_palette.dart';
 import '../data/chat_providers.dart';
@@ -150,6 +153,25 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     }
   }
 
+  void _messageMenu(ChatMessage message) {
+    final session = ref.read(authGateProvider).asData?.value;
+    final mine = session is AuthSignedIn && message.senderId == session.user.id;
+    if (mine) {
+      _ownMenu(message);
+      return;
+    }
+    showReportSheet(
+      context,
+      ref,
+      targetType: ReportTargetType.message,
+      targetId: message.id,
+      targetAuthorId: message.senderId,
+      targetPath:
+          'conversations/${widget.conversationId}/messages/${message.id}',
+      snapshot: message.text,
+    );
+  }
+
   void _ownMenu(ChatMessage message) {
     showModalBottomSheet<void>(
       context: context,
@@ -232,8 +254,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     final server = messagesState.asData?.value ?? const <ChatMessage>[];
     final knownIds = {for (final message in server) message.id};
+    final blocked =
+        ref.watch(blockedIdsProvider).asData?.value ?? const <String>{};
     final thread = [
-      ...server,
+      for (final message in server)
+        if (!message.hidden && !blocked.contains(message.senderId)) message,
       for (final message in _pending)
         if (!knownIds.contains(message.id)) message,
     ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -283,7 +308,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                     myId: myId,
                     conversation: conversation,
                     members: members,
-                    onLongPress: _ownMenu,
+                    onLongPress: _messageMenu,
                     onRetry: (message) =>
                         _send(message.text, messageId: message.id),
                   ),
@@ -497,9 +522,7 @@ class _Thread extends StatelessWidget {
           author: members[message.senderId],
           receipt: receipt?.label,
           seenBy: receipt?.seenBy ?? const [],
-          onLongPress: mine && !message.deleted
-              ? () => onLongPress(message)
-              : null,
+          onLongPress: !message.deleted ? () => onLongPress(message) : null,
           onRetry: message.delivery == MessageDelivery.failed
               ? () => onRetry(message)
               : null,

@@ -11,6 +11,9 @@ import '../../auth/domain/admin_identity.dart';
 import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
 import '../../auth/presentation/auth_error_message.dart';
+import '../../safety/data/safety_repository.dart';
+import '../../safety/domain/content_report.dart';
+import '../../safety/presentation/report_sheet.dart';
 import '../../chat/data/chat_providers.dart';
 import '../../chat/domain/club_member.dart';
 import '../../feed/presentation/author_avatar.dart';
@@ -307,6 +310,47 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
             'Üzenet küldése',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
+        ),
+        const SizedBox(height: 8),
+        Builder(
+          builder: (context) {
+            final session = ref.watch(authGateProvider).asData?.value;
+            final me = session is AuthSignedIn ? session.user.id : '';
+            final blocked =
+                ref.watch(blockedIdsProvider).asData?.value ?? const <String>{};
+            final isBlocked = blocked.contains(person.id);
+            if (me.isEmpty || me == person.id) return const SizedBox.shrink();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => showReportSheet(
+                    context,
+                    ref,
+                    targetType: ReportTargetType.profile,
+                    targetId: person.id,
+                    targetAuthorId: person.id,
+                    targetPath: 'users/${person.id}',
+                    snapshot: person.name,
+                  ),
+                  icon: const Icon(Icons.flag_outlined),
+                  label: const Text('Jelentés'),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () async {
+                    final repo = ref.read(safetyRepositoryProvider);
+                    if (isBlocked) {
+                      await repo.unblockUser(me, person.id);
+                    } else {
+                      await repo.blockUser(me, person.id);
+                    }
+                  },
+                  child: Text(isBlocked ? 'Letiltás feloldása' : 'Letiltás'),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );

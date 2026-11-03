@@ -5,6 +5,9 @@ abstract class AuthRepository {
 
   Future<void> signIn({required String email, required String password});
 
+  /// A jelszó újra megadása érzékeny művelet előtt.
+  Future<void> reauthenticate({required String password});
+
   Future<void> signOut();
 
   /// Új Firebase-fiók. A visszaadott e-mail a hitelesítés kanonikus címe.
