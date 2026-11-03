@@ -8,6 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app_flavor.dart';
+import 'app/emulator.dart';
 import 'app/firebase_bootstrap.dart';
 import 'app/firebase_setup_screen.dart';
 import 'app/router.dart';
@@ -18,16 +19,22 @@ import 'app/theme_preference.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('hu');
-  final options = firebaseOptionsForCurrentFlavor();
+  final options = useFirebaseEmulator
+      ? emulatorFirebaseOptions
+      : firebaseOptionsForCurrentFlavor();
   if (options == null) {
     runApp(const FirebaseSetupScreen());
     return;
   }
   await Firebase.initializeApp(options: options);
-  await startCrashReporting();
-  FirebaseAuth.instance.authStateChanges().listen((user) {
-    setCrashlyticsUser(user?.uid);
-  });
+  if (useFirebaseEmulator) {
+    await connectFirebaseEmulators();
+  } else {
+    await startCrashReporting();
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      setCrashlyticsUser(user?.uid);
+    });
+  }
   final prefs = await SharedPreferences.getInstance();
   final initial = ThemePreference.fromStorage(
     prefs.getString(ThemeController.storageKey),
@@ -60,7 +67,7 @@ class SubliApp extends ConsumerWidget {
       themeMode: preference.themeMode,
       builder: (context, child) {
         final dark = Theme.of(context).brightness == Brightness.dark;
-        return AnnotatedRegion<SystemUiOverlayStyle>(
+        final app = AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
@@ -72,6 +79,13 @@ class SubliApp extends ConsumerWidget {
             curve: Curves.easeInOut,
             child: child ?? const SizedBox.shrink(),
           ),
+        );
+        if (!useFirebaseEmulator) return app;
+        return Banner(
+          message: 'EMULÁTOR',
+          location: BannerLocation.topStart,
+          color: const Color(0xFFB45309),
+          child: app,
         );
       },
       routerConfig: router,

@@ -13,7 +13,7 @@ A fejlesztői és az éles app külön települ, külön Firebase-projekthez bes
 | Android | `android/app/src/dev/google-services.json` | `android/app/src/prod/google-services.json` |
 | iOS | `ios/config/dev/GoogleService-Info.plist` | `ios/config/prod/GoogleService-Info.plist` |
 
-Egyik projekt sincs összekötve, amíg a flavor `firebase_options` fájljának kulcsa `REPLACE_`-szal kezdődik. Ilyenkor az app egy tájékoztató képernyőt mutat („A Firebase-projekt még nincs összekötve”), és nem hívja a `Firebase.initializeApp`-ot. Az iOS build kiveszi a `GoogleService-Info.plist`-et a csomagból, ha a forrás hiányzik vagy a helyettesítő kulcsot tartalmazza, mert arra az iOS Firebase induláskor leállna. A natív json és plist fájlok a `flutterfire configure` után jönnek létre.
+Egyik projekt sincs összekötve, amíg a flavor `firebase_options` fájljának kulcsa `REPLACE_`-szal kezdődik, és az indítás nem kapja a `USE_EMULATOR` zászlót. Ilyenkor az app egy tájékoztató képernyőt mutat („A Firebase-projekt még nincs összekötve”), és nem hívja a `Firebase.initializeApp`-ot. Az iOS build kiveszi a `GoogleService-Info.plist`-et a csomagból, ha a forrás hiányzik vagy a helyettesítő kulcsot tartalmazza, mert arra az iOS Firebase induláskor leállna. A natív json és plist fájlok a `flutterfire configure` után jönnek létre.
 
 Az azonosítók a `ClubConfig`-ban is szerepelnek (`prodApplicationId`, `devApplicationId`).
 
@@ -29,6 +29,20 @@ flutter run --flavor prod
 A Cursor / VS Code indítók: **Subli DEV** és **Subli ÉLES** (`.vscode/launch.json`).
 
 iOS-en a `dev` és a `prod` scheme a `Debug-dev` / `Release-prod` konfigurációkat használja. Az Archive mindig a `prod` scheme-mel készül.
+
+## Helyi emulátor
+
+Felhő nélkül, a gépen futó emulátorral lehet belépni. Két terminál kell.
+
+```bash
+tool/emulator_start.sh
+node tool/seed_emulator.mjs
+flutter run --flavor dev -t lib/main.dart --dart-define=USE_EMULATOR=true
+```
+
+A Cursor indító neve: **Subli DEV (emulátor)**. A zászló nélkül az app a korábbi viselkedést tartja, és nem köt rá az emulátorra. A sarokban EMULÁTOR szalag látszik. Az adatok a `.emulator-data` mappába kerülnek, ez nincs a gitben. A felület a http://localhost:4000 címen van.
+
+A minta fiókok jelszava `Subli2026!`. Az admin: `info@sarosigyorgy.hu`. A szkript csak a helyi emulátorba ír.
 
 ## Firebase-projektek összekötése
 

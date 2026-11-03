@@ -60,6 +60,7 @@ app.*.map.json
 # Firestore rules unit tests (Node). The lockfile stays tracked.
 node_modules/
 .firebase/
+.emulator-data/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
