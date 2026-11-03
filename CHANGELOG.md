@@ -1,5 +1,15 @@
 # Subli
 
+## 0.4.0
+
+### Változtatva
+
+- A belépés után a logó mellett minden képernyőn a „Subli Lovas Közösségi App” cím látszik. Szűk kijelzőn két sorba törik, a rövid „Subli” név nem jelenik meg.
+- A bejegyzés kategóriája Poszt, nem Hír. A sorrend: Poszt, Közlemény, Esemény, Lovaink. Az Edzés és az Eredmény kikerült. Új bejegyzés alapból Poszt.
+- A regisztráció nem kér szerepet és lovas szintet. Minden új fiók tag, a jóváhagyás megmarad. A tagok oldalán a szerep nem szerkeszthető. Egy admin van, az info@sarosigyorgy.hu cím.
+- A mancs helyett patkó van a hírfolyam végén, az üres hírfolyamon, a szerkesztőben és a Lovaink kategóriánál.
+- A verzió `0.4.0+5`.
+
 ## 0.3.0
 
 ### Változtatva
