@@ -7,6 +7,8 @@ void main() {
     final options = emulatorFirebaseOptions();
     expect(options.projectId, 'demo-subli');
     expect(options.apiKey, isNot(startsWith('REPLACE_')));
+    expect(options.apiKey.length, 39);
+    expect(options.apiKey, startsWith('A'));
     expect(options.appId, contains(':android:'));
   });
 }

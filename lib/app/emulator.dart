@@ -14,12 +14,13 @@ const bool useFirebaseEmulator = bool.fromEnvironment('USE_EMULATOR');
 
 /// Demo-projekt. Az emulátor nem ellenőrzi a kulcsot, a projectId a lényeg.
 ///
-/// Az iOS Firebase elutasítja a nem hexadecimális alkalmazásazonosítót, ezért
-/// a helyettesítő azonosító hex, a bundle ID pedig a futó flavoré.
+/// Az iOS Firebase a kulcs formáját mégis ellenőrzi: 39 karakter, `A` betűvel
+/// kezdődik. Az alkalmazásazonosító hexadecimális, a bundle ID a futó flavoré.
+/// A kulcs nem valódi, felhőbe nem mutat.
 FirebaseOptions emulatorFirebaseOptions() {
   final ios = defaultTargetPlatform == TargetPlatform.iOS;
   return FirebaseOptions(
-    apiKey: 'demo-api-key',
+    apiKey: 'AIzaSyDEMOSubliLocalEmulatorKey00000000',
     appId: ios
         ? '1:123456789000:ios:0123456789abcdef'
         : '1:123456789000:android:0123456789abcdef',
