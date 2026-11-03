@@ -26,6 +26,24 @@ abstract final class ClubConfig {
   /// Szűk fejlécen ennyi fér ki a névből.
   static const String clubNameShort = 'Subli';
 
+  /// A logó alatti cím a belépésen. Null esetén a sor kimarad.
+  // A típus szándékosan nullable, hogy egy másik klubnál a sor kimaradhasson.
+  // ignore: unnecessary_nullable_for_final_variable_declarations
+  static const String? loginTitle = 'Subli Lovas Közösségi App';
+
+  /// A cím alatti támogatói sor. A [loginSponsorUrl] hosztneve a szövegben
+  /// link. Null esetén a sor kimarad.
+  // ignore: unnecessary_nullable_for_final_variable_declarations
+  static const String? loginSponsorText = 'A sublilotapok.hu támogatásával';
+
+  /// A támogatói oldal. Külső böngészőben nyílik. Null esetén a sor nem link.
+  // ignore: unnecessary_nullable_for_final_variable_declarations
+  static const String? loginSponsorUrl = 'https://sublilotapok.hu';
+
+  /// A regisztráció alatti kredit. Null esetén a sor kimarad.
+  // ignore: unnecessary_nullable_for_final_variable_declarations
+  static const String? loginCredit = 'Készítette: Sysco System';
+
   /// Éles alkalmazásazonosító (iOS bundle ID és Android applicationId).
   static const String prodApplicationId = 'hu.subli.app';
 

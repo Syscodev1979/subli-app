@@ -9,6 +9,7 @@ class AuthFrame extends StatelessWidget {
     required this.child,
     this.title,
     this.subtitle,
+    this.heading,
     this.onBack,
     this.logoWidth = 200,
     this.screenKey,
@@ -18,6 +19,9 @@ class AuthFrame extends StatelessWidget {
   final Widget child;
   final String? title;
   final String? subtitle;
+
+  /// A logó alatti saját tartalom. Ha megvan, a [title] és a [subtitle] kimarad.
+  final Widget? heading;
   final VoidCallback? onBack;
 
   /// Nyugalmi logószélesség. Szűk képernyőn és billentyűzetnél kisebb.
@@ -38,7 +42,8 @@ class AuthFrame extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final bottomInset = media.viewInsets.bottom;
-            final spare = constraints.maxHeight - 36 - bottomInset;
+            const verticalPadding = 48.0;
+            final spare = constraints.maxHeight - verticalPadding - bottomInset;
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
               child: ConstrainedBox(
@@ -65,28 +70,35 @@ class AuthFrame extends StatelessWidget {
                           filterQuality: FilterQuality.high,
                           semanticLabel: 'Subli',
                         ),
-                        if (title != null) ...[
+                        if (heading != null) ...[
                           const SizedBox(height: 16),
-                          Text(
-                            title!,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
+                          heading!,
+                        ] else ...[
+                          if (title != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              title!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ],
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              subtitle!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.62),
+                                  ),
+                            ),
+                          ],
                         ],
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            subtitle!,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.62),
-                                ),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
+                        SizedBox(height: heading != null ? 12 : 24),
                         child,
                       ],
                     ),
