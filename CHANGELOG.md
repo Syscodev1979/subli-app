@@ -1,5 +1,13 @@
 # Subli
 
+## 0.2.1
+
+### Hozzáadva
+
+- Helyi emulátor mód a `--dart-define=USE_EMULATOR=true` zászlóval. A Firebase a `demo-subli` projekttel a gépen futó emulátorhoz csatlakozik, és a sarokban EMULÁTOR szalag látszik. A zászló nélkül minden a régi.
+- Indító: Subli DEV (emulátor). A `tool/emulator_start.sh` elindítja az emulátort, a `tool/seed_emulator.mjs` mintaadatot tölt bele. Az adatok a `.emulator-data` mappában maradnak, ez nincs a gitben.
+- A verzió `0.2.1+3`.
+
 ## 0.2.0
 
 ### Változtatva
