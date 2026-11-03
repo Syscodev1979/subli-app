@@ -4,7 +4,9 @@ import 'package:subli_app/app/emulator.dart';
 void main() {
   test('az emulátor mód alapból ki van kapcsolva', () {
     expect(useFirebaseEmulator, isFalse);
-    expect(emulatorFirebaseOptions.projectId, 'demo-subli');
-    expect(emulatorFirebaseOptions.apiKey, isNot(startsWith('REPLACE_')));
+    final options = emulatorFirebaseOptions();
+    expect(options.projectId, 'demo-subli');
+    expect(options.apiKey, isNot(startsWith('REPLACE_')));
+    expect(options.appId, contains(':android:'));
   });
 }

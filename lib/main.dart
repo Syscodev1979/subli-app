@@ -20,7 +20,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('hu');
   final options = useFirebaseEmulator
-      ? emulatorFirebaseOptions
+      ? emulatorFirebaseOptions()
       : firebaseOptionsForCurrentFlavor();
   if (options == null) {
     runApp(const FirebaseSetupScreen());
