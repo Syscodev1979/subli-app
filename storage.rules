@@ -27,13 +27,18 @@ service firebase.storage {
       return activeUser() && firestore.get(userPath()).data.role == 'coach';
     }
 
+    // functions/club-policy.js MEMBERS_MAY_POST. Subli: true.
+    function membersMayPost() {
+      return true;
+    }
+
     function isPostAuthor(postId) {
       return firestore.exists(postPath(postId))
         && firestore.get(postPath(postId)).data.authorId == request.auth.uid;
     }
 
     function canReadPostFile(postId) {
-      return isAdmin() || isCoach() || (
+      return isAdmin() || (!membersMayPost() && isCoach()) || (
         activeUser()
         && firestore.exists(postPath(postId))
         && (
@@ -48,6 +53,14 @@ service firebase.storage {
           )
         )
       );
+    }
+
+    function memberMayWritePost(postId) {
+      return activeUser()
+        && (
+          !firestore.exists(postPath(postId))
+          || isPostAuthor(postId)
+        );
     }
 
     function coachMayWritePost(postId) {
@@ -110,14 +123,20 @@ service firebase.storage {
     match /posts/{postId}/docs/{fileName} {
       allow read: if canReadPostFile(postId);
       allow create, update: if allowedDocument()
-        && (isAdmin() || coachMayWritePost(postId));
+        && (
+          isAdmin()
+          || (membersMayPost() ? memberMayWritePost(postId) : coachMayWritePost(postId))
+        );
       allow delete: if activeUser() && (isAdmin() || isPostAuthor(postId));
     }
 
     match /posts/{postId}/{fileName} {
       allow read: if canReadPostFile(postId);
       allow create, update: if allowedUpload()
-        && (isAdmin() || coachMayWritePost(postId));
+        && (
+          isAdmin()
+          || (membersMayPost() ? memberMayWritePost(postId) : coachMayWritePost(postId))
+        );
       allow delete: if activeUser() && (isAdmin() || isPostAuthor(postId));
     }
 

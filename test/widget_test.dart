@@ -36,7 +36,8 @@ void main() {
       find.text('Még nincs bejegyzés. Hamarosan itt lesznek a klub hírei!'),
       findsOneWidget,
     );
-    expect(find.text('Mire gondolsz?'), findsNothing);
+    expect(find.text('Mire gondolsz, Sportoló?'), findsOneWidget);
+    expect(find.text('+ Új bejegyzés'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
 
     final appBarTheme = Theme.of(tester.element(find.byType(AppBar)))
@@ -71,6 +72,37 @@ void main() {
     expect(find.byTooltip('Kitűzés'), findsOneWidget);
     expect(find.text('Közzététel'), findsOneWidget);
     expect(find.text('Új bejegyzés'), findsOneWidget);
+  });
+
+  testWidgets('A tag mind a négy kategóriában írhat, kitűzni nem tud', (
+    tester,
+  ) async {
+    await _pumpApp(
+      tester,
+      AuthSignedIn(_activeUser(role: UserRole.member, name: 'Nagy Péter')),
+    );
+
+    expect(find.text('+ Új bejegyzés'), findsOneWidget);
+    await tester.tap(find.text('+ Új bejegyzés'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Új bejegyzés'), findsOneWidget);
+    expect(find.text('Poszt'), findsWidgets);
+    expect(find.text('Közlemény'), findsWidgets);
+    expect(find.text('Esemény'), findsWidgets);
+    expect(find.text('Lovaink'), findsWidgets);
+    expect(find.byTooltip('Kitűzés'), findsNothing);
+
+    final sheet = find.byKey(const Key('composer-sheet'));
+    await tester.tap(
+      find.descendant(of: sheet, matching: find.text('Közlemény')),
+    );
+    await tester.pump();
+    await tester.tap(find.descendant(of: sheet, matching: find.text('Esemény')));
+    await tester.pump();
+    await tester.tap(find.descendant(of: sheet, matching: find.text('Lovaink')));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Kijelentkezve a bejelentkezés látszik', (tester) async {

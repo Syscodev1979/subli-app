@@ -54,6 +54,13 @@ void main() {
 
     expect(users.savedName, 'Új Név');
     expect(find.text('Profil frissítve'), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('own-belt')));
+    await tester.tap(find.byKey(const Key('own-belt')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Haladó').last);
+    await tester.pump();
+    expect(users.savedBelt, 'advanced');
   });
 
   testWidgets('más profilján nincs e-mail és születési dátum', (tester) async {
@@ -150,6 +157,7 @@ AppUser _athlete() {
 
 class _FakeUsers implements UserRepository {
   String? savedName;
+  String? savedBelt;
 
   @override
   Future<void> updateOwnProfile({
@@ -196,7 +204,9 @@ class _FakeUsers implements UserRepository {
   Future<void> setBeltRank({
     required String userId,
     required String? beltRank,
-  }) async {}
+  }) async {
+    savedBelt = beltRank;
+  }
 
   @override
   Stream<List<AppUser>> watchAll() => const Stream.empty();

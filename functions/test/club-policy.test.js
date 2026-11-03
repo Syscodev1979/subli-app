@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   SIMPLE_MEMBERSHIP,
+  MEMBERS_MAY_POST,
   registrationRoleAllowed,
   roleChangeAllowed,
 } = require("../club-policy");
@@ -13,6 +14,10 @@ test("egyszerű tagságnál csak a member szerep regisztrálható", () => {
   assert.equal(registrationRoleAllowed("athlete"), false);
   assert.equal(registrationRoleAllowed("parent"), false);
   assert.equal(registrationRoleAllowed("admin"), false);
+});
+
+test("a Subliban minden tag posztolhat, a Gastroyal ezt hamisra állítja", () => {
+  assert.equal(MEMBERS_MAY_POST, true);
 });
 
 test("egyszerű tagságnál a szerep nem változik", () => {

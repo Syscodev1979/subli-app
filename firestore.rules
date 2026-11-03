@@ -54,6 +54,12 @@ service cloud.firestore {
       return true;
     }
 
+    // functions/club-policy.js MEMBERS_MAY_POST. Subli: true.
+    // Hamis értéknél az edző írja a posztot, és a régi edzői jogok megmaradnak.
+    function membersMayPost() {
+      return true;
+    }
+
     function isMemberRole(role) {
       return role == 'athlete' || role == 'parent';
     }
@@ -431,14 +437,15 @@ service cloud.firestore {
           && (audience.size() == 1 || !audience.hasAny(['all']));
     }
 
-    // Admin és edző mindig. Más aktív tag csak az „all” vagy a saját szerepe
-    // szerint olvas. Hiányzó audience minden tagnak szól.
+    // Admin mindig. Edzői többletjog csak ott, ahol a tagok nem posztolhatnak.
+    // Más aktív tag az „all” vagy a saját szerepe szerint olvas.
+    // Hiányzó audience minden tagnak szól.
     function canReadPostData(data) {
       let role = caller().get('role', '');
       return caller().get('status', '') == 'active'
         && (
           isAdmin()
-          || role == 'coach'
+          || (!membersMayPost() && role == 'coach')
           || data.get('audience', ['all']).hasAny(['all'])
           || (role == 'athlete' && data.get('audience', ['all']).hasAny(['athletes']))
           || (role == 'parent' && data.get('audience', ['all']).hasAny(['parents']))
@@ -485,16 +492,28 @@ service cloud.firestore {
         && data.get('createdAt', null) is timestamp;
     }
 
+    // A saját lovas szint. Szerep, állapot és a többi mező nem változik.
+    function selfMaySetBelt(userId) {
+      return isSelf(userId)
+        && isActive()
+        && hasAllowedKeys()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['beltRank'])
+        && validBeltRank(request.resource.data.get('beltRank', null));
+    }
+
     match /users/{userId} {
-      // Pending fiók csak a saját dokumentumát olvassa. Admin és edző mindet.
-      allow read: if isSelf(userId) || isAdmin() || isCoach();
+      // Pending fiók csak a saját dokumentumát olvassa.
+      // Edzői lista csak ott, ahol a tagok nem posztolhatnak.
+      allow read: if isSelf(userId) || isAdmin() || (!membersMayPost() && isCoach());
 
       allow create: if isSelf(userId) && validCreate(userId);
 
-      // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat.
+      // Szerepkört csak admin módosíthat. Edző jóváhagyhat és összekapcsolhat,
+      // ha a klub nem egyszerű tagságú. A lovas szintet a tag a sajátján állítja.
       allow update: if adminMayUpdate()
         || coachMayUpdate()
         || parentMayUpdatePhoto()
+        || selfMaySetBelt(userId)
         || (isSelf(userId) && hasAllowedKeys() && protectedFieldsUnchanged());
 
       allow delete: if false;
@@ -503,12 +522,21 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if canReadPostData(resource.data);
 
-      allow create: if (isAdmin() || isCoach())
+      allow create: if isActive()
         && request.resource.data.get('authorId', null) == request.auth.uid
-        && validPostShape();
+        && validPostShape()
+        && (
+          isAdmin()
+          || (
+            membersMayPost()
+              ? request.resource.data.get('pinned', true) == false
+              : isCoach()
+          )
+        );
 
-      // A szerző az authorId-t és a createdAt-et nem írhatja. Admin bármit,
-      // ami az engedélyezett mezők között marad.
+      // A szerző az authorId-t, a createdAt-et és a kitűzést nem írhatja.
+      // Admin bármit, ami az engedélyezett mezők között marad.
+      // Ahol a tagok nem posztolhatnak, a szerző (edző) a kitűzést is viheti.
       allow update: if validPostShape()
         && isActive()
         && (
@@ -517,6 +545,7 @@ service cloud.firestore {
             resource.data.get('authorId', null) == request.auth.uid
             && unchanged('authorId')
             && unchanged('createdAt')
+            && (!membersMayPost() || unchanged('pinned'))
           )
         );
 
@@ -566,7 +595,7 @@ service cloud.firestore {
           && (
             resource.data.get('authorId', null) == request.auth.uid
             || isAdmin()
-            || isCoach()
+            || (!membersMayPost() && isCoach())
           );
       }
     }

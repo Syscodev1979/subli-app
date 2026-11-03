@@ -18,6 +18,7 @@ import '../../../app/constants.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/auth_session.dart';
+import '../../auth/domain/user_status.dart';
 import '../data/feed_providers.dart';
 import '../data/media_prep.dart';
 import '../data/post_media_storage.dart';
@@ -268,7 +269,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       );
     }
     if (postId == null) {
-      if (!user.role.canWritePosts) {
+      if (user.status != UserStatus.active || !user.role.canWritePosts) {
         return _frame(
           title: _title(isNew: true),
           body: _centered('Nincs jogosultságod ehhez a művelethez.'),
@@ -443,7 +444,9 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
         onPhoto: _chooseImageSource,
         onVideo: _chooseVideoSource,
         onDocument: _pickDocuments,
-        onPinned: (value) => setState(() => _pinned = value),
+        onPinned: user.role.canPinPosts
+            ? (value) => setState(() => _pinned = value)
+            : null,
       ),
     );
   }
@@ -1464,7 +1467,7 @@ class _MediaToolbar extends StatelessWidget {
   final VoidCallback onPhoto;
   final VoidCallback onVideo;
   final VoidCallback onDocument;
-  final ValueChanged<bool> onPinned;
+  final ValueChanged<bool>? onPinned;
 
   @override
   Widget build(BuildContext context) {
@@ -1506,8 +1509,10 @@ class _MediaToolbar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          _PinButton(pinned: pinned, onChanged: enabled ? onPinned : null),
+          if (onPinned != null) ...[
+            const SizedBox(width: 8),
+            _PinButton(pinned: pinned, onChanged: enabled ? onPinned : null),
+          ],
         ],
       ),
     );

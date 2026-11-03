@@ -110,6 +110,15 @@ class ComposerBar extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => context.push(AppRoutes.newPost),
+                  icon: const Icon(Icons.add),
+                  label: const Text('+ Új bejegyzés'),
+                ),
+              ),
             ],
           ),
         ),

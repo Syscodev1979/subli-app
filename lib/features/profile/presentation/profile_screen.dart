@@ -64,6 +64,8 @@ class _ProfileBody extends ConsumerStatefulWidget {
 
 class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   var _uploading = false;
+  String? _beltOverride;
+  var _beltTouched = false;
 
   Future<void> _editPhoto() async {
     try {
@@ -170,6 +172,26 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     }
   }
 
+  Future<void> _setBelt(String? key) async {
+    setState(() {
+      _beltTouched = true;
+      _beltOverride = key;
+    });
+    try {
+      await ref
+          .read(userRepositoryProvider)
+          .setBeltRank(userId: widget.user.id, beltRank: key);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Lovas szint mentve')));
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _beltTouched = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
+    }
+  }
+
   Future<void> _editBirthDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -199,9 +221,9 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
-    final belt = user.role == UserRole.athlete
-        ? ClubConfig.beltByKey(user.beltRank)
-        : null;
+    final beltKey = _beltTouched ? _beltOverride : user.beltRank;
+    final showBelt =
+        ClubConfig.enforceSimpleMembership || user.role == UserRole.athlete;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
       children: [
@@ -221,15 +243,23 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
         ),
         const SizedBox(height: 8),
         Center(child: _RoleChip(role: user.role)),
-        if (user.role == UserRole.athlete) ...[
-          const SizedBox(height: 10),
-          Center(
-            child: belt == null
-                ? Text(
-                    'Nincs megadva lovas szint',
-                    style: TextStyle(color: FeedPalette.muted(context)),
-                  )
-                : BeltBadge(belt: belt),
+        if (showBelt) ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String?>(
+            key: const Key('own-belt'),
+            initialValue: ClubConfig.beltByKey(beltKey) == null
+                ? null
+                : beltKey,
+            decoration: const InputDecoration(labelText: 'Lovas szint'),
+            items: [
+              const DropdownMenuItem<String?>(
+                value: null,
+                child: Text('Nincs megadva'),
+              ),
+              for (final grade in ClubConfig.belts)
+                DropdownMenuItem(value: grade.key, child: Text(grade.caption)),
+            ],
+            onChanged: _setBelt,
           ),
         ],
         const SizedBox(height: 20),

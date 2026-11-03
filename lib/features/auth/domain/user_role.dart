@@ -25,8 +25,14 @@ enum UserRole {
       this == UserRole.admin ||
       (!ClubConfig.enforceSimpleMembership && this == UserRole.coach);
 
-  /// Bejegyzést egyszerű tagságnál csak az admin írhat, különben az edző is.
-  bool get canWritePosts => canReviewMembers;
+  /// A Subli minden szerepének enged posztot. A Gastroyal csak adminnak és edzőnek.
+  bool get canWritePosts =>
+      ClubConfig.enforceMembersMayPost || canReviewMembers;
+
+  /// Kitűzni a Subliban csak az admin tud. A Gastroyalban az edző is.
+  bool get canPinPosts =>
+      this == UserRole.admin ||
+      (!ClubConfig.enforceMembersMayPost && this == UserRole.coach);
 
   /// Edzői szerep kiosztása. Az admin szerep az appból nem adható.
   bool get canAssignRoles => this == UserRole.admin;

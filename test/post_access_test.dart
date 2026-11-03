@@ -18,6 +18,17 @@ void main() {
     expect(canManagePost(admin, post), isTrue);
     expect(canManagePost(otherCoach, post), isFalse);
     expect(canManagePost(athlete, post), isFalse);
+    final member = _user('member-1', UserRole.member);
+    expect(canManagePost(member, _post(authorId: member.id)), isTrue);
+    expect(canManagePost(member, post), isFalse);
+  });
+
+  test('egyszerű tagságnál mindenki írhat, kitűzni csak az admin tud', () {
+    expect(UserRole.member.canWritePosts, isTrue);
+    expect(UserRole.athlete.canWritePosts, isTrue);
+    expect(UserRole.member.canPinPosts, isFalse);
+    expect(UserRole.coach.canPinPosts, isFalse);
+    expect(UserRole.admin.canPinPosts, isTrue);
   });
 
   test('idegen hozzászólást egyszerű tagságnál csak az admin törölhet', () {

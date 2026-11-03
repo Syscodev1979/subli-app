@@ -12,6 +12,11 @@ const ONLY_ALL_AUDIENCE = true;
 // A Gastroyal hamis. A Firestore simpleMembership() ugyanezt mondja.
 const SIMPLE_MEMBERSHIP = true;
 
+// Subli: minden jóváhagyott tag posztolhat, az edző nem kap külön jogot.
+// A Gastroyal hamis: ott az edző írja a bejegyzést és látja a vezetőségi kört.
+// A Firestore és a Storage membersMayPost() ugyanezt mondja.
+const MEMBERS_MAY_POST = true;
+
 function registrationRoleAllowed(role) {
   if (SIMPLE_MEMBERSHIP) return role === "member";
   return role === "athlete" || role === "parent" || role === "coach";
@@ -27,6 +32,7 @@ module.exports = {
   ALLOW_GROUP_CHATS,
   ONLY_ALL_AUDIENCE,
   SIMPLE_MEMBERSHIP,
+  MEMBERS_MAY_POST,
   registrationRoleAllowed,
   roleChangeAllowed,
 };

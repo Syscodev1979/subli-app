@@ -15,6 +15,7 @@ import {
   query,
   setDoc,
   updateDoc,
+  deleteField,
   where,
   Timestamp,
 } from "firebase/firestore";
@@ -258,22 +259,52 @@ async function seedDoc(segments, data) {
   });
 }
 
-test("sportoló nem posztolhat", async () => {
+test("jóváhagyott tag mind a négy kategóriában posztolhat", async () => {
   await seed({
-    athlete1: userDoc({
-      id: "athlete1",
-      email: "athlete@example.com",
-      role: "athlete",
+    member1: userDoc({
+      id: "member1",
+      email: "member@example.com",
+      role: "member",
       status: "active",
     }),
   });
-  const athlete = testEnv.authenticatedContext("athlete1", {
-    email: "athlete@example.com",
+  const member = testEnv.authenticatedContext("member1", {
+    email: "member@example.com",
   });
+  const eventStart = Timestamp.fromDate(new Date("2026-11-08T09:00:00Z"));
+  for (const category of ["post", "announcement", "horses"]) {
+    await assertSucceeds(
+      setDoc(
+        doc(member.firestore(), "posts", category),
+        postDoc({
+          authorId: "member1",
+          authorName: "Tag",
+          category,
+          pinned: false,
+        }),
+      ),
+    );
+  }
+  await assertSucceeds(
+    setDoc(
+      doc(member.firestore(), "posts", "event"),
+      postDoc({
+        authorId: "member1",
+        authorName: "Tag",
+        category: "event",
+        pinned: false,
+        eventStartsAt: eventStart,
+      }),
+    ),
+  );
   await assertFails(
     setDoc(
-      doc(athlete.firestore(), "posts", "post-1"),
-      postDoc({ authorId: "athlete1", authorName: "Sportoló" }),
+      doc(member.firestore(), "posts", "pinned"),
+      postDoc({
+        authorId: "member1",
+        authorName: "Tag",
+        pinned: true,
+      }),
     ),
   );
 });
@@ -1045,20 +1076,50 @@ function documentItem(name, mime, sizeBytes) {
   };
 }
 
-test("sportoló nem írhatja a saját beltRank-ját", async () => {
+test("a tag a saját lovas szintjét állíthatja, másét és az érvénytelent nem", async () => {
   await seed({
-    athlete1: userDoc({
-      id: "athlete1",
-      email: "athlete@example.com",
+    member1: userDoc({
+      id: "member1",
+      email: "member@example.com",
+      role: "member",
+      status: "active",
+    }),
+    member2: userDoc({
+      id: "member2",
+      email: "member2@example.com",
+      role: "member",
       status: "active",
     }),
   });
-  const athlete = testEnv.authenticatedContext("athlete1", {
-    email: "athlete@example.com",
+  const member = testEnv.authenticatedContext("member1", {
+    email: "member@example.com",
+  });
+  await assertSucceeds(
+    updateDoc(doc(member.firestore(), "users", "member1"), {
+      beltRank: "beginner",
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(member.firestore(), "users", "member1"), {
+      beltRank: "competitor",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(member.firestore(), "users", "member1"), {
+      beltRank: "black",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(member.firestore(), "users", "member1"), {
+      role: "admin",
+    }),
+  );
+  const other = testEnv.authenticatedContext("member2", {
+    email: "member2@example.com",
   });
   await assertFails(
-    updateDoc(doc(athlete.firestore(), "users", "athlete1"), {
-      beltRank: "beginner",
+    updateDoc(doc(other.firestore(), "users", "member1"), {
+      beltRank: "advanced",
     }),
   );
 });
@@ -1379,8 +1440,8 @@ test("sportoló nem olvashat vezetőségi bejegyzést, hozzászólást, reakció
   const coach = testEnv.authenticatedContext("coach1", {
     email: "coach@example.com",
   });
-  await assertSucceeds(getDoc(doc(coach.firestore(), "posts", "staff-post")));
-  await assertSucceeds(getBytes(ref(coach.storage(), "posts/staff-post/a.jpg")));
+  await assertFails(getDoc(doc(coach.firestore(), "posts", "staff-post")));
+  await assertFails(getBytes(ref(coach.storage(), "posts/staff-post/a.jpg")));
 });
 
 test("szülő olvashat szülői bejegyzést, sportoló nem", async () => {
@@ -1555,7 +1616,7 @@ test("csak a kijelölt cím kap admin jogot, a régi helyettesítő nem", async 
       status: "active",
     }),
   });
-  await seedDoc(["posts", "post-1"], postDoc({ authorId: "admin1" }));
+  await seedDoc(["posts", "post-1"], postDoc({ authorId: "other-author" }));
 
   const designated = testEnv.authenticatedContext("admin1", {
     email: "Info@SarosiGyorgy.hu",
@@ -1799,6 +1860,148 @@ test("letiltás után a chatüzenet elutasítva", async () => {
       text: "Szia",
       createdAt,
       deleted: false,
+    }),
+  );
+});
+
+test("felfüggesztett és jóvá nem hagyott tag nem posztolhat", async () => {
+  await seed({
+    pending1: userDoc({
+      id: "pending1",
+      email: "pending@example.com",
+      role: "member",
+      status: "pending",
+    }),
+    suspended1: userDoc({
+      id: "suspended1",
+      email: "stop@example.com",
+      role: "member",
+      status: "suspended",
+    }),
+  });
+  const pending = testEnv.authenticatedContext("pending1", {
+    email: "pending@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(pending.firestore(), "posts", "pending-post"),
+      postDoc({ authorId: "pending1", authorName: "Várakozó" }),
+    ),
+  );
+  const suspended = testEnv.authenticatedContext("suspended1", {
+    email: "stop@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(suspended.firestore(), "posts", "suspended-post"),
+      postDoc({ authorId: "suspended1", authorName: "Felfüggesztett" }),
+    ),
+  );
+  await assertFails(
+    uploadString(ref(suspended.storage(), "posts/own-post/a.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+});
+
+test("a tag a saját bejegyzését törli, másét és a kitűzést nem", async () => {
+  await seed({
+    member1: userDoc({
+      id: "member1",
+      email: "member@example.com",
+      role: "member",
+      status: "active",
+    }),
+    member2: userDoc({
+      id: "member2",
+      email: "member2@example.com",
+      role: "member",
+      status: "active",
+    }),
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+    admin1: userDoc({
+      id: "admin1",
+      email: "info@sarosigyorgy.hu",
+      role: "admin",
+      status: "active",
+    }),
+  });
+  await seedDoc(
+    ["posts", "own"],
+    postDoc({ authorId: "member1", authorName: "Tag" }),
+  );
+  await seedDoc(
+    ["posts", "other"],
+    postDoc({ authorId: "member2", authorName: "Másik" }),
+  );
+  await seedDoc(["posts", "own", "comments", "c1"], {
+    authorId: "member2",
+    authorName: "Másik",
+    authorPhotoUrl: null,
+    text: "Idegen hozzászólás.",
+    createdAt,
+  });
+  const member = testEnv.authenticatedContext("member1", {
+    email: "member@example.com",
+  });
+  await assertFails(
+    updateDoc(doc(member.firestore(), "posts", "own"), { pinned: true }),
+  );
+  await assertFails(deleteDoc(doc(member.firestore(), "posts", "other")));
+  await assertFails(
+    deleteDoc(doc(member.firestore(), "posts", "own", "comments", "c1")),
+  );
+  await assertFails(
+    uploadString(ref(member.storage(), "posts/other/a.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+  await assertSucceeds(
+    uploadString(ref(member.storage(), "posts/fresh/a.jpg"), "img", "raw", {
+      contentType: "image/jpeg",
+    }),
+  );
+  await assertSucceeds(
+    uploadString(ref(member.storage(), "posts/fresh/docs/oklevel.pdf"), "%PDF", "raw", {
+      contentType: "application/pdf",
+    }),
+  );
+
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(deleteDoc(doc(coach.firestore(), "posts", "other")));
+  await assertFails(
+    deleteDoc(doc(coach.firestore(), "posts", "own", "comments", "c1")),
+  );
+
+  await assertSucceeds(deleteDoc(doc(member.firestore(), "posts", "own")));
+
+  const admin = testEnv.authenticatedContext("admin1", adminToken);
+  await assertSucceeds(deleteDoc(doc(admin.firestore(), "posts", "other")));
+});
+
+test("a tag törölheti a saját lovas szintjét", async () => {
+  await seed({
+    member1: userDoc({
+      id: "member1",
+      email: "member@example.com",
+      role: "member",
+      status: "active",
+      beltRank: "beginner",
+    }),
+  });
+  const member = testEnv.authenticatedContext("member1", {
+    email: "member@example.com",
+  });
+  await assertSucceeds(
+    updateDoc(doc(member.firestore(), "users", "member1"), {
+      beltRank: deleteField(),
     }),
   );
 });

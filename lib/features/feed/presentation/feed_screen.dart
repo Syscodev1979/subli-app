@@ -12,6 +12,7 @@ import '../../auth/data/auth_providers.dart';
 import '../../chat/data/chat_providers.dart';
 import '../../chat/presentation/chat_button.dart';
 import '../../auth/domain/app_user.dart';
+import '../../auth/domain/user_status.dart';
 import '../../safety/data/safety_repository.dart';
 import '../../auth/domain/auth_session.dart';
 import '../domain/post_category.dart';
@@ -387,7 +388,9 @@ class _FeedFrame extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(child: header),
-          if (user case final current? when current.role.canWritePosts)
+          if (user case final current?
+              when current.status == UserStatus.active &&
+                  current.role.canWritePosts)
             SliverToBoxAdapter(child: ComposerBar(user: current)),
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           ...slivers,

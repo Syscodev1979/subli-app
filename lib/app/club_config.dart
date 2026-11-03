@@ -73,6 +73,16 @@ abstract final class ClubConfig {
   static bool get enforceSimpleMembership =>
       debugSimpleMembershipOverride ?? simpleMembership;
 
+  /// Minden jóváhagyott tag posztolhat, az edző nem kap külön jogot.
+  /// A Gastroyal hamisra állítja. Ugyanez a functions/club-policy.js
+  /// MEMBERS_MAY_POST és a szabályok membersMayPost() függvénye.
+  static const bool membersMayPost = true;
+
+  static bool? debugMembersMayPostOverride;
+
+  static bool get enforceMembersMayPost =>
+      debugMembersMayPostOverride ?? membersMayPost;
+
   /// A klub jele. A Gastroyal a mancsot tartja meg.
   static const ClubMark themeIcon = ClubMark.horseshoe;
 
