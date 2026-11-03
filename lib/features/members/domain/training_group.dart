@@ -30,6 +30,6 @@ class TrainingGroup {
 const suggestedGroups = [
   (name: 'Kezdők', color: '#2E7D32', description: ''),
   (name: 'Haladók', color: '#1F6FEB', description: ''),
-  (name: 'Versenycsapat', color: '#6B1E2E', description: ''),
-  (name: 'Felnőtt csoport', color: '#C9A227', description: ''),
+  (name: 'Díjugratók', color: '#6B1E2E', description: ''),
+  (name: 'Túralovasok', color: '#C9A227', description: ''),
 ];

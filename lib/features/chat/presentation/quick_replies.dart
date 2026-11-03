@@ -8,10 +8,10 @@ class QuickReplies extends StatelessWidget {
   const QuickReplies({required this.onSelected, super.key});
 
   static const templates = <String>[
-    '🤒 Beteg vagyok, ma nem tudok jönni',
-    '⏰ Késni fogok',
-    '❌ Ma nem tudok jönni',
-    '❓ Kérdésem van az otthoni edzésről',
+    'Ma nem tudok jönni',
+    'Késni fogok',
+    'Kérdésem van a lóról',
+    'Kérdésem van az edzésről',
   ];
 
   final ValueChanged<String> onSelected;

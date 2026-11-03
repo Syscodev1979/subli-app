@@ -38,17 +38,23 @@ class CategoryStyle {
         onColor: Color(0xFF2B2308),
         foreground: AppColors.gold,
       ),
-      PostCategory.training => CategoryStyle(
-        icon: Icons.sports_martial_arts,
-        color: AppColors.accentGreen,
-        onColor: Colors.white,
-        foreground: dark ? AppColors.mediaPhotoDark : AppColors.accentGreen,
-      ),
       PostCategory.event => CategoryStyle(
         icon: Icons.calendar_month,
         color: const Color(0xFF2D6CDF),
         onColor: Colors.white,
         foreground: dark ? AppColors.mediaCameraDark : const Color(0xFF2D6CDF),
+      ),
+      PostCategory.training => CategoryStyle(
+        icon: Icons.sports,
+        color: AppColors.accentGreen,
+        onColor: Colors.white,
+        foreground: dark ? AppColors.mediaPhotoDark : AppColors.accentGreen,
+      ),
+      PostCategory.horses => CategoryStyle(
+        icon: Icons.pets,
+        color: AppColors.burgundy,
+        onColor: Colors.white,
+        foreground: dark ? AppColors.burgundyDarkMode : AppColors.burgundy,
       ),
     };
   }
@@ -157,7 +163,7 @@ class CategoryChipRow extends StatelessWidget {
               selected: selected == category,
               onTap: () => onSelected(category),
             ),
-            if (category != PostCategory.event) const SizedBox(width: 8),
+            if (category != PostCategory.horses) const SizedBox(width: 8),
           ],
         ],
       ),

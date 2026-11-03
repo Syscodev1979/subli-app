@@ -5,7 +5,7 @@ enum ReactionType {
   haha,
   wow,
   sad,
-  osu;
+  horse;
 
   static ReactionType? fromName(Object? value) {
     return switch (value) {
@@ -14,7 +14,7 @@ enum ReactionType {
       'haha' => ReactionType.haha,
       'wow' => ReactionType.wow,
       'sad' => ReactionType.sad,
-      'osu' => ReactionType.osu,
+      'horse' => ReactionType.horse,
       _ => null,
     };
   }
@@ -25,7 +25,7 @@ enum ReactionType {
     ReactionType.haha => 'Haha',
     ReactionType.wow => 'Wow',
     ReactionType.sad => 'Szomorú',
-    ReactionType.osu => 'Osu!',
+    ReactionType.horse => 'Lovas!',
   };
 
   /// A Like pipa ikon, a többi emoji.
@@ -35,7 +35,7 @@ enum ReactionType {
     ReactionType.haha => '😄',
     ReactionType.wow => '😮',
     ReactionType.sad => '😢',
-    ReactionType.osu => '💪',
+    ReactionType.horse => '🐴',
   };
 }
 

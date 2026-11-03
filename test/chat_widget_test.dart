@@ -143,9 +143,9 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('⏰ Késni fogok'));
-    expect(filled, '⏰ Késni fogok');
-    expect(find.text('🤒 Beteg vagyok, ma nem tudok jönni'), findsOneWidget);
+    await tester.tap(find.text('Késni fogok'));
+    expect(filled, 'Késni fogok');
+    expect(find.text('Ma nem tudok jönni'), findsOneWidget);
     expect(showsQuickReplies(UserRole.athlete, true), isTrue);
     expect(showsQuickReplies(UserRole.parent, true), isTrue);
     expect(showsQuickReplies(UserRole.coach, true), isFalse);

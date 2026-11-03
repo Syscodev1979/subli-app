@@ -933,7 +933,7 @@ test("a saját reakció cserélhető, idegenét más sportoló nem törli", asyn
     setDoc(reaction, { userName: "Sportoló", type: "like", createdAt }),
   );
   await assertSucceeds(
-    updateDoc(reaction, { userName: "Sportoló", type: "osu", createdAt }),
+    updateDoc(reaction, { userName: "Sportoló", type: "horse", createdAt }),
   );
   await assertFails(
     setDoc(doc(athlete.firestore(), "posts", "post-1", "reactions", "athlete2"), {
@@ -984,7 +984,7 @@ test("sportoló nem írhatja a saját beltRank-ját", async () => {
   });
   await assertFails(
     updateDoc(doc(athlete.firestore(), "users", "athlete1"), {
-      beltRank: "kyu5",
+      beltRank: "beginner",
     }),
   );
 });

@@ -23,7 +23,7 @@ void main() {
   ) async {
     await _pump(tester, PostPage(posts: [_post], hasMore: false));
 
-    expect(find.text('Minden bejegyzést láttál 🥋'), findsOneWidget);
+    expect(find.text('Minden bejegyzést láttál 🐴'), findsOneWidget);
     expect(find.text('Nézz vissza később a friss hírekért!'), findsOneWidget);
     expect(find.text('Hír'), findsWidgets);
     expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);

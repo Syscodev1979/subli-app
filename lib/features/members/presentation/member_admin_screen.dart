@@ -373,7 +373,7 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String?>(
             initialValue: _belt,
-            decoration: const InputDecoration(labelText: 'Öv'),
+            decoration: const InputDecoration(labelText: 'Lovas szint'),
             items: [
               const DropdownMenuItem<String?>(
                 value: null,

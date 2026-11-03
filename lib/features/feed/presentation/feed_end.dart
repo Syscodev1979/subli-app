@@ -14,13 +14,13 @@ class FeedEndMark extends StatelessWidget {
       child: Column(
         children: [
           const Icon(
-            Icons.sports_martial_arts,
+            Icons.pets,
             size: 28,
             color: AppColors.gold,
           ),
           const SizedBox(height: 10),
           Text(
-            'Minden bejegyzést láttál 🥋',
+            'Minden bejegyzést láttál 🐴',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: FeedPalette.title(context),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/club_config.dart';
 
-/// Színes öv-csík és a fokozat felirata, például „5. kyu – kék öv”.
+/// Színes jelzés és a lovas szint felirata, például „Kezdő”.
 class BeltBadge extends StatelessWidget {
   const BeltBadge({required this.belt, this.compact = false, super.key});
 

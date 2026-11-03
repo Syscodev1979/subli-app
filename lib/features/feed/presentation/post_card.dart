@@ -712,7 +712,7 @@ Color _reactionColor(ReactionType type) {
     ReactionType.haha ||
     ReactionType.wow ||
     ReactionType.sad => const Color(0xFFF9A825),
-    ReactionType.osu => AppColors.burgundy,
+    ReactionType.horse => AppColors.burgundy,
   };
 }
 

@@ -39,7 +39,7 @@ abstract class UserRepository {
     required String? photoUrl,
   });
 
-  /// Övfokozat. A [beltRank] null törli a mezőt.
+  /// Lovas szint. A [beltRank] null törli a mezőt.
   Future<void> setBeltRank({required String userId, required String? beltRank});
 
   /// Minden regisztrált fiók. Csak admin olvashatja.

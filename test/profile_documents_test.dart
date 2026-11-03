@@ -22,7 +22,7 @@ void main() {
     await initializeDateFormatting('hu');
   });
 
-  testWidgets('a saját profilon látszik a név, az öv és az e-mail', (
+  testWidgets('a saját profilon látszik a név, a lovas szint és az e-mail', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -42,7 +42,7 @@ void main() {
 
     expect(find.text('Teszt Sportoló'), findsWidgets);
     expect(find.text('Sportoló'), findsOneWidget);
-    expect(find.text('5. kyu – kék öv'), findsOneWidget);
+    expect(find.text('Kezdő'), findsOneWidget);
     expect(find.text('teszt@example.com'), findsOneWidget);
     expect(find.text('Születési dátum'), findsOneWidget);
 
@@ -73,7 +73,7 @@ void main() {
                 role: UserRole.athlete,
                 isMinor: false,
                 parentIds: [],
-                beltRank: 'kyu8',
+                beltRank: 'advanced',
               ),
             ),
           ),
@@ -85,7 +85,7 @@ void main() {
 
     expect(find.text('Nagy Béla'), findsOneWidget);
     expect(find.text('Sportoló'), findsOneWidget);
-    expect(find.text('8. kyu – sárga öv'), findsOneWidget);
+    expect(find.text('Haladó'), findsOneWidget);
     expect(find.text('Üzenet küldése'), findsOneWidget);
     expect(find.text('E-mail'), findsNothing);
     expect(find.text('Születési dátum'), findsNothing);
@@ -140,7 +140,7 @@ AppUser _athlete() {
     parentIds: const [],
     childRequests: const [],
     createdAt: DateTime(2026, 1, 1),
-    beltRank: 'kyu5',
+    beltRank: 'beginner',
   );
 }
 

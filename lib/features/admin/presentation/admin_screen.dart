@@ -364,7 +364,7 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 initialValue: ClubConfig.beltByKey(user.beltRank)?.key,
-                decoration: const InputDecoration(labelText: 'Övfokozat'),
+                decoration: const InputDecoration(labelText: 'Lovas szint'),
                 items: [
                   const DropdownMenuItem<String?>(
                     value: null,

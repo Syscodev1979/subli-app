@@ -96,10 +96,7 @@ service cloud.firestore {
 
     function validBeltRank(value) {
       return value == null || value in [
-        'kyu10', 'kyu9', 'kyu8', 'kyu7', 'kyu6',
-        'kyu5', 'kyu4', 'kyu3', 'kyu2', 'kyu1',
-        'dan1', 'dan2', 'dan3', 'dan4', 'dan5',
-        'dan6', 'dan7', 'dan8', 'dan9', 'dan10',
+        'beginner', 'advanced', 'competitor',
       ];
     }
 
@@ -389,9 +386,10 @@ service cloud.firestore {
         && data.get('category', '') in [
           'news',
           'announcement',
-          'result',
-          'training',
           'event',
+          'training',
+          'result',
+          'horses',
         ]
         && data.get('searchKeywords', null) is list
         && data.get('searchKeywords', []).size() <= 200
@@ -527,7 +525,7 @@ service cloud.firestore {
           && request.resource.data.get('userName', '').size() > 0
           && request.resource.data.get('userName', '').size() <= 120
           && request.resource.data.get('type', null) in [
-            'like', 'heart', 'haha', 'wow', 'sad', 'osu',
+            'like', 'heart', 'haha', 'wow', 'sad', 'horse',
           ]
           && request.resource.data.get('createdAt', null) is timestamp;
         allow delete: if canReadPost(postId)

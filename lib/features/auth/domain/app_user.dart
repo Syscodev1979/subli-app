@@ -35,7 +35,7 @@ class AppUser {
   final List<ChildRequest> childRequests;
   final DateTime createdAt;
 
-  /// Övfokozat kulcsa, például `kyu5`. Csak edző és admin írhatja.
+  /// Lovas szint kulcsa, például `beginner`. Csak edző és admin írhatja.
   final String? beltRank;
 
   /// Jelentkezéskor kért szerep. Jelenleg csak `coach` lehet, és csak létrehozáskor.

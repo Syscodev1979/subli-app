@@ -2,9 +2,10 @@
 enum PostCategory {
   news('Hír'),
   announcement('Közlemény'),
-  result('Eredmény'),
+  event('Esemény'),
   training('Edzés'),
-  event('Esemény');
+  result('Eredmény'),
+  horses('Lovaink');
 
   const PostCategory(this.label);
 

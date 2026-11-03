@@ -178,7 +178,7 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
           .setBeltRank(userId: widget.person.id, beltRank: key);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Övfokozat mentve')));
+          .showSnackBar(const SnackBar(content: Text('Lovas szint mentve')));
     } catch (error) {
       if (!mounted) return;
       setState(() => _beltOverride = null);
@@ -272,7 +272,7 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
             initialValue: ClubConfig.beltByKey(beltKey) == null
                 ? null
                 : beltKey,
-            decoration: const InputDecoration(labelText: 'Övfokozat'),
+            decoration: const InputDecoration(labelText: 'Lovas szint'),
             items: [
               const DropdownMenuItem<String?>(
                 value: null,

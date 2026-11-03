@@ -170,7 +170,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
           Center(
             child: belt == null
                 ? Text(
-                    'Nincs megadva övfokozat',
+                    'Nincs megadva lovas szint',
                     style: TextStyle(color: FeedPalette.muted(context)),
                   )
                 : BeltBadge(belt: belt),

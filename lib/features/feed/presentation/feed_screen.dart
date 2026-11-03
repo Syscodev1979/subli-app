@@ -446,7 +446,7 @@ class _EmptyFeed extends StatelessWidget {
       child: Column(
         children: [
           const Icon(
-            Icons.sports_martial_arts,
+            Icons.pets,
             size: 56,
             color: AppColors.burgundy,
           ),

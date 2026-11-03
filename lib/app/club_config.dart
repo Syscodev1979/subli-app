@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// A klub megjelenéséhez és szabályaihoz tartozó, kódban rögzített értékek.
 ///
-/// Az övfokozatok és a dokumentumtípusok itt cserélhetők, ha a klub mást használ.
+/// A lovas szintek és a dokumentumtípusok itt cserélhetők, ha a klub mást használ.
 abstract final class ClubConfig {
   /// TODO_SUBLI: ideiglenes piros kör S betűvel, amíg a végleges logó nincs meg.
   static const String logoAsset = 'assets/images/logo.png';
@@ -49,131 +49,26 @@ abstract final class ClubConfig {
   static const int maxDocumentBytes = 20 * 1024 * 1024;
   static const int maxDocumentsPerPost = 5;
 
-  /// 10. kyu-tól 1. kyu-ig, majd 1. dan-tól 10. dan-ig.
-  ///
-  /// A színek egy szokásos magyar kyu-skála szerint vannak, és szabadon
-  /// átírhatók. A felirat mindig „5. kyu – kék öv” alakú.
+  /// Lovas szintek. A [key] a `users.beltRank` mezőbe kerül,
+  /// a régi övfokozat-mechanizmussal. A felirat a szint neve.
   static const List<BeltGrade> belts = [
     BeltGrade(
-      key: 'kyu10',
-      label: '10. kyu',
-      beltName: 'fehér öv',
-      color: Color(0xFFF4F1F2),
-    ),
-    BeltGrade(
-      key: 'kyu9',
-      label: '9. kyu',
-      beltName: 'fehér-sárga öv',
-      color: Color(0xFFF4F1F2),
-      stripe: Color(0xFFF2C200),
-    ),
-    BeltGrade(
-      key: 'kyu8',
-      label: '8. kyu',
-      beltName: 'sárga öv',
-      color: Color(0xFFF2C200),
-    ),
-    BeltGrade(
-      key: 'kyu7',
-      label: '7. kyu',
-      beltName: 'narancssárga öv',
-      color: Color(0xFFF08A24),
-    ),
-    BeltGrade(
-      key: 'kyu6',
-      label: '6. kyu',
-      beltName: 'zöld öv',
+      key: 'beginner',
+      label: 'Kezdő',
+      beltName: '',
       color: Color(0xFF2E7D32),
     ),
     BeltGrade(
-      key: 'kyu5',
-      label: '5. kyu',
-      beltName: 'kék öv',
+      key: 'advanced',
+      label: 'Haladó',
+      beltName: '',
       color: Color(0xFF1F6FEB),
     ),
     BeltGrade(
-      key: 'kyu4',
-      label: '4. kyu',
-      beltName: 'lila öv',
-      color: Color(0xFF7B4B9A),
-    ),
-    BeltGrade(
-      key: 'kyu3',
-      label: '3. kyu',
-      beltName: 'barna öv',
-      color: Color(0xFF8D5A32),
-    ),
-    BeltGrade(
-      key: 'kyu2',
-      label: '2. kyu',
-      beltName: 'barna öv',
-      color: Color(0xFF6B3E22),
-    ),
-    BeltGrade(
-      key: 'kyu1',
-      label: '1. kyu',
-      beltName: 'barna öv',
-      color: Color(0xFF4A2A16),
-    ),
-    BeltGrade(
-      key: 'dan1',
-      label: '1. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan2',
-      label: '2. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan3',
-      label: '3. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan4',
-      label: '4. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan5',
-      label: '5. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan6',
-      label: '6. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan7',
-      label: '7. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan8',
-      label: '8. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan9',
-      label: '9. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
-    ),
-    BeltGrade(
-      key: 'dan10',
-      label: '10. dan',
-      beltName: 'fekete öv',
-      color: Color(0xFF1C1B1F),
+      key: 'competitor',
+      label: 'Versenyző',
+      beltName: '',
+      color: Color(0xFF6B1E2E),
     ),
   ];
 
@@ -325,7 +220,7 @@ class AudienceOption {
   final String description;
 }
 
-/// Egy övfokozat. A [key] kerül a `users.beltRank` mezőbe.
+/// Egy lovas szint. A [key] kerül a `users.beltRank` mezőbe.
 class BeltGrade {
   const BeltGrade({
     required this.key,
@@ -341,8 +236,8 @@ class BeltGrade {
   final Color color;
   final Color? stripe;
 
-  /// Például „5. kyu – kék öv”.
-  String get caption => '$label – $beltName';
+  /// Üres [beltName] esetén csak a szint neve, különben „cím – név”.
+  String get caption => beltName.isEmpty ? label : '$label – $beltName';
 }
 
 enum DocumentKind { pdf, word, excel, powerpoint }
