@@ -15,25 +15,31 @@ import 'app/router.dart';
 import 'app/theme.dart';
 import 'app/theme_controller.dart';
 import 'app/theme_preference.dart';
+import 'features/auth/data/auth_providers.dart';
+import 'features/auth/domain/auth_session.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('hu');
-  final options = useFirebaseEmulator
-      ? emulatorFirebaseOptions()
-      : firebaseOptionsForCurrentFlavor();
-  if (options == null) {
-    runApp(const FirebaseSetupScreen());
-    return;
-  }
-  await Firebase.initializeApp(options: options);
-  if (useFirebaseEmulator) {
-    await connectFirebaseEmulators();
-  } else {
-    await startCrashReporting();
-    FirebaseAuth.instance.authStateChanges().listen((user) {
-      setCrashlyticsUser(user?.uid);
-    });
+  final emulator = useFirebaseEmulator;
+  final offline = emulator && !await emulatorHubReachable();
+  if (!offline) {
+    final options = emulator
+        ? emulatorFirebaseOptions()
+        : firebaseOptionsForCurrentFlavor();
+    if (options == null) {
+      runApp(const FirebaseSetupScreen());
+      return;
+    }
+    await Firebase.initializeApp(options: options);
+    if (emulator) {
+      await connectFirebaseEmulators();
+    } else {
+      await startCrashReporting();
+      FirebaseAuth.instance.authStateChanges().listen((user) {
+        setCrashlyticsUser(user?.uid);
+      });
+    }
   }
   final prefs = await SharedPreferences.getInstance();
   final initial = ThemePreference.fromStorage(
@@ -45,6 +51,12 @@ Future<void> main() async {
         themePreferenceProvider.overrideWith(
           () => ThemeController(initial: initial, preloaded: true),
         ),
+        if (offline) ...[
+          emulatorOfflineProvider.overrideWithValue(true),
+          authGateProvider.overrideWith(
+            (ref) => Stream<AuthSession>.value(const AuthSignedOut()),
+          ),
+        ],
       ],
       child: const SubliApp(),
     ),

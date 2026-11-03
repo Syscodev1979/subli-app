@@ -1,6 +1,5 @@
 // Fejlesztői Firebase-beállítások (subli-app-dev).
-// Amíg az apiKey REPLACE_ kezdetű, az app nem csatlakozik projekthez:
-// a firebaseOptionsForCurrentFlavor nullt ad, és nem hívja a Firebase-t.
+// Amíg az apiKey REPLACE_ kezdetű, a fejlesztői app a helyi emulátort használja.
 // A flutterfire configure felülírja ezt a fájlt. Az osztály neve maradjon
 // DefaultFirebaseOptions.
 // ignore_for_file: type=lint

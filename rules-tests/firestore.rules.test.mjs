@@ -896,6 +896,80 @@ test("nem tag nem olvas üzenetet, és a kliens nem ír taglistát", async () =>
   );
 });
 
+test("csoportos beszélgetés nem hozható létre, a kétszemélyes üzenet igen", async () => {
+  await seed({
+    athlete1: userDoc({
+      id: "athlete1",
+      email: "athlete@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    athlete2: userDoc({
+      id: "athlete2",
+      name: "Másik Sportoló",
+      email: "athlete2@example.com",
+      role: "athlete",
+      status: "active",
+    }),
+    coach1: userDoc({
+      id: "coach1",
+      email: "coach@example.com",
+      role: "coach",
+      status: "active",
+    }),
+  });
+  const coach = testEnv.authenticatedContext("coach1", {
+    email: "coach@example.com",
+  });
+  await assertFails(
+    setDoc(doc(coach.firestore(), "conversations", "group"), {
+      memberIds: ["coach1", "athlete1", "athlete2"],
+      type: "group",
+      createdAt,
+      updatedAt: createdAt,
+      lastReadAt: {},
+      hasMinor: false,
+      guardianIds: [],
+    }),
+  );
+  await assertFails(
+    setDoc(doc(coach.firestore(), "conversations", "pair"), {
+      memberIds: ["coach1", "athlete1"],
+      type: "direct",
+      createdAt,
+      updatedAt: createdAt,
+      lastReadAt: {},
+      hasMinor: false,
+      guardianIds: [],
+    }),
+  );
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "conversations", "pair"), {
+      memberIds: ["coach1", "athlete1"],
+      type: "direct",
+      createdAt,
+      updatedAt: createdAt,
+      lastReadAt: {},
+      hasMinor: false,
+      guardianIds: [],
+    });
+  });
+  await assertFails(
+    updateDoc(doc(coach.firestore(), "conversations", "pair"), {
+      memberIds: ["coach1", "athlete1", "athlete2"],
+    }),
+  );
+  await assertSucceeds(
+    setDoc(doc(coach.firestore(), "conversations", "pair", "messages", "m1"), {
+      senderId: "coach1",
+      text: "Szia",
+      createdAt,
+      deleted: false,
+    }),
+  );
+});
+
 test("a saját reakció cserélhető, idegenét más sportoló nem törli", async () => {
   await seed({
     coach1: userDoc({
@@ -1329,7 +1403,7 @@ test("szülő olvashat szülői bejegyzést, sportoló nem", async () => {
   }
 });
 
-test("minden tag mellé más célközönség nem írható", async () => {
+test("csak a minden tag célközönség írható, a többi elutasítva", async () => {
   await seed({
     coach1: userDoc({
       id: "coach1",
@@ -1350,11 +1424,28 @@ test("minden tag mellé más célközönség nem írható", async () => {
   await assertFails(
     setDoc(doc(coach.firestore(), "posts", "empty"), postDoc({ audience: [] })),
   );
-  await assertSucceeds(
+  await assertFails(
     setDoc(
       doc(coach.firestore(), "posts", "both"),
       postDoc({ audience: ["parents", "athletes"] }),
     ),
+  );
+  await assertFails(
+    setDoc(
+      doc(coach.firestore(), "posts", "staff-only"),
+      postDoc({ audience: ["staff"] }),
+    ),
+  );
+  await assertSucceeds(
+    setDoc(
+      doc(coach.firestore(), "posts", "everyone"),
+      postDoc({ audience: ["all"] }),
+    ),
+  );
+  await assertFails(
+    updateDoc(doc(coach.firestore(), "posts", "everyone"), {
+      audience: ["staff"],
+    }),
   );
 });
 

@@ -291,41 +291,57 @@ async function main() {
       createdAt: at('2026-11-02T17:40:00.000Z'),
     });
 
-  const memberIds = ['seed-admin', 'seed-anna', 'seed-peter', 'seed-eszter'];
-  await db.collection('conversations').doc('conv-istallo').set({
-    memberIds,
-    type: 'group',
-    createdAt: at('2026-11-03T06:00:00.000Z'),
-    updatedAt: at('2026-11-03T09:15:00.000Z'),
-    lastReadAt: {},
-    hasMinor: false,
-    guardianIds: [],
-    lastMessage: {
-      text: 'Én viszem a pótló kantárt.',
-      senderId: 'seed-peter',
-      createdAt: at('2026-11-03T09:15:00.000Z'),
+  const oldGroup = db.collection('conversations').doc('conv-istallo');
+  const oldMessages = await oldGroup.collection('messages').listDocuments();
+  for (const ref of oldMessages) await ref.delete();
+  await oldGroup.delete();
+
+  const directs = [
+    {
+      id: 'conv-admin-anna',
+      memberIds: ['seed-admin', 'seed-anna'],
+      senderId: 'seed-admin',
+      text: 'Szia Anna, üdv a közösségben!',
+      createdAt: '2026-11-03T08:40:00.000Z',
     },
-  });
-  const messages = [
-    ['msg-1', 'seed-anna', 'Ma 16-kor találkozunk az istállónál.', '2026-11-03T08:40:00.000Z'],
-    ['msg-2', 'seed-eszter', 'Borsó már fel van nyergelve.', '2026-11-03T09:00:00.000Z'],
-    ['msg-3', 'seed-peter', 'Én viszem a pótló kantárt.', '2026-11-03T09:15:00.000Z'],
+    {
+      id: 'conv-admin-peter',
+      memberIds: ['seed-admin', 'seed-peter'],
+      senderId: 'seed-admin',
+      text: 'Szia Péter, mikor tudsz jönni edzésre?',
+      createdAt: '2026-11-03T09:15:00.000Z',
+    },
   ];
-  for (const [id, senderId, text, createdAt] of messages) {
+  for (const item of directs) {
+    const createdAt = at(item.createdAt);
+    await db.collection('conversations').doc(item.id).set({
+      memberIds: item.memberIds,
+      type: 'direct',
+      createdAt,
+      updatedAt: createdAt,
+      lastReadAt: {},
+      hasMinor: false,
+      guardianIds: [],
+      lastMessage: {
+        text: item.text,
+        senderId: item.senderId,
+        createdAt,
+      },
+    });
     await db
       .collection('conversations')
-      .doc('conv-istallo')
+      .doc(item.id)
       .collection('messages')
-      .doc(id)
+      .doc('msg-1')
       .set({
-        senderId,
-        text,
-        createdAt: at(createdAt),
+        senderId: item.senderId,
+        text: item.text,
+        createdAt,
         deleted: false,
       });
   }
 
-  console.log('Mintaadat kész: 5 fiók, 4 csoport, 5 bejegyzés, 1 beszélgetés.');
+  console.log('Mintaadat kész: 5 fiók, 4 csoport, 5 bejegyzés, 2 beszélgetés.');
 }
 
 main().catch((error) => {

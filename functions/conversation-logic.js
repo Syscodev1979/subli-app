@@ -65,6 +65,15 @@ function planConversation(caller, other, today = new Date(), adultsOnly = false)
   };
 }
 
+/** 2-nél több tag tilos, ha a klub nem enged csoportos chatet. */
+function assertDirectChat(memberIds, allowGroupChats) {
+  if (!allowGroupChats && memberIds.length > 2) {
+    const error = new Error("Csoportos beszélgetés nem hozható létre.");
+    error.code = "group-chat-forbidden";
+    throw error;
+  }
+}
+
 function findExisting(conversations, memberIds) {
   const key = memberKey(memberIds);
   return conversations.find((item) => memberKey(item.memberIds) === key) || null;
@@ -117,6 +126,7 @@ module.exports = {
   memberKey,
   isMinor,
   planConversation,
+  assertDirectChat,
   findExisting,
   addParents,
   nameKeywords,

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
+import '../../../app/club_config.dart';
 import '../../auth/domain/user_role.dart';
 import '../domain/chat_message.dart';
 import '../domain/chat_repository.dart';
@@ -71,6 +72,7 @@ class FirestoreChatRepository implements ChatRepository {
 
   @override
   Future<String> startConversation(String otherId) async {
+    ClubConfig.rejectGroupConversation(2);
     final result = await _functions.httpsCallable('startConversation').call({
       'otherId': otherId,
     });

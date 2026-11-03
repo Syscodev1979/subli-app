@@ -13,8 +13,29 @@ void main() {
     await initializeDateFormatting('hu');
   });
 
-  setUp(() => ClubConfig.debugAdultsOnlyOverride = false);
-  tearDown(() => ClubConfig.debugAdultsOnlyOverride = null);
+  setUp(() {
+    ClubConfig.debugAdultsOnlyOverride = false;
+    ClubConfig.debugSelectableAudiencesOverride = const [
+      'all',
+      'staff',
+      'parents',
+      'athletes',
+    ];
+  });
+  tearDown(() {
+    ClubConfig.debugAdultsOnlyOverride = null;
+    ClubConfig.debugSelectableAudiencesOverride = null;
+  });
+
+  test('a Subli csak a minden tagot kínálja, választó nélkül', () {
+    ClubConfig.debugSelectableAudiencesOverride = null;
+    expect(ClubConfig.selectableAudienceKeys, ['all']);
+    expect(ClubConfig.showsAudiencePicker, isFalse);
+    expect(
+      ClubConfig.visibleAudiences.map((option) => option.key),
+      ['all'],
+    );
+  });
 
   test('a minden tag kizárólagos, a többiből több is választható', () {
     final parents = PostAudience.toggle(

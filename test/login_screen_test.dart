@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:subli_app/app/club_config.dart';
 import 'package:subli_app/app/constants.dart';
+import 'package:subli_app/app/emulator.dart';
 import 'package:subli_app/app/theme.dart';
 import 'package:subli_app/features/auth/data/auth_providers.dart';
 import 'package:subli_app/features/auth/domain/auth_repository.dart';
@@ -208,6 +209,35 @@ void main() {
       find.byKey(const Key('login-screen')),
       matchesGoldenFile('goldens/login_se_keyboard.png'),
     );
+  });
+
+  testWidgets('ha a próbaszerver nem fut, a belépés ezt írja ki', (
+    tester,
+  ) async {
+    await _surface(tester, const Size(390, 844));
+    final auth = _FakeAuth();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(auth),
+          emulatorOfflineProvider.overrideWithValue(true),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const LoginScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(emulatorOfflineMessage), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('login-email')), 'a@b.hu');
+    await tester.enterText(
+      find.byKey(const Key('login-password')),
+      'Subli2026!',
+    );
+    await tester.tap(find.byKey(const Key('login-submit')));
+    await tester.pump();
+    expect(auth.signInCalls, 0);
   });
 }
 

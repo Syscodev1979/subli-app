@@ -66,6 +66,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         actions: [
           IconButton(
+            key: const Key('new-direct-message'),
             tooltip: 'Új üzenet',
             onPressed: () => context.push(AppRoutes.newMessage),
             icon: const Icon(Icons.edit_outlined),

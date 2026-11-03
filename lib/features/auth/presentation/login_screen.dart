@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
+import '../../../app/emulator.dart';
 import '../data/auth_providers.dart';
 import '../../../core/widgets/error_notice.dart';
 import 'auth_error_message.dart';
@@ -38,6 +39,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _signIn() async {
     if (_submitting) return;
+    if (ref.read(emulatorOfflineProvider)) {
+      setState(() => _message = emulatorOfflineMessage);
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _submitting = true;
@@ -59,6 +64,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final offline = ref.watch(emulatorOfflineProvider);
+    final notice = offline ? emulatorOfflineMessage : _message;
     return AuthFrame(
       screenKey: const Key('login-screen'),
       heading: const LoginHeading(),
@@ -92,9 +99,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 validator: validatePassword,
                 onFieldSubmitted: (_) => _signIn(),
               ),
-              if (_message != null) ...[
+              if (notice != null) ...[
                 const SizedBox(height: 12),
-                ErrorNotice(_message!),
+                ErrorNotice(notice),
               ],
               const SizedBox(height: 16),
               AuthPrimaryButton(

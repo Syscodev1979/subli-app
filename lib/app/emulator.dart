@@ -1,16 +1,57 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../firebase_options_dev.dart' as dev_options;
 import 'app_flavor.dart';
 
-/// Igaz, ha az appot `--dart-define=USE_EMULATOR=true` mellett indították.
-///
-/// A zászló nélkül az érték hamis, és a Firebase a korábbi úton indul.
-const bool useFirebaseEmulator = bool.fromEnvironment('USE_EMULATOR');
+/// A fejlesztői flavor helyettesítő kulccsal magától az emulátorra megy.
+/// Az éles flavor a zászló nélkül a felhős beállítást használja.
+bool emulatorModeFor({
+  required bool dartDefine,
+  required bool devFlavor,
+  required String devApiKey,
+}) {
+  if (dartDefine) return true;
+  if (!devFlavor) return false;
+  return devApiKey.startsWith('REPLACE_');
+}
+
+bool get useFirebaseEmulator => emulatorModeFor(
+  dartDefine: const bool.fromEnvironment('USE_EMULATOR'),
+  devFlavor: AppFlavor.current.isDev,
+  devApiKey: dev_options.DefaultFirebaseOptions.currentPlatform.apiKey,
+);
+
+/// A belépési oldalon, ha a helyi emulátor nem válaszol.
+const emulatorOfflineMessage =
+    'A helyi próbaszerver nem fut. Indítsd el: ./tool/run_dev.sh';
+
+/// Igaz, ha az emulátor mód kellene, de a 4000-es port nem válaszol.
+final emulatorOfflineProvider = Provider<bool>((ref) => false);
+
+/// Az emulátor kezelőfelülete. Az iOS szimulátor a gép localhostját látja.
+Future<bool> emulatorHubReachable() async {
+  final client = HttpClient();
+  try {
+    final request = await client
+        .getUrl(Uri.parse('http://127.0.0.1:4000/'))
+        .timeout(const Duration(seconds: 2));
+    final response = await request.close().timeout(const Duration(seconds: 2));
+    await response.drain<void>();
+    return response.statusCode >= 200 && response.statusCode < 500;
+  } catch (_) {
+    return false;
+  } finally {
+    client.close(force: true);
+  }
+}
 
 /// Demo-projekt. Az emulátor nem ellenőrzi a kulcsot, a projectId a lényeg.
 ///

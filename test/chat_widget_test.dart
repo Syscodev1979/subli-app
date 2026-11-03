@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:subli_app/app/club_config.dart';
 import 'package:subli_app/app/theme.dart';
 import 'package:subli_app/features/auth/data/auth_providers.dart';
 import 'package:subli_app/features/auth/domain/app_user.dart';
@@ -78,6 +79,21 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Új üzenet'), findsWidgets);
+    expect(find.byKey(const Key('new-direct-message')), findsOneWidget);
+    expect(find.byKey(const Key('new-group-chat')), findsNothing);
+    expect(ClubConfig.allowGroupChats, isFalse);
+  });
+
+  test('csoportos beszélgetés elutasítva, a kétszemélyes megengedett', () {
+    expect(ClubConfig.groupChatsAllowed, isFalse);
+    expect(
+      () => ClubConfig.rejectGroupConversation(3),
+      throwsStateError,
+    );
+    expect(() => ClubConfig.rejectGroupConversation(2), returnsNormally);
+    ClubConfig.debugAllowGroupChatsOverride = true;
+    addTearDown(() => ClubConfig.debugAllowGroupChatsOverride = null);
+    expect(() => ClubConfig.rejectGroupConversation(3), returnsNormally);
   });
 
   testWidgets('a saját buborék fehér, a törölt üzenet dőlt', (tester) async {

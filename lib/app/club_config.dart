@@ -62,6 +62,22 @@ abstract final class ClubConfig {
 
   static bool get enforceAdultsOnly => debugAdultsOnlyOverride ?? adultsOnly;
 
+  /// Csoportos beszélgetés. A Subli csak kétszemélyes chatet enged.
+  /// A Gastroyal igazra állítja, ott a viselkedés a régi marad.
+  static const bool allowGroupChats = false;
+
+  static bool? debugAllowGroupChatsOverride;
+
+  static bool get groupChatsAllowed =>
+      debugAllowGroupChatsOverride ?? allowGroupChats;
+
+  /// 2-nél több tagú beszélgetés a felületen és a kliensen is tilos.
+  static void rejectGroupConversation(int memberCount) {
+    if (!groupChatsAllowed && memberCount > 2) {
+      throw StateError('Csoportos beszélgetés nem hozható létre.');
+    }
+  }
+
   /// TODO_SUBLI: a visszajelző cím. Addig senki nem kap levelet.
   static const String feedbackEmail = 'visszajelzes-beallitando@invalid';
 
@@ -200,13 +216,30 @@ abstract final class ClubConfig {
     ),
   ];
 
-  /// A szerkesztőben látható célközönségek. 18 év feletti klubban nincs „Szülők”.
-  static List<AudienceOption> get visibleAudiences => enforceAdultsOnly
-      ? [
-          for (final option in audiences)
-            if (option.key != 'parents') option,
-        ]
-      : audiences;
+  /// A poszt írásakor választható célközönségek.
+  /// A Subli csak a „Minden tag”. A Gastroyal a teljes listát adja meg,
+  /// és abból a felnőtt szabály továbbra is kiveszi a szülőket.
+  static const List<String> selectableAudienceKeys = ['all'];
+
+  static List<String>? debugSelectableAudiencesOverride;
+
+  /// A szerkesztőben látható célközönségek.
+  static List<AudienceOption> get visibleAudiences {
+    final allowed = debugSelectableAudiencesOverride ?? selectableAudienceKeys;
+    final base = enforceAdultsOnly
+        ? [
+            for (final option in audiences)
+              if (option.key != 'parents') option,
+          ]
+        : audiences;
+    return [
+      for (final option in base)
+        if (allowed.contains(option.key)) option,
+    ];
+  }
+
+  /// Egy választásnál a célközönség-választó nem jelenik meg.
+  static bool get showsAudiencePicker => visibleAudiences.length > 1;
 
   static AudienceOption? audienceByKey(String key) {
     for (final option in audiences) {

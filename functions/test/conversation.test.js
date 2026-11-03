@@ -3,11 +3,13 @@ const assert = require("node:assert/strict");
 const {
   isMinor,
   planConversation,
+  assertDirectChat,
   findExisting,
   addParents,
   memberKey,
   nameKeywords,
 } = require("../conversation-logic");
+const { ALLOW_GROUP_CHATS, ONLY_ALL_AUDIENCE } = require("../club-policy");
 
 const today = new Date(2026, 9, 22);
 
@@ -131,6 +133,27 @@ test("új szülő bekerül a kiskorú meglévő beszélgetéseibe", () => {
 
   const unchanged = addParents(withCoach, ["parent-2"]);
   assert.equal(unchanged, withCoach);
+});
+
+test("csoportos chat tilos, a kétszemélyes megengedett", () => {
+  assert.equal(ALLOW_GROUP_CHATS, false);
+  assert.equal(ONLY_ALL_AUDIENCE, true);
+  assert.throws(
+    () => assertDirectChat(["a", "b", "c"], ALLOW_GROUP_CHATS),
+    (error) => error.code === "group-chat-forbidden",
+  );
+  assert.doesNotThrow(() => assertDirectChat(["a", "b"], ALLOW_GROUP_CHATS));
+  assert.doesNotThrow(() => assertDirectChat(["a", "b", "c"], true));
+
+  const direct = planConversation(
+    user("admin", "admin", adultBirth),
+    user("member", "athlete", adultBirth),
+    today,
+    true,
+  );
+  assert.doesNotThrow(() => assertDirectChat(direct.memberIds, ALLOW_GROUP_CHATS));
+  assert.equal(direct.memberIds.length, 2);
+  assert.equal(direct.type, "direct");
 });
 
 test("a tagkereső előtagjai ékezet nélkül készülnek", () => {

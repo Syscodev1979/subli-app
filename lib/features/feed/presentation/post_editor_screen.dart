@@ -318,8 +318,10 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
     _originalCategory = post.category;
     _originalEventStartsAt = post.eventStartsAt;
     _originalEventEndsAt = post.eventEndsAt;
-    _audience = post.audience;
-    _originalAudience = post.audience;
+    _audience = ClubConfig.showsAudiencePicker
+        ? post.audience
+        : PostAudience.everyone;
+    _originalAudience = _audience;
     _images
       ..clear()
       ..addAll(post.images.map(_MediaDraft.remote));
@@ -783,6 +785,12 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
         freshUrls: freshUrls,
       );
       if (_cancelUpload) throw const MediaUploadCancelled();
+      final audienceKeys = [
+        for (final item in ClubConfig.showsAudiencePicker
+            ? _audience
+            : PostAudience.everyone)
+          item.value,
+      ];
       if (isNew) {
         await repository.createPost(
           postId: postId,
@@ -795,7 +803,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           media: media,
           eventStartsAt: _savedEventStart,
           eventEndsAt: _savedEventEnd,
-          audience: [for (final item in _audience) item.value],
+          audience: audienceKeys,
         );
       } else {
         await repository.updatePost(
@@ -806,7 +814,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           media: media,
           eventStartsAt: _savedEventStart,
           eventEndsAt: _savedEventEnd,
-          audience: [for (final item in _audience) item.value],
+          audience: audienceKeys,
         );
         await storage?.deleteExcept(postId, [
           for (final item in media) ...[item.url, ?item.thumbUrl],
@@ -1355,15 +1363,17 @@ class _AuthorBlock extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 8),
-              AudienceChip(
-                audience: audience,
-                onTap: () async {
-                  final picked = await showAudienceSheet(context, audience);
-                  if (picked == null) return;
-                  onAudience(picked);
-                },
-              ),
+              if (ClubConfig.showsAudiencePicker) ...[
+                const SizedBox(height: 8),
+                AudienceChip(
+                  audience: audience,
+                  onTap: () async {
+                    final picked = await showAudienceSheet(context, audience);
+                    if (picked == null) return;
+                    onAudience(picked);
+                  },
+                ),
+              ],
             ],
           ),
         ),

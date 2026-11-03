@@ -29,7 +29,7 @@ void main() {
       find.text('Oszd meg a klub híreit, eredményeit, gondolataidat…'),
       findsOneWidget,
     );
-    expect(find.text('🌐 Minden tag'), findsOneWidget);
+    expect(find.byKey(const Key('audience-chip')), findsNothing);
     expect(find.text('5000'), findsOneWidget);
     expect(_publishButton(tester).onTap, isNull);
     expect(_field(tester).style?.fontSize, 24);

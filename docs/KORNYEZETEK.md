@@ -32,15 +32,13 @@ iOS-en a `dev` és a `prod` scheme a `Debug-dev` / `Release-prod` konfiguráció
 
 ## Helyi emulátor
 
-Felhő nélkül, a gépen futó emulátorral lehet belépni. Két terminál kell.
+Felhő nélkül, a gépen futó emulátorral lehet belépni. Egy parancs:
 
 ```bash
-tool/emulator_start.sh
-node tool/seed_emulator.mjs
-flutter run --flavor dev -t lib/main.dart --dart-define=USE_EMULATOR=true
+./tool/run_dev.sh
 ```
 
-A Cursor indító neve: **Subli DEV (emulátor)**. A zászló nélkül az app a korábbi viselkedést tartja, és nem köt rá az emulátorra. A sarokban EMULÁTOR szalag látszik. Az adatok a `.emulator-data` mappába kerülnek, ez nincs a gitben. A felület a http://localhost:4000 címen van.
+Ez elindítja az emulátort, ha a 4000-es port még nem válaszol, üres adatbázisnál betölti a mintaadatot, majd a futó szimulátoron elindítja a fejlesztői appot. A **Subli DEV** indító ugyanezt az emulátor módot használja, amíg a `firebase_options_dev.dart` helyettesítő kulcsot tartalmaz. A sarokban EMULÁTOR szalag látszik. Ha a próbaszerver nem fut, a belépési oldal megmondja, hogyan kell elindítani. Az éles flavor ettől nem változik. Az adatok a `.emulator-data` mappába kerülnek, ez nincs a gitben. A felület a http://localhost:4000 címen van.
 
 A minta fiókok jelszava `Subli2026!`. Az admin: `info@sarosigyorgy.hu`. A szkript csak a helyi emulátorba ír.
 

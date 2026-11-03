@@ -404,11 +404,19 @@ service cloud.firestore {
         && audienceOk();
     }
 
+    // Subli: csak a „Minden tag”. A Gastroyal a teljes listát engedi.
+    // Ugyanaz a szándék, mint a functions/club-policy.js ONLY_ALL_AUDIENCE.
+    function onlyAllAudience() {
+      return true;
+    }
+
     function audienceOk() {
       let audience = request.resource.data.get('audience', []);
-      return audience.hasOnly(['all', 'staff', 'parents', 'athletes'])
-        && audience.size() > 0
-        && (audience.size() == 1 || !audience.hasAny(['all']));
+      return onlyAllAudience()
+        ? audience.size() == 1 && audience.hasOnly(['all'])
+        : audience.hasOnly(['all', 'staff', 'parents', 'athletes'])
+          && audience.size() > 0
+          && (audience.size() == 1 || !audience.hasAny(['all']));
     }
 
     // Admin és edző mindig. Más aktív tag csak az „all” vagy a saját szerepe
@@ -611,13 +619,28 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // functions/club-policy.js ALLOW_GROUP_CHATS. Subli: false.
+    function groupChatsAllowed() {
+      return false;
+    }
+
+    function conversationSizeAllowed() {
+      return groupChatsAllowed()
+        || request.resource.data.get('memberIds', []).size() <= 2;
+    }
+
     match /conversations/{conversationId} {
       allow read: if isActive()
         && request.auth.uid in resource.data.memberIds;
-      allow create, delete: if false;
+      // A beszélgetést a Cloud Function hozza létre. A kliens sem kétszemélyes,
+      // sem csoportos chatet nem írhat. A 2-nél több tag külön is tilos,
+      // és meglévő chathez sem adható új tag.
+      allow create: if conversationSizeAllowed() && false;
+      allow delete: if false;
       allow update: if isActive()
         && request.auth.uid in resource.data.memberIds
-        && onlyOwnReadStamp();
+        && onlyOwnReadStamp()
+        && request.resource.data.memberIds == resource.data.memberIds;
 
       match /messages/{messageId} {
         allow read: if inConversation(conversationId);

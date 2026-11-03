@@ -6,11 +6,12 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const {
   isMinor,
   planConversation,
+  assertDirectChat,
   memberKey,
   addParents,
   nameKeywords,
 } = require("./conversation-logic");
-const { ADULTS_ONLY } = require("./club-policy");
+const { ADULTS_ONLY, ALLOW_GROUP_CHATS } = require("./club-policy");
 const { authorPropagationPlan, chunk } = require("./profile-sync");
 const {
   DELETED_NAME,
@@ -151,7 +152,7 @@ exports.syncMember = onDocumentWritten("users/{uid}", async (event) => {
   const plan = authorPropagationPlan(before, after);
   if (plan) await propagateAuthor(uid, plan);
 
-  if (ADULTS_ONLY) return;
+  if (ADULTS_ONLY || !ALLOW_GROUP_CHATS) return;
   if (!after || !isMinor(personFromUser(uid, after, today), today)) return;
   const previous = new Set(Array.isArray(before?.parentIds) ? before.parentIds : []);
   const added = (Array.isArray(after.parentIds) ? after.parentIds : []).filter(
@@ -193,6 +194,17 @@ exports.startConversation = onCall(async (request) => {
   }
 
   const plan = planConversation(caller, other, today, ADULTS_ONLY);
+  try {
+    assertDirectChat(plan.memberIds, ALLOW_GROUP_CHATS);
+  } catch (error) {
+    if (error.code === "group-chat-forbidden") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Csoportos beszélgetés nem hozható létre.",
+      );
+    }
+    throw error;
+  }
   const key = memberKey(plan.memberIds);
   const existing = await db
     .collection("conversations")
