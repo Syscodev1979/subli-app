@@ -1,5 +1,16 @@
 # Subli
 
+## 0.5.0
+
+### Hozzáadva
+
+- Induláskor az app a `config/app` dokumentum `minVersion` és `latestVersion` mezőjét veti össze a saját verziójával. A minimum alatt egy bezárhatatlan frissítési képernyő jelenik meg, a legújabb verzió alatt csak egy bezárható jelzés. Ha a dokumentum nem olvasható, az app nem blokkol.
+- A Profilon a „Fiókom törlése” a jelszó újra megadása után törli a fiókot, a profilt és a feltöltött képeket. A bejegyzések és a hozzászólások megmaradnak, a szerző „Törölt felhasználó” lesz. Az admin fiókja így nem törölhető.
+- Bejegyzés, hozzászólás, chatüzenet és idegen profil jelenthető. A jelentést csak az admin látja, elrejtheti vagy törölheti a tartalmat, felfüggesztheti a tagot, és lezárhatja a jelentést. Egy tag letilthat egy másikat: a letiltott tartalma nem látszik, és chatüzenetet sem válthatnak. A letiltás a profilon feloldható.
+- A regisztráció és a profil alja az adatvédelmi tájékoztatóra és a felhasználási feltételekre mutat. A címek a ClubConfig-ban vannak, amíg nincs végleges oldal, `TODO_SUBLI` helyettesítő.
+- Az iOS engedélykérések magyarul szólnak, és van PrivacyInfo.xcprivacy. Az áruházi űrlaphoz a `docs/ARUHAZI_ADATKEZELES.md` foglalja össze a gyűjtött adatokat.
+- A verzió `0.5.0+6`.
+
 ## 0.4.0
 
 ### Változtatva
