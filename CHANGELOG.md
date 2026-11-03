@@ -1,5 +1,15 @@
 # Subli
 
+## 0.5.1
+
+### Változtatva
+
+- Minden jóváhagyott, nem felfüggesztett tag írhat bejegyzést Poszt, Közlemény, Esemény és Lovaink kategóriában. A hírfolyamon a „+ Új bejegyzés” gomb neki is látszik. A saját bejegyzését szerkesztheti és törölheti. Mások bejegyzését és hozzászólását csak az admin törölheti. Kitűzni csak az admin tud.
+- A saját profilon a tag beállíthatja vagy törölheti a lovas szintjét: Kezdő, Haladó, Versenyző, vagy nincs megadva. Az admin bárkiét állíthatja. Szerepet, jóváhagyást és felfüggesztést a tag továbbra sem írhat.
+- Egy régi edző-dokumentum a Subliban nem kap több jogot, mint egy tag. A Gastroyal ezt a `MEMBERS_MAY_POST` kapcsolóval tartja a régiben.
+- A Frissítés gomb az App Store oldalát nyitja, az azonosító `6830208527`.
+- A verzió `0.5.1+7`.
+
 ## 0.5.0
 
 ### Hozzáadva
