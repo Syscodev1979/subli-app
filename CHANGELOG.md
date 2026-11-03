@@ -1,5 +1,13 @@
 # Subli
 
+## 0.2.0
+
+### Változtatva
+
+- A márkaszínek a Subli logóhoz igazodnak. A gombok, linkek és aktív ikonok `#D7262B`, a nagy felületek `#EF3D42`. A hibaüzenet borostyán `#B45309`, és mindig ikon is van mellette.
+- Mindenhol a teljes Subli logó látszik. Az alkalmazásikon piros, a fejlesztői változaton DEV szalag van. A kezdőképernyő fehér, sötét módban is.
+- A verzió `0.2.0+2`.
+
 ## 0.1.1
 
 ### Változtatva
