@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
+import '../../../core/widgets/horseshoe_icon.dart';
 import '../../../core/widgets/club_drawer.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../chat/data/chat_providers.dart';
@@ -446,7 +447,7 @@ class _EmptyFeed extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
       child: Column(
         children: [
-          const Icon(Icons.pets, size: 56, color: AppColors.burgundy),
+          const ClubThemeIcon(size: 56, color: AppColors.burgundy),
           const SizedBox(height: 16),
           Text(
             message ??

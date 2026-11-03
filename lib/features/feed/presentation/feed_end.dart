@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/constants.dart';
+import '../../../core/widgets/horseshoe_icon.dart';
 import 'feed_palette.dart';
 
 /// A lista alja, ha minden bejegyzés betöltődött.
@@ -13,11 +14,7 @@ class FeedEndMark extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 28, 32, 40),
       child: Column(
         children: [
-          const Icon(
-            Icons.pets,
-            size: 28,
-            color: AppColors.gold,
-          ),
+          const ClubThemeIcon(size: 28, color: AppColors.gold),
           const SizedBox(height: 10),
           Text(
             'Minden bejegyzést láttál 🐴',

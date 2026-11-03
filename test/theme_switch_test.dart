@@ -98,7 +98,7 @@ void main() {
     );
   });
 
-  testWidgets('szűk fejlécen a klubnév rövidül, a kapcsoló teljes marad', (
+  testWidgets('szűk fejlécen a teljes cím marad, a kapcsoló teljes marad', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(300, 700);
@@ -108,7 +108,14 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await _pumpFeed(tester);
 
-    expect(find.text('Subli'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(find.byKey(const Key('club-title')))
+          .data!
+          .replaceAll('\n', ' '),
+      'Subli Lovas Közösségi App',
+    );
+    expect(find.text('Subli'), findsNothing);
     expect(find.text(AppInfo.clubName), findsNothing);
     expect(tester.getSize(find.byType(ThemeSwitch)), const Size(64, 32));
   });
@@ -156,9 +163,7 @@ Future<void> _pumpSwitch(WidgetTester tester, {required bool dark}) async {
         darkTheme: AppTheme.dark,
         themeMode: dark ? ThemeMode.dark : ThemeMode.light,
         home: const Scaffold(
-          body: Center(
-            child: RepaintBoundary(child: ThemeSwitch()),
-          ),
+          body: Center(child: RepaintBoundary(child: ThemeSwitch())),
         ),
       ),
     ),

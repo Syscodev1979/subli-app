@@ -394,7 +394,9 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
                       },
               ),
             ],
-            if (widget.canAssignRoles && !user.requestedCoach) ...[
+            if (widget.canAssignRoles &&
+                !user.requestedCoach &&
+                !ClubConfig.enforceSimpleMembership) ...[
               const SizedBox(height: 12),
               DropdownButtonFormField<UserRole>(
                 initialValue: _role,

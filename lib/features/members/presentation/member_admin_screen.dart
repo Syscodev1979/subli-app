@@ -355,7 +355,7 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
               decoration: const InputDecoration(labelText: 'Név'),
             ),
             const SizedBox(height: 12),
-            if (!_locked)
+            if (!_locked && !ClubConfig.enforceSimpleMembership)
               DropdownButtonFormField<UserRole>(
                 initialValue: _roleChoices.contains(_role)
                     ? _role

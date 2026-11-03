@@ -64,7 +64,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   final _picker = ImagePicker();
   _MediaDraft? _video;
   var _pinned = false;
-  var _category = PostCategory.news;
+  var _category = ClubConfig.defaultPostCategory;
   DateTime? _eventStartsAt;
   DateTime? _eventEndsAt;
   List<PostAudience> _audience = PostAudience.everyone;
@@ -81,7 +81,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
   String? _error;
   String _originalText = '';
   var _originalPinned = false;
-  var _originalCategory = PostCategory.news;
+  var _originalCategory = ClubConfig.defaultPostCategory;
   DateTime? _originalEventStartsAt;
   DateTime? _originalEventEndsAt;
   List<PostAudience> _originalAudience = PostAudience.everyone;
@@ -215,7 +215,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
           _images.isNotEmpty ||
           _video != null ||
           _documents.isNotEmpty ||
-          _category != PostCategory.news ||
+          _category != ClubConfig.defaultPostCategory ||
           (_category == PostCategory.event && _eventStartsAt != null) ||
           !PostAudience.same(_audience, PostAudience.everyone);
     }
@@ -786,9 +786,10 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
       );
       if (_cancelUpload) throw const MediaUploadCancelled();
       final audienceKeys = [
-        for (final item in ClubConfig.showsAudiencePicker
-            ? _audience
-            : PostAudience.everyone)
+        for (final item
+            in ClubConfig.showsAudiencePicker
+                ? _audience
+                : PostAudience.everyone)
           item.value,
       ];
       if (isNew) {

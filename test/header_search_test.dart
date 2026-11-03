@@ -28,7 +28,8 @@ void main() {
     await _pump(tester);
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Subli – lovas közösségi app'), findsOneWidget);
+    expect(_headerText(tester), 'Subli Lovas Közösségi App');
+    expect(find.text('Subli – lovas közösségi app'), findsNothing);
     expect(find.text('Subli'), findsNothing);
     final image = tester.widget<Image>(
       find.byWidgetPredicate(
@@ -43,12 +44,17 @@ void main() {
     expect(image.filterQuality, FilterQuality.high);
   });
 
-  testWidgets('360 px alatt a rövid klubnév jelenik meg', (tester) async {
-    _useSurface(tester, const Size(359, 700));
+  testWidgets('320 px-en is a teljes cím látszik, két sorban', (tester) async {
+    _useSurface(tester, const Size(320, 700));
     await _pump(tester);
 
-    expect(find.text('Subli'), findsOneWidget);
+    expect(_headerText(tester), 'Subli Lovas Közösségi App');
+    expect(find.text('Subli'), findsNothing);
     expect(find.text('Subli – lovas közösségi app'), findsNothing);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('club-title'))).data,
+      'Subli Lovas\nKözösségi App',
+    );
   });
 
   testWidgets('a keresősáv törölhető és a Mégse bezárja', (tester) async {
@@ -91,7 +97,7 @@ void main() {
     final scrolled = tester.getTopLeft(search()).dy;
     expect(scrolled, lessThan(before));
 
-    await tester.tap(find.text('Subli – lovas közösségi app'));
+    await tester.tap(find.byKey(const Key('club-title')));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(search()).dy, greaterThan(scrolled));
   });
@@ -178,6 +184,13 @@ Future<void> _paintImages(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+String _headerText(WidgetTester tester) {
+  return tester
+      .widget<Text>(find.byKey(const Key('club-title')))
+      .data!
+      .replaceAll('\n', ' ');
+}
+
 Post _post(int index) {
   return Post(
     id: 'post-$index',
@@ -188,7 +201,7 @@ Post _post(int index) {
     createdAt: DateTime(2026, 10, 21, 18, index),
     updatedAt: DateTime(2026, 10, 21, 18, index),
     pinned: false,
-    category: PostCategory.training,
+    category: PostCategory.post,
     searchKeywords: const ['edzes'],
   );
 }

@@ -1,26 +1,35 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
+import '../../../core/widgets/horseshoe_icon.dart';
 import '../domain/post_category.dart';
 
 /// A kategória ikonja és színei. A kitöltött chip a saját színét kapja.
 class CategoryStyle {
   const CategoryStyle({
-    required this.icon,
+    this.icon,
+    this.clubMark = false,
     required this.color,
     required this.onColor,
     required this.foreground,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final bool clubMark;
   final Color color;
   final Color onColor;
   final Color foreground;
 
+  Widget mark({required double size, required Color color}) {
+    if (clubMark) return ClubThemeIcon(size: size, color: color);
+    return Icon(icon, size: size, color: color);
+  }
+
   static CategoryStyle of(PostCategory category, Brightness brightness) {
     final dark = brightness == Brightness.dark;
     return switch (category) {
-      PostCategory.news => CategoryStyle(
+      PostCategory.post => CategoryStyle(
         icon: Icons.article_outlined,
         color: const Color(0xFF5E5A5C),
         onColor: Colors.white,
@@ -32,26 +41,14 @@ class CategoryStyle {
         onColor: Colors.white,
         foreground: dark ? AppColors.burgundyDarkMode : AppColors.burgundy,
       ),
-      PostCategory.result => const CategoryStyle(
-        icon: Icons.emoji_events,
-        color: AppColors.gold,
-        onColor: Color(0xFF2B2308),
-        foreground: AppColors.gold,
-      ),
       PostCategory.event => CategoryStyle(
         icon: Icons.calendar_month,
         color: const Color(0xFF2D6CDF),
         onColor: Colors.white,
         foreground: dark ? AppColors.mediaCameraDark : const Color(0xFF2D6CDF),
       ),
-      PostCategory.training => CategoryStyle(
-        icon: Icons.sports,
-        color: AppColors.accentGreen,
-        onColor: Colors.white,
-        foreground: dark ? AppColors.mediaPhotoDark : AppColors.accentGreen,
-      ),
       PostCategory.horses => CategoryStyle(
-        icon: Icons.pets,
+        clubMark: true,
         color: AppColors.burgundy,
         onColor: Colors.white,
         foreground: dark ? AppColors.burgundyDarkMode : AppColors.burgundy,
@@ -65,7 +62,7 @@ class CategoryChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    this.icon,
+    this.leading,
     this.color = AppColors.burgundy,
     this.onColor = Colors.white,
     super.key,
@@ -74,7 +71,7 @@ class CategoryChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final IconData? icon;
+  final Widget? leading;
   final Color color;
   final Color onColor;
 
@@ -101,10 +98,7 @@ class CategoryChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 16, color: selected ? onColor : color),
-                  const SizedBox(width: 6),
-                ],
+                if (leading != null) ...[leading!, const SizedBox(width: 6)],
                 Text(
                   label,
                   style: TextStyle(
@@ -154,16 +148,30 @@ class CategoryChipRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
           ],
-          for (final category in PostCategory.values) ...[
-            CategoryChip(
-              label: category.label,
-              icon: CategoryStyle.of(category, brightness).icon,
-              color: CategoryStyle.of(category, brightness).color,
-              onColor: CategoryStyle.of(category, brightness).onColor,
-              selected: selected == category,
-              onTap: () => onSelected(category),
+          for (
+            var index = 0;
+            index < ClubConfig.postCategories.length;
+            index++
+          ) ...[
+            Builder(
+              builder: (context) {
+                final category = ClubConfig.postCategories[index];
+                final style = CategoryStyle.of(category, brightness);
+                final markColor = selected == category
+                    ? style.onColor
+                    : style.color;
+                return CategoryChip(
+                  label: category.label,
+                  leading: style.mark(size: 16, color: markColor),
+                  color: style.color,
+                  onColor: style.onColor,
+                  selected: selected == category,
+                  onTap: () => onSelected(category),
+                );
+              },
             ),
-            if (category != PostCategory.horses) const SizedBox(width: 8),
+            if (index != ClubConfig.postCategories.length - 1)
+              const SizedBox(width: 8),
           ],
         ],
       ),
@@ -189,7 +197,7 @@ class CategoryLabel extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(style.icon, size: 12, color: style.foreground),
+            style.mark(size: 12, color: style.foreground),
             const SizedBox(width: 4),
             Text(
               category.label,

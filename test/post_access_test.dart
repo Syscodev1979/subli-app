@@ -20,11 +20,11 @@ void main() {
     expect(canManagePost(athlete, post), isFalse);
   });
 
-  test('idegen hozzászólást csak admin és edző törölhet', () {
+  test('idegen hozzászólást egyszerű tagságnál csak az admin törölhet', () {
     expect(canDeleteComment(athlete, comment), isTrue);
-    expect(canDeleteComment(otherCoach, comment), isTrue);
+    expect(canDeleteComment(otherCoach, comment), isFalse);
     expect(canDeleteComment(admin, comment), isTrue);
-    expect(canDeleteComment(author, _comment(authorId: 'valaki')), isTrue);
+    expect(canDeleteComment(author, _comment(authorId: 'valaki')), isFalse);
     expect(canDeleteComment(athlete, _comment(authorId: 'valaki')), isFalse);
   });
 }

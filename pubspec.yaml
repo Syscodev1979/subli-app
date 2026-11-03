@@ -54,6 +54,7 @@ dependencies:
   table_calendar: ^3.3.0
   intl: ^0.20.3
   url_launcher: ^6.3.3
+  flutter_svg: ^2.2.1
   flutter_image_compress: ^2.5.1
   video_compress: ^3.1.4
   video_player: ^2.14.1
@@ -103,6 +104,7 @@ flutter:
     - assets/branding/app_icon_foreground.png
     - assets/branding/app_icon_dev_1024.png
     - assets/branding/app_icon_dev_foreground.png
+    - assets/branding/icons/horseshoe.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

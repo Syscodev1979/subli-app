@@ -93,7 +93,7 @@ class Post {
     required this.createdAt,
     required this.updatedAt,
     required this.pinned,
-    this.category = PostCategory.news,
+    this.category = PostCategory.post,
     this.searchKeywords = const [],
     this.media = const [],
     this.eventStartsAt,

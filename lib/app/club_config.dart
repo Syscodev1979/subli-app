@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../features/feed/domain/post_category.dart';
+
 /// A klub megjelenéséhez és szabályaihoz tartozó, kódban rögzített értékek.
 ///
 /// A lovas szintek és a dokumentumtípusok itt cserélhetők, ha a klub mást használ.
@@ -61,6 +63,29 @@ abstract final class ClubConfig {
   static bool? debugAdultsOnlyOverride;
 
   static bool get enforceAdultsOnly => debugAdultsOnlyOverride ?? adultsOnly;
+
+  /// Egyszerű tagság: minden regisztráló tag, egy admin van, szerepet nem választ.
+  /// A Gastroyal hamisra állítja, ott a sportoló, szülő és edző megmarad.
+  static const bool simpleMembership = true;
+
+  static bool? debugSimpleMembershipOverride;
+
+  static bool get enforceSimpleMembership =>
+      debugSimpleMembershipOverride ?? simpleMembership;
+
+  /// A klub jele. A Gastroyal a mancsot tartja meg.
+  static const ClubMark themeIcon = ClubMark.horseshoe;
+
+  /// Választható posztkategóriák, ebben a sorrendben.
+  /// A Gastroyal a saját listáját ide írja, nem a közös kódba.
+  static const List<PostCategory> postCategories = [
+    PostCategory.post,
+    PostCategory.announcement,
+    PostCategory.event,
+    PostCategory.horses,
+  ];
+
+  static const PostCategory defaultPostCategory = PostCategory.post;
 
   /// Csoportos beszélgetés. A Subli csak kétszemélyes chatet enged.
   /// A Gastroyal igazra állítja, ott a viselkedés a régi marad.
@@ -303,6 +328,9 @@ class BeltGrade {
   /// Üres [beltName] esetén csak a szint neve, különben „cím – név”.
   String get caption => beltName.isEmpty ? label : '$label – $beltName';
 }
+
+/// A klub jele a hírfolyamon és a kategóriáknál.
+enum ClubMark { paw, horseshoe }
 
 enum DocumentKind { pdf, word, excel, powerpoint }
 

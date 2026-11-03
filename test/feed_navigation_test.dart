@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:subli_app/core/widgets/horseshoe_icon.dart';
 import 'package:subli_app/features/auth/data/auth_providers.dart';
 import 'package:subli_app/features/auth/domain/app_user.dart';
 import 'package:subli_app/features/auth/domain/auth_session.dart';
@@ -25,7 +26,10 @@ void main() {
 
     expect(find.text('Minden bejegyzést láttál 🐴'), findsOneWidget);
     expect(find.text('Nézz vissza később a friss hírekért!'), findsOneWidget);
-    expect(find.text('Hír'), findsWidgets);
+    expect(find.text('Poszt'), findsWidgets);
+    expect(find.text('Hír'), findsNothing);
+    expect(find.byIcon(Icons.pets), findsNothing);
+    expect(find.byType(HorseshoeIcon), findsWidgets);
     expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
     expect(
       find.descendant(
@@ -50,9 +54,9 @@ void main() {
       },
     );
 
-    await tester.tap(find.widgetWithText(CategoryChip, 'Edzés'));
+    await tester.tap(find.widgetWithText(CategoryChip, 'Esemény'));
     await tester.pumpAndSettle();
-    expect(category, PostCategory.training);
+    expect(category, PostCategory.event);
 
     await tester.tap(find.byKey(const Key('feed-search')));
     await tester.pumpAndSettle();
@@ -78,7 +82,7 @@ final _post = Post(
   createdAt: DateTime(2026, 10, 21, 18, 30),
   updatedAt: DateTime(2026, 10, 21, 18, 30),
   pinned: false,
-  category: PostCategory.training,
+  category: PostCategory.post,
   searchKeywords: ['holnap', 'kozos', 'edzes'],
 );
 

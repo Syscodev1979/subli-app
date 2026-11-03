@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:subli_app/app/constants.dart';
+import 'package:subli_app/core/widgets/horseshoe_icon.dart';
 import 'package:subli_app/app/router.dart';
 import 'package:subli_app/app/theme.dart';
 import 'package:subli_app/features/auth/data/auth_providers.dart';
@@ -25,6 +26,10 @@ void main() {
     await _openComposer(tester, ThemeMode.light);
 
     expect(find.text('Új bejegyzés'), findsOneWidget);
+    expect(find.text('Poszt'), findsWidgets);
+    expect(find.text('Hír'), findsNothing);
+    expect(find.byIcon(Icons.pets), findsNothing);
+    expect(find.byType(HorseshoeIcon), findsWidgets);
     expect(
       find.text('Oszd meg a klub híreit, eredményeit, gondolataidat…'),
       findsOneWidget,
@@ -281,7 +286,7 @@ AppUser _coach() {
     id: 'coach-1',
     name: 'Kovács Anna',
     email: 'anna@example.com',
-    role: UserRole.coach,
+    role: UserRole.admin,
     birthDate: DateTime(1990, 4, 2),
     photoUrl: null,
     status: UserStatus.active,

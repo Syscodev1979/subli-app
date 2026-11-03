@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:subli_app/core/widgets/horseshoe_icon.dart';
 import 'package:subli_app/features/auth/data/auth_providers.dart';
 import 'package:subli_app/features/auth/domain/app_user.dart';
 import 'package:subli_app/features/auth/domain/auth_session.dart';
@@ -18,7 +19,10 @@ void main() {
   testWidgets('A hírfolyam fejlécén megjelenik a klub neve', (tester) async {
     await _pumpApp(tester, AuthSignedIn(_activeAthlete()));
 
-    expect(find.text('Subli – lovas közösségi app'), findsOneWidget);
+    expect(_headerText(tester), 'Subli Lovas Közösségi App');
+    expect(find.text('Subli – lovas közösségi app'), findsNothing);
+    expect(find.byIcon(Icons.pets), findsNothing);
+    expect(find.byType(HorseshoeIcon), findsWidgets);
     expect(find.byTooltip('Menü'), findsOneWidget);
     expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
     expect(
@@ -42,10 +46,10 @@ void main() {
     expect(appBarTheme.elevation, 0);
   });
 
-  testWidgets('Edző a Mire gondolsz sávból ír bejegyzést', (tester) async {
+  testWidgets('Admin a Mire gondolsz sávból ír bejegyzést', (tester) async {
     await _pumpApp(
       tester,
-      AuthSignedIn(_activeUser(role: UserRole.coach, name: 'Kovács Anna')),
+      AuthSignedIn(_activeUser(role: UserRole.admin, name: 'Kovács Anna')),
     );
 
     expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
@@ -90,6 +94,13 @@ Future<void> _pumpApp(WidgetTester tester, AuthSession session) async {
     ),
   );
   await tester.pumpAndSettle();
+}
+
+String _headerText(WidgetTester tester) {
+  return tester
+      .widget<Text>(find.byKey(const Key('club-title')))
+      .data!
+      .replaceAll('\n', ' ');
 }
 
 AppUser _activeAthlete() => _activeUser();

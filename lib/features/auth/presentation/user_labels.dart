@@ -7,6 +7,7 @@ extension UserRoleLabel on UserRole {
     UserRole.coach => 'Edző',
     UserRole.athlete => 'Sportoló',
     UserRole.parent => 'Szülő',
+    UserRole.member => 'Tag',
   };
 }
 

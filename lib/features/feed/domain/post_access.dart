@@ -7,7 +7,8 @@ bool canManagePost(AppUser user, Post post) {
   return user.role == UserRole.admin || user.id == post.authorId;
 }
 
-/// Saját hozzászólást a szerző, bármelyiket admin és edző törölheti.
+/// Saját hozzászólást a szerző törölheti. Másokét csak az, aki tagot
+/// jóváhagyhat: egyszerű tagságnál az admin, különben az edző is.
 bool canDeleteComment(AppUser user, PostComment comment) {
   return user.id == comment.authorId || user.role.canReviewMembers;
 }

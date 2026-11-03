@@ -94,7 +94,11 @@ void main() {
 
   testWidgets('a regisztráción választható az Edző vagyok', (tester) async {
     ClubConfig.debugAdultsOnlyOverride = false;
-    addTearDown(() => ClubConfig.debugAdultsOnlyOverride = null);
+    ClubConfig.debugSimpleMembershipOverride = false;
+    addTearDown(() {
+      ClubConfig.debugAdultsOnlyOverride = null;
+      ClubConfig.debugSimpleMembershipOverride = null;
+    });
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: RegisterScreen())),
     );

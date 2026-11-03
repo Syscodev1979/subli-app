@@ -12,7 +12,10 @@ void main() {
     await initializeDateFormatting('hu');
   });
 
-  tearDown(() => ClubConfig.debugAdultsOnlyOverride = null);
+  tearDown(() {
+    ClubConfig.debugAdultsOnlyOverride = null;
+    ClubConfig.debugSimpleMembershipOverride = null;
+  });
 
   test('18 év alatt a szabály elutasít, a születésnapon már nem', () {
     final today = DateTime(2026, 11, 3);
@@ -27,42 +30,46 @@ void main() {
     expect(adultsOnlyBirthDateError(null, onDate: today), isNotNull);
   });
 
-  testWidgets('a Subliban nincs Szülő vagyok, és 18 év alatt nem enged tovább', (
-    tester,
-  ) async {
-    ClubConfig.debugAdultsOnlyOverride = true;
-    final under18 = DateTime(DateTime.now().year - 10, 1, 1);
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: RegisterScreen(debugBirthDate: under18),
+  testWidgets(
+    'a Subliban nincs Szülő vagyok, és 18 év alatt nem enged tovább',
+    (tester) async {
+      ClubConfig.debugAdultsOnlyOverride = true;
+      final under18 = DateTime(DateTime.now().year - 10, 1, 1);
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(home: RegisterScreen(debugBirthDate: under18)),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('Sportoló vagyok'), findsOneWidget);
-    expect(find.text('Edző vagyok'), findsOneWidget);
-    expect(find.text('Szülő vagyok'), findsNothing);
+      expect(find.text('Ki vagy?'), findsNothing);
+      expect(find.text('Sportoló vagyok'), findsNothing);
+      expect(find.text('Edző vagyok'), findsNothing);
+      expect(find.text('Szülő vagyok'), findsNothing);
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'Teszt Anna');
-    await tester.enterText(find.byType(TextFormField).at(1), 'anna@example.com');
-    await tester.enterText(find.byType(TextFormField).at(2), 'titok123');
-    await tester.enterText(find.byType(TextFormField).at(3), 'titok123');
-    final privacy = find.byType(Checkbox);
-    await tester.ensureVisible(privacy);
-    await tester.tap(privacy);
-    await tester.pump();
-    final submit = find.widgetWithText(AuthPrimaryButton, 'Regisztráció');
-    await tester.ensureVisible(submit);
-    await tester.tap(submit);
-    await tester.pump();
+      await tester.enterText(find.byType(TextFormField).at(0), 'Teszt Anna');
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        'anna@example.com',
+      );
+      await tester.enterText(find.byType(TextFormField).at(2), 'titok123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'titok123');
+      final privacy = find.byType(Checkbox);
+      await tester.ensureVisible(privacy);
+      await tester.tap(privacy);
+      await tester.pump();
+      final submit = find.widgetWithText(AuthPrimaryButton, 'Regisztráció');
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pump();
 
-    expect(find.text(adultsOnlyRegistrationMessage), findsOneWidget);
-  });
+      expect(find.text(adultsOnlyRegistrationMessage), findsOneWidget);
+    },
+  );
 
   testWidgets('szülős klubban a Szülő vagyok megmarad', (tester) async {
     ClubConfig.debugAdultsOnlyOverride = false;
+    ClubConfig.debugSimpleMembershipOverride = false;
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: RegisterScreen())),
     );

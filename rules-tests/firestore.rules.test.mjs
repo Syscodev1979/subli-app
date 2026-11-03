@@ -210,7 +210,7 @@ test("admin módosíthatja egy edző státuszát", async () => {
   );
 });
 
-test("edző jóváhagyhat egy pending sportolót", async () => {
+test("edző nem hagyhat jóvá pending tagot", async () => {
   await seed({
     coach1: userDoc({
       id: "coach1",
@@ -228,7 +228,7 @@ test("edző jóváhagyhat egy pending sportolót", async () => {
   const coach = testEnv.authenticatedContext("coach1", {
     email: "coach@example.com",
   });
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(coach.firestore(), "users", "athlete1"), {
       status: "active",
       auditBy: "coach1",
@@ -245,7 +245,7 @@ function postDoc(overrides = {}) {
     createdAt,
     updatedAt: createdAt,
     pinned: false,
-    category: "news",
+    category: "post",
     searchKeywords: ["holnap", "edzes"],
     audience: ["all"],
     ...overrides,
@@ -324,7 +324,7 @@ test("ismeretlen kategória és túl hosszú keresőlista elutasítva", async ()
   await assertSucceeds(
     setDoc(
       doc(coach.firestore(), "posts", "training"),
-      postDoc({ category: "training", searchKeywords: ["edzes"] }),
+      postDoc({ category: "post", searchKeywords: ["edzes"] }),
     ),
   );
   await assertSucceeds(
@@ -1192,6 +1192,7 @@ test("18 év alatti regisztráció és a parent szerep elutasítva", async () =>
       userDoc({
         id: "adult-user",
         email: "felnott@example.com",
+        role: "member",
         birthDate,
       }),
     ),
@@ -1211,13 +1212,34 @@ test("requestedRole más értékkel elutasítva", async () => {
       }),
     ),
   );
+  await assertFails(
+    setDoc(
+      doc(user.firestore(), "users", uid),
+      userDoc({
+        id: uid,
+        email: "uj@example.com",
+        role: "member",
+        requestedRole: "coach",
+      }),
+    ),
+  );
+  await assertFails(
+    setDoc(
+      doc(user.firestore(), "users", uid),
+      userDoc({
+        id: uid,
+        email: "uj@example.com",
+        role: "coach",
+      }),
+    ),
+  );
   await assertSucceeds(
     setDoc(
       doc(user.firestore(), "users", uid),
       userDoc({
         id: uid,
         email: "uj@example.com",
-        requestedRole: "coach",
+        role: "member",
       }),
     ),
   );
@@ -1510,9 +1532,15 @@ test("senki nem állíthat be admin szerepet, az admin sem", async () => {
       auditBy: "admin1",
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(admin.firestore(), "users", "athlete1"), {
       role: "coach",
+      auditBy: "admin1",
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(admin.firestore(), "users", "athlete1"), {
+      role: "member",
       auditBy: "admin1",
     }),
   );

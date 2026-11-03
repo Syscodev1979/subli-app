@@ -5,7 +5,8 @@ enum UserRole {
   admin('admin'),
   coach('coach'),
   athlete('athlete'),
-  parent('parent');
+  parent('parent'),
+  member('member');
 
   const UserRole(this.value);
 
@@ -19,10 +20,12 @@ enum UserRole {
     throw FormatException('Unknown role: $value');
   }
 
-  /// Jóváhagyási lista: admin és edző.
-  bool get canReviewMembers => this == UserRole.admin || this == UserRole.coach;
+  /// Jóváhagyás. Egyszerű tagságnál csak az admin, különben az edző is.
+  bool get canReviewMembers =>
+      this == UserRole.admin ||
+      (!ClubConfig.enforceSimpleMembership && this == UserRole.coach);
 
-  /// Bejegyzést admin és edző írhat.
+  /// Bejegyzést egyszerű tagságnál csak az admin írhat, különben az edző is.
   bool get canWritePosts => canReviewMembers;
 
   /// Edzői szerep kiosztása. Az admin szerep az appból nem adható.

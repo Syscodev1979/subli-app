@@ -74,7 +74,8 @@ class MemberProfileScreen extends ConsumerWidget {
           final canSetBelt =
               viewer != null &&
               (isDesignatedAdmin(viewer) ||
-                  (viewer.role == UserRole.coach &&
+                  (!ClubConfig.enforceSimpleMembership &&
+                      viewer.role == UserRole.coach &&
                       (person.role == UserRole.athlete ||
                           person.role == UserRole.parent)));
           return _MemberBody(

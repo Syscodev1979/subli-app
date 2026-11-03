@@ -137,14 +137,15 @@ class _MembersDirectoryViewState extends State<MembersDirectoryView> {
                         setState(() => _status = selected ? status : null);
                       },
                     ),
-                  for (final role in UserRole.assignable)
-                    FilterChip(
-                      label: Text(role.labelHu),
-                      selected: _role == role,
-                      onSelected: (selected) {
-                        setState(() => _role = selected ? role : null);
-                      },
-                    ),
+                  if (!ClubConfig.enforceSimpleMembership)
+                    for (final role in UserRole.assignable)
+                      FilterChip(
+                        label: Text(role.labelHu),
+                        selected: _role == role,
+                        onSelected: (selected) {
+                          setState(() => _role = selected ? role : null);
+                        },
+                      ),
                   for (final group in widget.groups)
                     FilterChip(
                       label: Text(group.name),

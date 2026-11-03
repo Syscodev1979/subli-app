@@ -1,10 +1,10 @@
 /// A bejegyzés kategóriája. A [name] a Firestore-ban tárolt kulcs.
+///
+/// A klubonkénti sorrend és a választható lista a [ClubConfig.postCategories].
 enum PostCategory {
-  news('Hír'),
+  post('Poszt'),
   announcement('Közlemény'),
   event('Esemény'),
-  training('Edzés'),
-  result('Eredmény'),
   horses('Lovaink');
 
   const PostCategory(this.label);
@@ -15,6 +15,6 @@ enum PostCategory {
     for (final category in values) {
       if (category.name == raw) return category;
     }
-    return news;
+    return post;
   }
 }

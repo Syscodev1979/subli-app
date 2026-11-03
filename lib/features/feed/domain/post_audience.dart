@@ -73,6 +73,7 @@ enum PostAudience {
       UserRole.admin || UserRole.coach => null,
       UserRole.athlete => const ['all', 'athletes'],
       UserRole.parent => const ['all', 'parents'],
+      UserRole.member => const ['all'],
     };
   }
 }

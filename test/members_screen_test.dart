@@ -79,7 +79,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Adminisztrátor'), findsNothing);
-    expect(find.text('Sportoló'), findsWidgets);
+    expect(find.text('Szerepkör'), findsNothing);
+    expect(find.text('Sportoló'), findsNothing);
 
     await tester.ensureVisible(find.byKey(const Key('delete-member')));
     await tester.pumpAndSettle();

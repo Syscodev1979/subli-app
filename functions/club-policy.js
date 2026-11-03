@@ -8,4 +8,25 @@ const ALLOW_GROUP_CHATS = false;
 // A Firestore-szabály onlyAllAudience() függvénye ugyanezt mondja.
 const ONLY_ALL_AUDIENCE = true;
 
-module.exports = { ADULTS_ONLY, ALLOW_GROUP_CHATS, ONLY_ALL_AUDIENCE };
+// Egyszerű tagság: új fiók csak member, a szerep utána nem változik.
+// A Gastroyal hamis. A Firestore simpleMembership() ugyanezt mondja.
+const SIMPLE_MEMBERSHIP = true;
+
+function registrationRoleAllowed(role) {
+  if (SIMPLE_MEMBERSHIP) return role === "member";
+  return role === "athlete" || role === "parent" || role === "coach";
+}
+
+function roleChangeAllowed(before, after) {
+  if (!SIMPLE_MEMBERSHIP) return true;
+  return before === after;
+}
+
+module.exports = {
+  ADULTS_ONLY,
+  ALLOW_GROUP_CHATS,
+  ONLY_ALL_AUDIENCE,
+  SIMPLE_MEMBERSHIP,
+  registrationRoleAllowed,
+  roleChangeAllowed,
+};

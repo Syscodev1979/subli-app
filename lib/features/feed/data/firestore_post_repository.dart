@@ -105,7 +105,7 @@ class FirestorePostRepository implements PostRepository {
         if (hasCategory && hasAudience) continue;
         final text = data['text'] is String ? data['text'] as String : '';
         batch.update(document.reference, {
-          if (!hasCategory) 'category': PostCategory.news.name,
+          if (!hasCategory) 'category': PostCategory.post.name,
           if (!hasCategory)
             'searchKeywords': postSearchKeywords(
               text: text,

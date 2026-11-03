@@ -315,6 +315,7 @@ class _RoleChip extends StatelessWidget {
       UserRole.coach => 'Edző',
       UserRole.athlete => 'Sportoló',
       UserRole.parent => 'Szülő',
+      UserRole.member => 'Tag',
     };
     return DecoratedBox(
       decoration: BoxDecoration(

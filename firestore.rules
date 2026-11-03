@@ -49,6 +49,11 @@ service cloud.firestore {
       return isActiveRole('coach');
     }
 
+    // functions/club-policy.js SIMPLE_MEMBERSHIP. Subli: true.
+    function simpleMembership() {
+      return true;
+    }
+
     function isMemberRole(role) {
       return role == 'athlete' || role == 'parent';
     }
@@ -103,17 +108,20 @@ service cloud.firestore {
     }
 
     function validRequestedRole(data) {
-      return data.get('requestedRole', null) == null
-        || (
-          data.get('requestedRole', null) == 'coach'
-          && data.get('role', null) == 'athlete'
-        );
+      return simpleMembership()
+        ? data.get('requestedRole', null) == null
+        : data.get('requestedRole', null) == null
+          || (
+            data.get('requestedRole', null) == 'coach'
+            && data.get('role', null) == 'athlete'
+          );
     }
 
     // Edző csak sportoló vagy szülő fiókot hagyhat jóvá és kapcsolhat össze.
     // A szerep nem változhat: admin és edző dokumentumát csak admin írhatja.
     function coachMayUpdate() {
-      return isCoach()
+      return !simpleMembership()
+        && isCoach()
         && isMemberRole(resource.data.get('role', null))
         && isMemberRole(request.resource.data.get('role', null))
         && unchanged('role')
@@ -158,7 +166,7 @@ service cloud.firestore {
     function adminMayUpdate() {
       return isAdmin()
         && hasAllowedKeys()
-        && adminRoleFrozen()
+        && (simpleMembership() ? unchanged('role') : adminRoleFrozen())
         && adminAccountStaysActive()
         && request.resource.data.get('id', null) == resource.data.get('id', null)
         && request.resource.data.get('email', null) == resource.data.get('email', null)
@@ -222,7 +230,11 @@ service cloud.firestore {
       return hasAllowedKeys()
         && data.get('id', null) == userId
         && data.get('status', null) == 'pending'
-        && data.get('role', null) == 'athlete'
+        && (
+          simpleMembership()
+            ? data.get('role', null) == 'member'
+            : data.get('role', null) == 'athlete'
+        )
         && data.get('childIds', null) is list
         && data.get('childIds', null).size() == 0
         && data.get('parentIds', null) is list
@@ -386,11 +398,9 @@ service cloud.firestore {
         && data.get('updatedAt', null) is timestamp
         && data.get('pinned', null) is bool
         && data.get('category', '') in [
-          'news',
+          'post',
           'announcement',
           'event',
-          'training',
-          'result',
           'horses',
         ]
         && data.get('searchKeywords', null) is list

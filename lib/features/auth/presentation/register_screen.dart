@@ -111,7 +111,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _submitting = true;
       _error = null;
     });
-    final asParent = !_adultsOnly && _kind == _RegistrationKind.parent;
+    final simple = ClubConfig.enforceSimpleMembership;
+    final asParent =
+        !simple && !_adultsOnly && _kind == _RegistrationKind.parent;
     try {
       await ref
           .read(accountRegistrarProvider)
@@ -119,9 +121,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             name: _nameController.text,
             email: _emailController.text,
             password: _passwordController.text,
-            role: asParent ? UserRole.parent : UserRole.athlete,
+            role: simple
+                ? UserRole.member
+                : (asParent ? UserRole.parent : UserRole.athlete),
             birthDate: asParent ? null : _birthDate,
-            requestedRole: _kind == _RegistrationKind.coach ? 'coach' : null,
+            requestedRole: simple || _kind != _RegistrationKind.coach
+                ? null
+                : 'coach',
             childRequests: asParent
                 ? [
                     for (final child in _children)
@@ -259,36 +265,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   }
                 },
               ),
-              const SizedBox(height: 16),
-              Text('Ki vagy?', style: theme.textTheme.titleSmall),
-              RadioGroup<_RegistrationKind>(
-                groupValue: _kind,
-                onChanged: (kind) {
-                  if (_submitting || kind == null) return;
-                  setState(() => _kind = kind);
-                },
-                child: Column(
-                  children: [
-                    const RadioListTile<_RegistrationKind>(
-                      value: _RegistrationKind.athlete,
-                      title: Text('Sportoló vagyok'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    if (!_adultsOnly)
+              if (!ClubConfig.enforceSimpleMembership) ...[
+                const SizedBox(height: 16),
+                Text('Ki vagy?', style: theme.textTheme.titleSmall),
+                RadioGroup<_RegistrationKind>(
+                  groupValue: _kind,
+                  onChanged: (kind) {
+                    if (_submitting || kind == null) return;
+                    setState(() => _kind = kind);
+                  },
+                  child: Column(
+                    children: [
                       const RadioListTile<_RegistrationKind>(
-                        value: _RegistrationKind.parent,
-                        title: Text('Szülő vagyok'),
+                        value: _RegistrationKind.athlete,
+                        title: Text('Sportoló vagyok'),
                         contentPadding: EdgeInsets.zero,
                       ),
-                    const RadioListTile<_RegistrationKind>(
-                      value: _RegistrationKind.coach,
-                      title: Text('Edző vagyok'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ],
+                      if (!_adultsOnly)
+                        const RadioListTile<_RegistrationKind>(
+                          value: _RegistrationKind.parent,
+                          title: Text('Szülő vagyok'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      const RadioListTile<_RegistrationKind>(
+                        value: _RegistrationKind.coach,
+                        title: Text('Edző vagyok'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              if (_kind != _RegistrationKind.parent) ...[
+              ],
+              if (ClubConfig.enforceSimpleMembership ||
+                  _kind != _RegistrationKind.parent) ...[
                 const SizedBox(height: 8),
                 _DateField(
                   label: 'Születési dátum',
