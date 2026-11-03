@@ -1,5 +1,15 @@
 # Subli
 
+## 0.3.0
+
+### Változtatva
+
+- A fejlesztői app a helyettesítő Firebase-kulccsal magától a helyi emulátorra csatlakozik. A sima Subli DEV indító és a szimulátoron az ikon is a belépési oldalra visz. Ha a próbaszerver nem fut, a belépés megmondja: `./tool/run_dev.sh`. Az éles flavor továbbra is a „nincs összekötve” oldalon marad.
+- A `./tool/run_dev.sh` elindítja az emulátort, üres adatbázisnál betölti a mintaadatot, majd a futó szimulátoron elindítja az appot.
+- Csoportos beszélgetés nem hozható létre, adminnak sem. Csak a kétszemélyes chat marad. A szerver és a Firestore-szabály is elutasítja a kettőnél több tagot, és meglévő chathez nem lehet új tagot adni.
+- Posztoláskor a célközönség a Subli klubban csak „Minden tag”. A választó nem jelenik meg. Más célközönséget a szabály sem fogad el.
+- A verzió `0.3.0+4`.
+
 ## 0.2.3
 
 ### Változtatva
