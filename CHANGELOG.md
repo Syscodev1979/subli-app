@@ -1,5 +1,12 @@
 # Subli
 
+## 0.2.2
+
+### Változtatva
+
+- A belépési oldalon a logó alatt a „Subli Lovas Közösségi App” cím látszik, alatta a sublilotapok.hu támogatói link, a regisztráció alatt pedig a „Készítette: Sysco System” sor. Ha egy felirat a ClubConfig-ban null, az a sor kimarad.
+- A verzió `0.2.2+4`.
+
 ## 0.2.1
 
 ### Hozzáadva
