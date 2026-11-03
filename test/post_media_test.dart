@@ -29,7 +29,7 @@ void main() {
   test('a storage útvonal a letöltési címből jön', () {
     expect(
       storageObjectPath(
-        'https://firebasestorage.googleapis.com/v0/b/gastroyal-karate.firebasestorage.app/o/posts%2Fpost-1%2Fa.jpg?alt=media&token=abc',
+        'https://firebasestorage.googleapis.com/v0/b/subli-app.firebasestorage.app/o/posts%2Fpost-1%2Fa.jpg?alt=media&token=abc',
       ),
       'posts/post-1/a.jpg',
     );

@@ -4,7 +4,7 @@ Az első tesztelői kiadás az `1.0.0+19`. A `+` utáni szám a build száma: mi
 
 Az iOS minimum verzió 15.0. Az alkalmazás csak a rendszer szokásos titkosítását használja, ezért az `Info.plist` `ITSAppUsesNonExemptEncryption` értéke `NO`. A fotó, a kamera és a mikrofon engedélyszövege magyar.
 
-A TestFlight-csomag mindig a **prod** flavor. A dev változat a `gastroyal-karate-dev` projekthez való, és nem kerül a tesztelőkhöz.
+A TestFlight-csomag mindig a **prod** flavor. A dev változat a `subli-app-dev` projekthez való, és nem kerül a tesztelőkhöz.
 
 ## 1. Verziószám
 

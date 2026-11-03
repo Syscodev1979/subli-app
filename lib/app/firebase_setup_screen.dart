@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
 import 'app_flavor.dart';
-import 'club_config.dart';
 
-/// A dev flavor akkor jelenik meg, ha a gastroyal-karate-dev még nincs bekötve.
+/// Akkor jelenik meg, ha a flavor Firebase-projektje még nincs bekötve.
+/// Ilyenkor a Firebase inicializálása nem fut le, hálózati hívás nincs.
 class FirebaseSetupScreen extends StatelessWidget {
   const FirebaseSetupScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final flavor = AppFlavor.current;
+    final projectId = flavor.isDev ? 'subli-app-dev' : 'subli-app';
     return MaterialApp(
       title: flavor.appName,
       home: Scaffold(
@@ -26,18 +27,19 @@ class FirebaseSetupScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'A fejlesztői Firebase-projekt még nincs összekötve. '
-                  'Az alkalmazás ezért nem csatlakozik az éles klubadatokhoz.',
+                  'A Firebase-projekt még nincs összekötve. '
+                  'Az alkalmazás ezért nem csatlakozik klubadatokhoz, '
+                  'és nem indít hálózati hívást.',
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Hozd létre a gastroyal-karate-dev projektet, majd futtasd '
+                Text(
+                  'Hozd létre a $projectId projektet, majd futtasd '
                   'a docs/KORNYEZETEK.md-ben leírt flutterfire configure '
                   'parancsot.',
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Várt azonosító: ${ClubConfig.devApplicationId}',
+                  'Várt azonosító: ${flavor.applicationId}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

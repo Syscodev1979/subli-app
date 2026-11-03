@@ -17,7 +17,6 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		A8E950FFD20708C2B0A60A98 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA1DB987CFB1432662D53EFC /* Pods_Runner.framework */; };
-		CF3653B784A60A797B48900C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 53DD72A10225789F7432273E /* GoogleService-Info.plist */; };
 		DE8978087A06E06D33EB79D7 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9E9AA39BBFA7CAFCC49BE2A /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -57,7 +56,6 @@
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		362B4C32CD103F4A41B6583C /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
-		53DD72A10225789F7432273E /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6F2291FD15CABCECBF73ABF0 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -147,7 +145,6 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
-				53DD72A10225789F7432273E /* GoogleService-Info.plist */,
 				C96CDDDA636F16F94DA8F1A6 /* Pods */,
 				FA7343E43951EA2D508814B9 /* Frameworks */,
 			);
@@ -320,7 +317,6 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
-				CF3653B784A60A797B48900C /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,7 +383,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "case \"${CONFIGURATION}\" in\n  *-dev) SRC=\"${SRCROOT}/config/dev/GoogleService-Info.plist\" ;;\n  *) SRC=\"${SRCROOT}/config/prod/GoogleService-Info.plist\" ;;\nesac\nDEST=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/GoogleService-Info.plist\"\nif [ ! -f \"${SRC}\" ]; then\n  exit 0\nfi\nif grep -q \"REPLACE_WITH_FLUTTERFIRE\" \"${SRC}\"; then\n  rm -f \"${DEST}\"\n  exit 0\nfi\ncp \"${SRC}\" \"${DEST}\"\n";
+			shellScript = "case \"${CONFIGURATION}\" in\n  *-dev) SRC=\"${SRCROOT}/config/dev/GoogleService-Info.plist\" ;;\n  *) SRC=\"${SRCROOT}/config/prod/GoogleService-Info.plist\" ;;\nesac\nDEST=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/GoogleService-Info.plist\"\nif [ ! -f \"${SRC}\" ] || grep -q \"REPLACE_WITH_FLUTTERFIRE\" \"${SRC}\"; then\n  rm -f \"${DEST}\"\n  exit 0\nfi\ncp \"${SRC}\" \"${DEST}\"\n";
 		};
 		C0FFEE000000000000000002 /* Crashlytics dSYM */ = {
 			isa = PBXShellScriptBuildPhase;

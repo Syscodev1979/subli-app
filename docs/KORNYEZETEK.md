@@ -7,13 +7,13 @@ A fejlesztői és az éles app külön települ, külön Firebase-projekthez bes
 | Flavor | `dev` | `prod` |
 | Megjelenő név | Gastroyal DEV | Gastroyal |
 | Azonosító | `hu.gastroyalkarate.app.dev` | `hu.gastroyalkarate.app` |
-| Firebase-projekt | `gastroyal-karate-dev` | `gastroyal-karate` |
+| Firebase-projekt | `subli-app-dev` | `subli-app` |
 | Régió | `europe-west3` | `europe-west3` |
 | Beállítások | `lib/firebase_options_dev.dart` | `lib/firebase_options_prod.dart` |
 | Android | `android/app/src/dev/google-services.json` | `android/app/src/prod/google-services.json` |
 | iOS | `ios/config/dev/GoogleService-Info.plist` | `ios/config/prod/GoogleService-Info.plist` |
 
-A dev projekt még nincs összekötve, amíg a `firebase_options_dev.dart` kulcsa `REPLACE_`-szal kezdődik. Ilyenkor az app egy tájékoztató képernyőt mutat, és nem hívja a `Firebase.initializeApp`-ot. Az iOS build ilyenkor kiveszi a `GoogleService-Info.plist`-et a dev csomagból, mert a helyettesítő kulcsra az iOS Firebase induláskor leállna, az éles plistet pedig nem hagyhatjuk a dev appban. Az éles kulcsokat a dev fájlba bemásolni nem szabad.
+Egyik projekt sincs összekötve, amíg a flavor `firebase_options` fájljának kulcsa `REPLACE_`-szal kezdődik. Ilyenkor az app egy tájékoztató képernyőt mutat („A Firebase-projekt még nincs összekötve”), és nem hívja a `Firebase.initializeApp`-ot. Az iOS build kiveszi a `GoogleService-Info.plist`-et a csomagból, ha a forrás hiányzik vagy a helyettesítő kulcsot tartalmazza, mert arra az iOS Firebase induláskor leállna. A natív json és plist fájlok a `flutterfire configure` után jönnek létre.
 
 Az azonosítók a `ClubConfig`-ban is szerepelnek (`prodApplicationId`, `devApplicationId`).
 
@@ -32,7 +32,7 @@ iOS-en a `dev` és a `prod` scheme a `Debug-dev` / `Release-prod` konfiguráció
 
 ## Firebase-projektek összekötése
 
-A `gastroyal-karate-dev` projektet kézzel kell létrehozni, `europe-west3` régióval. Kell hozzá e-mail/jelszó belépés, Firestore, Storage, Functions (Blaze csomag) és Crashlytics. A függvények kódja eleve `europe-west3`-ra van állítva.
+A `subli-app` és a `subli-app-dev` projektet kézzel kell létrehozni, `europe-west3` régióval. Kell hozzájuk e-mail/jelszó belépés, Firestore, Storage, Functions (Blaze csomag) és Crashlytics. A függvények kódja eleve `europe-west3`-ra van állítva. Ezek a projektek még nem léteznek; a létrehozásuk nem ennek a tárolónak a dolga.
 
 Ha a projekt megvan és a `flutterfire` be van jelentkezve, ezt a két parancsot kell futtatni a tároló gyökeréből. Új Android- és iOS-appot regisztrálnak a megadott azonosítóval. A régi `com.example` appok nem jók helyettük.
 
@@ -40,7 +40,7 @@ Ha a projekt megvan és a `flutterfire` be van jelentkezve, ezt a két parancsot
 
 ```bash
 flutterfire configure \
-  --project=gastroyal-karate \
+  --project=subli-app \
   --out=lib/firebase_options_prod.dart \
   --platforms=android,ios \
   --ios-bundle-id=hu.gastroyalkarate.app \
@@ -55,7 +55,7 @@ Fejlesztői:
 
 ```bash
 flutterfire configure \
-  --project=gastroyal-karate-dev \
+  --project=subli-app-dev \
   --out=lib/firebase_options_dev.dart \
   --platforms=android,ios \
   --ios-bundle-id=hu.gastroyalkarate.app.dev \
@@ -68,7 +68,7 @@ flutterfire configure \
 
 A generált Dart-osztály neve maradjon `DefaultFirebaseOptions`. A `lib/main.dart` a flavor szerint választ a két fájl közül.
 
-A parancs átírhatja a `firebase.json` elejét, és a gyökérbe tehet egy `android/app/google-services.json`-t. A gyökér fájlt törölni kell, mert a flavor saját json-ja a mérvadó. A `firebase.json`-ban maradjon meg a Firestore, a Storage, a Functions és az emulátor, valamint mindkét flavor kimeneti útja. A `.firebaserc` aliasai: `prod` = `gastroyal-karate`, `dev` = `gastroyal-karate-dev`.
+A parancs átírhatja a `firebase.json` elejét, és a gyökérbe tehet egy `android/app/google-services.json`-t. A gyökér fájlt törölni kell, mert a flavor saját json-ja a mérvadó. A `firebase.json`-ban maradjon meg a Firestore, a Storage, a Functions és az emulátor, valamint mindkét flavor kimeneti útja. A `.firebaserc` aliasai: `prod` = `subli-app`, `dev` = `subli-app-dev`.
 
 ## Telepítés az egyik vagy a másik projektre
 

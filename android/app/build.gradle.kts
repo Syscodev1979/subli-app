@@ -1,11 +1,24 @@
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    id("com.google.gms.google-services") apply false
+    id("com.google.firebase.crashlytics") apply false
     // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// A google-services.json a flutterfire configure után kerül a flavor mappájába.
+// Amíg nincs meg, a plugin nem fut, és a build nem a régi projekthez kötődik.
+val hasGoogleServices = listOf(
+    "google-services.json",
+    "src/dev/google-services.json",
+    "src/prod/google-services.json",
+).any { file(it).exists() }
+
+if (hasGoogleServices) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 android {

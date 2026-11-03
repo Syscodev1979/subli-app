@@ -1,6 +1,8 @@
-// Éles Firebase-beállítások (gastroyal-karate).
-// A flutterfire configure felülírhatja ezt a fájlt. A osztály neve maradjon
-// DefaultFirebaseOptions, a main előtaggal importálja.
+// Éles Firebase-beállítások (subli-app).
+// Amíg az apiKey REPLACE_ kezdetű, az app nem csatlakozik projekthez:
+// a firebaseOptionsForCurrentFlavor nullt ad, és nem hívja a Firebase-t.
+// A flutterfire configure felülírja ezt a fájlt. Az osztály neve maradjon
+// DefaultFirebaseOptions.
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
@@ -32,19 +34,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyApFMD2liX5wTdaYxNXxXf8Ap49GA0ECXw',
-    appId: '1:555040837330:android:59bed8fa5d3c434918e70b',
-    messagingSenderId: '555040837330',
-    projectId: 'gastroyal-karate',
-    storageBucket: 'gastroyal-karate.firebasestorage.app',
+    apiKey: 'REPLACE_WITH_FLUTTERFIRE',
+    appId: '1:000000000000:android:0000000000000000000000',
+    messagingSenderId: '000000000000',
+    projectId: 'subli-app',
+    storageBucket: 'subli-app.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDyHM290hZrogKmgzTdxoj74MUHeek7VSI',
-    appId: '1:555040837330:ios:58b7ba2a5807f47a18e70b',
-    messagingSenderId: '555040837330',
-    projectId: 'gastroyal-karate',
-    storageBucket: 'gastroyal-karate.firebasestorage.app',
+    apiKey: 'REPLACE_WITH_FLUTTERFIRE',
+    appId: '1:000000000000:ios:0000000000000000000000',
+    messagingSenderId: '000000000000',
+    projectId: 'subli-app',
+    storageBucket: 'subli-app.firebasestorage.app',
     iosBundleId: 'hu.gastroyalkarate.app',
   );
 }

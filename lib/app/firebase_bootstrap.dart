@@ -6,8 +6,8 @@ import '../firebase_options_dev.dart' as dev_options;
 import '../firebase_options_prod.dart' as prod_options;
 import 'app_flavor.dart';
 
-/// A flavorhoz tartozó Firebase-beállítások. Hamis, ha a dev projekt még nincs
-/// összekötve, és ilyenkor az app nem az éles adatbázishoz csatlakozik.
+/// A flavorhoz tartozó Firebase-beállítások. Null, ha a projekt még nincs
+/// összekötve: ilyenkor az app nem hívja a Firebase-t.
 FirebaseOptions? firebaseOptionsForCurrentFlavor() {
   final options = switch (AppFlavor.current) {
     AppFlavor.prod => prod_options.DefaultFirebaseOptions.currentPlatform,

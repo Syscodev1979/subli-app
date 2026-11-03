@@ -1,7 +1,7 @@
 {
   "projects": {
-    "default": "gastroyal-karate",
-    "prod": "gastroyal-karate",
-    "dev": "gastroyal-karate-dev"
+    "default": "subli-app",
+    "prod": "subli-app",
+    "dev": "subli-app-dev"
   }
 }

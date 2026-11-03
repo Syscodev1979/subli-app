@@ -1,6 +1,7 @@
-// Fejlesztői Firebase-beállítások (gastroyal-karate-dev).
-// Amíg az apiKey REPLACE_ kezdetű, a dev flavor nem a éles projekthez csatlakozik.
-// A flutterfire configure felülírja ezt a fájlt. A osztály neve maradjon
+// Fejlesztői Firebase-beállítások (subli-app-dev).
+// Amíg az apiKey REPLACE_ kezdetű, az app nem csatlakozik projekthez:
+// a firebaseOptionsForCurrentFlavor nullt ad, és nem hívja a Firebase-t.
+// A flutterfire configure felülírja ezt a fájlt. Az osztály neve maradjon
 // DefaultFirebaseOptions.
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
@@ -36,16 +37,16 @@ class DefaultFirebaseOptions {
     apiKey: 'REPLACE_WITH_FLUTTERFIRE',
     appId: '1:000000000000:android:0000000000000000000000',
     messagingSenderId: '000000000000',
-    projectId: 'gastroyal-karate-dev',
-    storageBucket: 'gastroyal-karate-dev.firebasestorage.app',
+    projectId: 'subli-app-dev',
+    storageBucket: 'subli-app-dev.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'REPLACE_WITH_FLUTTERFIRE',
     appId: '1:000000000000:ios:0000000000000000000000',
     messagingSenderId: '000000000000',
-    projectId: 'gastroyal-karate-dev',
-    storageBucket: 'gastroyal-karate-dev.firebasestorage.app',
+    projectId: 'subli-app-dev',
+    storageBucket: 'subli-app-dev.firebasestorage.app',
     iosBundleId: 'hu.gastroyalkarate.app.dev',
   );
 }
