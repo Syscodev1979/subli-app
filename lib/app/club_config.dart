@@ -106,9 +106,11 @@ abstract final class ClubConfig {
   /// TODO_SUBLI: a visszajelző cím. Addig senki nem kap levelet.
   static const String feedbackEmail = 'visszajelzes-beallitando@invalid';
 
-  /// TODO_SUBLI: az App Store oldal. A Frissítés gomb addig ezt nyitja.
+  /// Az App Store alkalmazásazonosító. A Frissítés gomb ezt nyitja.
+  static const String appStoreAppleId = '6830208527';
+
   static const String appStoreUrl =
-      'https://example.invalid/TODO_SUBLI/app-store';
+      'https://apps.apple.com/app/id$appStoreAppleId';
 
   /// TODO_SUBLI: a Google Play oldal. A Frissítés gomb addig ezt nyitja.
   static const String playStoreUrl = 'https://example.invalid/TODO_SUBLI/play';
