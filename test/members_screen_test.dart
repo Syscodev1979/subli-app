@@ -64,7 +64,7 @@ void main() {
             actor: _user(
               id: 'admin',
               name: 'Admin',
-              email: 'admin-beallitando@invalid',
+              email: 'info@sarosigyorgy.hu',
               role: UserRole.admin,
             ),
             groups: const [],

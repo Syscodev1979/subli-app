@@ -1,10 +1,14 @@
-// TODO_SUBLI: a valódi admin cím. A helyettesítő nem létezik, senki nem kap admin jogot.
-const ADMIN_EMAIL = "admin-beallitando@invalid";
+// Kisbetűs admin cím. A ClubConfig.adminEmail, a Firestore és a Storage szabály ugyanez.
+const ADMIN_EMAIL = "info@sarosigyorgy.hu";
 const DELETED_NAME = "Törölt tag";
+
+function emailMatchesAdmin(value) {
+  return String(value || "").toLowerCase() === ADMIN_EMAIL;
+}
 
 function tokenIsAdmin(token) {
   if (!token || typeof token !== "object") return false;
-  return token.email === ADMIN_EMAIL;
+  return emailMatchesAdmin(token.email);
 }
 
 function userRecordIsAdmin(data) {
@@ -12,7 +16,7 @@ function userRecordIsAdmin(data) {
   return (
     data.role === "admin" &&
     data.status === "active" &&
-    String(data.email || "").toLowerCase() === ADMIN_EMAIL
+    emailMatchesAdmin(data.email)
   );
 }
 
@@ -49,7 +53,7 @@ function memberAuditPlan(before, after) {
 function deletionGuard({ callerId, targetId, target }) {
   if (!target) return { ok: false, reason: "missing" };
   if (callerId === targetId) return { ok: false, reason: "self" };
-  if (target.role === "admin" || String(target.email || "").toLowerCase() === ADMIN_EMAIL) {
+  if (target.role === "admin" || emailMatchesAdmin(target.email)) {
     return { ok: false, reason: "admin" };
   }
   return { ok: true };

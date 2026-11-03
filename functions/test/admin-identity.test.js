@@ -13,11 +13,20 @@ const {
 
 test("admin csak a kijelölt címmel igaz", () => {
   assert.equal(tokenIsAdmin({ email: ADMIN_EMAIL, email_verified: false }), true);
-  assert.equal(tokenIsAdmin({ email: ADMIN_EMAIL }), true);
+  assert.equal(tokenIsAdmin({ email: "Info@SarosiGyorgy.hu" }), true);
+  assert.equal(tokenIsAdmin({ email: "admin-beallitando@invalid" }), false);
   assert.equal(tokenIsAdmin({ email: "mas@example.com", email_verified: true }), false);
   assert.equal(
-    userRecordIsAdmin({ role: "admin", status: "active", email: ADMIN_EMAIL }),
+    userRecordIsAdmin({ role: "admin", status: "active", email: "INFO@SAROSIGYORGY.HU" }),
     true,
+  );
+  assert.equal(
+    userRecordIsAdmin({
+      role: "admin",
+      status: "active",
+      email: "admin-beallitando@invalid",
+    }),
+    false,
   );
   assert.equal(
     userRecordIsAdmin({ role: "admin", status: "active", email: "mas@example.com" }),

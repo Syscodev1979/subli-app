@@ -1,8 +1,8 @@
 # Új klub: az admin e-mail cseréje
 
-Az appban egyetlen admin lehet. A cím a tesztidőszakban is rögzített, és a szerver ellenőrzi: a szerep `admin`, és a bejelentkezett e-mail pontosan ez.
+Az appban egyetlen admin lehet. A cím kisbetűsen van tárolva, és a szerver a bejövő címet kisbetűsítve hasonlítja össze: a szerep `admin`, és a bejelentkezett e-mail ez.
 
-A Subli – lovas közösségi app admin címe: `admin-beallitando@invalid`.
+A Subli – lovas közösségi app admin címe: `info@sarosigyorgy.hu`.
 
 Más klubnál ezt a címet **mind a négy** helyen ki kell cserélni, ugyanarra a szövegre:
 

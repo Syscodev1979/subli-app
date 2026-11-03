@@ -1,5 +1,13 @@
 # Subli
 
+## 0.1.1
+
+### Változtatva
+
+- Az egyetlen admin cím `info@sarosigyorgy.hu`. Kisbetűsen van tárolva, és a kliens, a Firestore-szabály, a Storage-szabály és a Cloud Functions is kisbetűsítve hasonlítja össze. Más cím, köztük a korábbi helyettesítő, nem kap admin jogot.
+- A visszajelző cím továbbra is helyettesítő.
+- A verzió `0.1.1+2`.
+
 ## 0.1.0
 
 Első kiadás, leválasztva a Gastroyal Karate SE alkalmazásról. A Firebase-projektek még nincsenek összekötve, és nem történt deploy. A korábbi napló változatlanul a `docs/GASTROYAL_CHANGELOG.md` fájlban van.

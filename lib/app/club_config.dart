@@ -34,11 +34,11 @@ abstract final class ClubConfig {
   /// TODO_SUBLI: a visszajelző cím. Addig senki nem kap levelet.
   static const String feedbackEmail = 'visszajelzes-beallitando@invalid';
 
-  /// TODO_SUBLI: az egyetlen admin e-mail. A helyettesítő cím nem létezik,
-  /// ezért véletlenül senki nem kap admin jogot. Ugyanez a szöveg szerepel a
-  /// Firestore és a Storage szabályokban, valamint a Cloud Functionsben.
+  /// Az egyetlen admin e-mail, kisbetűsen tárolva. Az összehasonlítás a
+  /// bejövő címet is kisbetűsíti. Ugyanez a szöveg szerepel a Firestore és a
+  /// Storage szabályokban, valamint a Cloud Functionsben.
   /// Lásd a docs/UJ_KLUB.md fájlt.
-  static const String adminEmail = 'admin-beallitando@invalid';
+  static const String adminEmail = 'info@sarosigyorgy.hu';
 
   /// Az iOS alkalmazás minimum verziója.
   static const String iosMinimumVersion = '15.0';

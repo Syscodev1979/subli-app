@@ -30,13 +30,15 @@ service cloud.firestore {
         && caller().get('role', null) == role;
     }
 
-    // TODO_SUBLI: ugyanaz a helyettesítő cím, mint a ClubConfig.adminEmail.
+    // Ugyanaz a kisbetűs cím, mint a ClubConfig.adminEmail.
     function adminEmail() {
-      return 'admin-beallitando@invalid';
+      return 'info@sarosigyorgy.hu';
     }
 
     function isDesignatedAdmin() {
-      return signedIn() && request.auth.token.email == adminEmail();
+      return signedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() == adminEmail();
     }
 
     function isAdmin() {
