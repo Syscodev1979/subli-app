@@ -127,7 +127,7 @@ class MediaPrep {
   Future<File> _tempFile(String extension) async {
     final dir = await getTemporaryDirectory();
     final name =
-        'gastroyal_${DateTime.now().microsecondsSinceEpoch}.$extension';
+        'subli_${DateTime.now().microsecondsSinceEpoch}.$extension';
     return File('${dir.path}/$name');
   }
 

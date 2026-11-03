@@ -41,7 +41,7 @@ class _ProfileFooterState extends State<ProfileFooter> {
     final body = 'Verzió: $version\nKészülék: $device\n\n';
     final uri = Uri.parse(
       'mailto:${ClubConfig.feedbackEmail}'
-      '?subject=${Uri.encodeComponent('Gastroyal visszajelzés $version')}'
+      '?subject=${Uri.encodeComponent('Subli visszajelzés $version')}'
       '&body=${Uri.encodeComponent(body)}',
     );
     await launchUrl(uri);

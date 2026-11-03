@@ -4,25 +4,32 @@ import 'package:flutter/material.dart';
 ///
 /// Az övfokozatok és a dokumentumtípusok itt cserélhetők, ha a klub mást használ.
 abstract final class ClubConfig {
-  /// A fejléc logója. Nagy felbontású kép, a felület kicsire méretezi.
+  /// TODO_SUBLI: ideiglenes piros kör S betűvel, amíg a végleges logó nincs meg.
   static const String logoAsset = 'assets/images/logo.png';
 
+  /// A fejléc teljes neve.
+  static const String clubName = 'Subli – lovas közösségi app';
+
+  /// Szűk fejlécen ennyi fér ki a névből.
+  static const String clubNameShort = 'Subli';
+
   /// Éles alkalmazásazonosító (iOS bundle ID és Android applicationId).
-  static const String prodApplicationId = 'hu.gastroyalkarate.app';
+  static const String prodApplicationId = 'hu.subli.app';
 
   /// Fejlesztői alkalmazásazonosító. A két változat egyszerre telepíthető.
-  static const String devApplicationId = 'hu.gastroyalkarate.app.dev';
+  static const String devApplicationId = 'hu.subli.app.dev';
 
-  static const String prodAppName = 'Gastroyal';
-  static const String devAppName = 'Gastroyal DEV';
+  static const String prodAppName = 'Subli';
+  static const String devAppName = 'Subli DEV';
 
-  /// A profil „Visszajelzés küldése” sora ide nyit e-mailt.
-  static const String feedbackEmail = 'info@gastroyalkarate.hu';
+  /// TODO_SUBLI: a visszajelző cím. Addig senki nem kap levelet.
+  static const String feedbackEmail = 'visszajelzes-beallitando@invalid';
 
-  /// Az egyetlen admin e-mail címe. Ugyanez a szöveg szerepel a Firestore és
-  /// a Storage szabályokban, valamint a Cloud Functionsben. Új klubnál mind
-  /// a négy helyen cserélni kell. Lásd a docs/UJ_KLUB.md fájlt.
-  static const String adminEmail = 'info@sarosigyorgy.hu';
+  /// TODO_SUBLI: az egyetlen admin e-mail. A helyettesítő cím nem létezik,
+  /// ezért véletlenül senki nem kap admin jogot. Ugyanez a szöveg szerepel a
+  /// Firestore és a Storage szabályokban, valamint a Cloud Functionsben.
+  /// Lásd a docs/UJ_KLUB.md fájlt.
+  static const String adminEmail = 'admin-beallitando@invalid';
 
   /// Az iOS alkalmazás minimum verziója.
   static const String iosMinimumVersion = '15.0';

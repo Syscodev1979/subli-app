@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/app/theme.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post_audience.dart';
-import 'package:gastroyal_karate_app/features/feed/presentation/audience_sheet.dart';
-import 'package:gastroyal_karate_app/features/feed/presentation/post_card.dart';
+import 'package:subli_app/app/theme.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/domain/post_audience.dart';
+import 'package:subli_app/features/feed/presentation/audience_sheet.dart';
+import 'package:subli_app/features/feed/presentation/post_card.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() {

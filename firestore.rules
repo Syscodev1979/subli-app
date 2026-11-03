@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Gastroyal Karate SE — users és posts.
+// Subli — users és posts.
 // Deploy: firebase deploy --only firestore:rules,firestore:indexes
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -30,8 +30,9 @@ service cloud.firestore {
         && caller().get('role', null) == role;
     }
 
+    // TODO_SUBLI: ugyanaz a helyettesítő cím, mint a ClubConfig.adminEmail.
     function adminEmail() {
-      return 'info@sarosigyorgy.hu';
+      return 'admin-beallitando@invalid';
     }
 
     function isDesignatedAdmin() {

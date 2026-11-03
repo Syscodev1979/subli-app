@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/app/club_colors.dart';
-import 'package:gastroyal_karate_app/app/constants.dart';
+import 'package:subli_app/app/club_colors.dart';
+import 'package:subli_app/app/constants.dart';
 
 void main() {
   test('a sötét módbeli szövegek elérik a WCAG AA kontrasztot', () {

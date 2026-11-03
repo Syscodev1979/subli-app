@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/core/utils/hungarian_relative_time.dart';
-import 'package:gastroyal_karate_app/core/utils/name_initials.dart';
+import 'package:subli_app/core/utils/hungarian_relative_time.dart';
+import 'package:subli_app/core/utils/name_initials.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/feed/data/storage_object_path.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/data/storage_object_path.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
 
 void main() {
   test('a média lista csak ismert képet és videót tart meg', () {

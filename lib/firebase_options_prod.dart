@@ -47,6 +47,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '000000000000',
     projectId: 'subli-app',
     storageBucket: 'subli-app.firebasestorage.app',
-    iosBundleId: 'hu.gastroyalkarate.app',
+    iosBundleId: 'hu.subli.app',
   );
 }

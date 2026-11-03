@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/app/club_config.dart';
-import 'package:gastroyal_karate_app/app/theme_controller.dart';
-import 'package:gastroyal_karate_app/features/auth/data/auth_providers.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/auth_session.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
-import 'package:gastroyal_karate_app/features/chat/data/chat_providers.dart';
-import 'package:gastroyal_karate_app/features/feed/data/feed_providers.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post_category.dart';
-import 'package:gastroyal_karate_app/main.dart';
+import 'package:subli_app/app/club_config.dart';
+import 'package:subli_app/app/theme_controller.dart';
+import 'package:subli_app/features/auth/data/auth_providers.dart';
+import 'package:subli_app/features/auth/domain/app_user.dart';
+import 'package:subli_app/features/auth/domain/auth_session.dart';
+import 'package:subli_app/features/auth/domain/user_role.dart';
+import 'package:subli_app/features/auth/domain/user_status.dart';
+import 'package:subli_app/features/chat/data/chat_providers.dart';
+import 'package:subli_app/features/feed/data/feed_providers.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/domain/post_category.dart';
+import 'package:subli_app/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_chat_repository.dart';
@@ -28,8 +28,8 @@ void main() {
     await _pump(tester);
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Gastroyal Karate SE'), findsOneWidget);
-    expect(find.text('Gastroyal'), findsNothing);
+    expect(find.text('Subli – lovas közösségi app'), findsOneWidget);
+    expect(find.text('Subli'), findsNothing);
     final image = tester.widget<Image>(
       find.byWidgetPredicate(
         (widget) =>
@@ -47,8 +47,8 @@ void main() {
     _useSurface(tester, const Size(359, 700));
     await _pump(tester);
 
-    expect(find.text('Gastroyal'), findsOneWidget);
-    expect(find.text('Gastroyal Karate SE'), findsNothing);
+    expect(find.text('Subli'), findsOneWidget);
+    expect(find.text('Subli – lovas közösségi app'), findsNothing);
   });
 
   testWidgets('a keresősáv törölhető és a Mégse bezárja', (tester) async {
@@ -91,7 +91,7 @@ void main() {
     final scrolled = tester.getTopLeft(search()).dy;
     expect(scrolled, lessThan(before));
 
-    await tester.tap(find.text('Gastroyal Karate SE'));
+    await tester.tap(find.text('Subli – lovas közösségi app'));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(search()).dy, greaterThan(scrolled));
   });
@@ -161,7 +161,7 @@ Future<void> _pump(
         ),
         chatRepositoryProvider.overrideWithValue(const FakeChatRepository()),
       ],
-      child: const GastroyalApp(),
+      child: const SubliApp(),
     ),
   );
   await tester.pumpAndSettle();

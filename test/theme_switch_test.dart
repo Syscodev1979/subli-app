@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/app/constants.dart';
-import 'package:gastroyal_karate_app/app/theme.dart';
-import 'package:gastroyal_karate_app/app/theme_controller.dart';
-import 'package:gastroyal_karate_app/app/theme_preference.dart';
-import 'package:gastroyal_karate_app/core/widgets/theme_switch.dart';
-import 'package:gastroyal_karate_app/features/auth/data/auth_providers.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/auth_session.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
-import 'package:gastroyal_karate_app/features/chat/data/chat_providers.dart';
-import 'package:gastroyal_karate_app/features/feed/data/feed_providers.dart';
-import 'package:gastroyal_karate_app/main.dart';
+import 'package:subli_app/app/constants.dart';
+import 'package:subli_app/app/theme.dart';
+import 'package:subli_app/app/theme_controller.dart';
+import 'package:subli_app/app/theme_preference.dart';
+import 'package:subli_app/core/widgets/theme_switch.dart';
+import 'package:subli_app/features/auth/data/auth_providers.dart';
+import 'package:subli_app/features/auth/domain/app_user.dart';
+import 'package:subli_app/features/auth/domain/auth_session.dart';
+import 'package:subli_app/features/auth/domain/user_role.dart';
+import 'package:subli_app/features/auth/domain/user_status.dart';
+import 'package:subli_app/features/chat/data/chat_providers.dart';
+import 'package:subli_app/features/feed/data/feed_providers.dart';
+import 'package:subli_app/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_chat_repository.dart';
@@ -108,7 +108,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await _pumpFeed(tester);
 
-    expect(find.text('Gastroyal'), findsOneWidget);
+    expect(find.text('Subli'), findsOneWidget);
     expect(find.text(AppInfo.clubName), findsNothing);
     expect(tester.getSize(find.byType(ThemeSwitch)), const Size(64, 32));
   });
@@ -138,7 +138,7 @@ Future<void> _pumpFeed(WidgetTester tester) async {
         postRepositoryProvider.overrideWithValue(const FakePostRepository()),
         chatRepositoryProvider.overrideWithValue(const FakeChatRepository()),
       ],
-      child: const GastroyalApp(),
+      child: const SubliApp(),
     ),
   );
   await tester.pumpAndSettle();

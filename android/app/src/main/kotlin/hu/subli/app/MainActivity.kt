@@ -1,4 +1,4 @@
-package hu.gastroyalkarate.app
+package hu.subli.app
 
 import io.flutter.embedding.android.FlutterActivity
 

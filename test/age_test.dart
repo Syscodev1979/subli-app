@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/age.dart';
+import 'package:subli_app/features/auth/domain/age.dart';
 
 void main() {
   test('a 18. születésnap előtt kiskorú, a napján már nem', () {

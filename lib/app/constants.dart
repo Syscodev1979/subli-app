@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// A Gastroyal Karate SE márkaszínei.
+import 'club_config.dart';
+
+/// TODO_SUBLI: a színek helyettesítők, a végleges paletta később jön.
+///
+/// A Subli márkaszínei.
 ///
 /// Világos módban a fő szín a [burgundy], sötét módban a [burgundyDarkMode].
 /// A [accentGreen] később a lájk helyetti pipa színe lesz.
@@ -132,10 +136,10 @@ abstract final class AppRoutes {
   static String memberAdmin(String id) => '/admin/members/$id';
 }
 
-/// Közös, a felületen megjelenő nevek.
+/// Közös, a felületen megjelenő nevek. A forrás a [ClubConfig].
 abstract final class AppInfo {
-  static const String clubName = 'Gastroyal Karate SE';
+  static const String clubName = ClubConfig.clubName;
 
   /// Szűk fejlécen ennyi fér ki a klubnévből.
-  static const String clubNameShort = 'Gastroyal';
+  static const String clubNameShort = ClubConfig.clubNameShort;
 }

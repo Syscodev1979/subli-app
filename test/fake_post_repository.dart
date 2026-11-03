@@ -1,7 +1,7 @@
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post_category.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post_repository.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/reaction.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/domain/post_category.dart';
+import 'package:subli_app/features/feed/domain/post_repository.dart';
+import 'package:subli_app/features/feed/domain/reaction.dart';
 
 /// Üres hírfolyam a widgettesztekhez, Firebase nélkül.
 class FakePostRepository implements PostRepository {

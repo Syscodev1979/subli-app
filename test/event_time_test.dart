@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/event_time.dart';
+import 'package:subli_app/features/feed/domain/event_time.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() {

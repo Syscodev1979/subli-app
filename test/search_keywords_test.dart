@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/event_time.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/search_keywords.dart';
+import 'package:subli_app/features/feed/domain/event_time.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/domain/search_keywords.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() {

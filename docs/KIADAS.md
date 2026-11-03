@@ -18,7 +18,7 @@ Következő tesztcsomagnál például `1.0.0+20`. Ha a viselkedés is változik,
 
 ## 2. Csomag készítése
 
-Aláíráshoz Apple Developer fiók, a `hu.gastroyalkarate.app` App ID, és az Xcode-ban kiválasztott csapat kell. A részletek a `docs/KORNYEZETEK.md`-ben vannak, ha a Firebase-t is újra kell kötni.
+Aláíráshoz Apple Developer fiók, a `hu.subli.app` App ID, és az Xcode-ban kiválasztott csapat kell. A részletek a `docs/KORNYEZETEK.md`-ben vannak, ha a Firebase-t is újra kell kötni.
 
 ### Xcode Archive
 
@@ -53,7 +53,7 @@ App Store Connect → az app → TestFlight.
 - Belső tesztelő: App Store Connect-felhasználó, a build feldolgozása után azonnal telepíthet. Kis admincsapathoz ez a gyorsabb, ha mindenkinek van hozzáférése.
 - Külső tesztelő: e-mail-cím elég. Csoportot kell létrehozni, abba kerül a 7–8 admin, és az első buildnél az Apple rövid béta-ellenőrzést kérhet. A további buildek ugyanabba a csoportba már külön ellenőrzés nélkül kimehetnek, amíg a megfelelőségi válasz nem változik.
 
-A tesztelő a TestFlight appból telepít. A telefonon a név **Gastroyal**, az azonosító `hu.gastroyalkarate.app`. A Gastroyal DEV nem ez a csomag.
+A tesztelő a TestFlight appból telepít. A telefonon a név **Subli**, az azonosító `hu.subli.app`. A Subli DEV nem ez a csomag.
 
 ## 4. Új tesztverzió
 

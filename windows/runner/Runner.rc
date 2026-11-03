@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "Gastroyal Karate SE" "\0"
-            VALUE "FileDescription", "gastroyal_karate_app" "\0"
+            VALUE "CompanyName", "Subli – lovas közösségi app" "\0"
+            VALUE "FileDescription", "Subli" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "gastroyal_karate_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 Gastroyal Karate SE. All rights reserved." "\0"
-            VALUE "OriginalFilename", "gastroyal_karate_app.exe" "\0"
-            VALUE "ProductName", "gastroyal_karate_app" "\0"
+            VALUE "InternalName", "subli_app" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Subli – lovas közösségi app. All rights reserved." "\0"
+            VALUE "OriginalFilename", "subli_app.exe" "\0"
+            VALUE "ProductName", "Subli" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

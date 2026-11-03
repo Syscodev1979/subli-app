@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/app/auth_redirect.dart';
-import 'package:gastroyal_karate_app/app/constants.dart';
+import 'package:subli_app/app/auth_redirect.dart';
+import 'package:subli_app/app/constants.dart';
 
 void main() {
   test('kijelentkezve csak a belépés és a regisztráció érhető el', () {

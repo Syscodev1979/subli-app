@@ -2,14 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Gastroyal DEV",
+      "name": "Subli DEV",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "toolArgs": ["--flavor", "dev"]
     },
     {
-      "name": "Gastroyal ÉLES",
+      "name": "Subli ÉLES",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",

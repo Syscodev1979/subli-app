@@ -1,4 +1,5 @@
-const ADMIN_EMAIL = "info@sarosigyorgy.hu";
+// TODO_SUBLI: a valódi admin cím. A helyettesítő nem létezik, senki nem kap admin jogot.
+const ADMIN_EMAIL = "admin-beallitando@invalid";
 const DELETED_NAME = "Törölt tag";
 
 function tokenIsAdmin(token) {

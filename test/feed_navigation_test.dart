@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/auth/data/auth_providers.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/auth_session.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
-import 'package:gastroyal_karate_app/features/chat/data/chat_providers.dart';
-import 'package:gastroyal_karate_app/features/feed/data/feed_providers.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post_category.dart';
-import 'package:gastroyal_karate_app/features/feed/presentation/category_style.dart';
-import 'package:gastroyal_karate_app/main.dart';
+import 'package:subli_app/features/auth/data/auth_providers.dart';
+import 'package:subli_app/features/auth/domain/app_user.dart';
+import 'package:subli_app/features/auth/domain/auth_session.dart';
+import 'package:subli_app/features/auth/domain/user_role.dart';
+import 'package:subli_app/features/auth/domain/user_status.dart';
+import 'package:subli_app/features/chat/data/chat_providers.dart';
+import 'package:subli_app/features/feed/data/feed_providers.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/domain/post_category.dart';
+import 'package:subli_app/features/feed/presentation/category_style.dart';
+import 'package:subli_app/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_chat_repository.dart';
@@ -102,7 +102,7 @@ Future<void> _pump(
         ),
         chatRepositoryProvider.overrideWithValue(const FakeChatRepository()),
       ],
-      child: const GastroyalApp(),
+      child: const SubliApp(),
     ),
   );
   await tester.pumpAndSettle();

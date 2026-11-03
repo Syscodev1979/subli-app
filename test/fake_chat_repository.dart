@@ -1,7 +1,7 @@
-import 'package:gastroyal_karate_app/features/chat/domain/chat_message.dart';
-import 'package:gastroyal_karate_app/features/chat/domain/chat_repository.dart';
-import 'package:gastroyal_karate_app/features/chat/domain/club_member.dart';
-import 'package:gastroyal_karate_app/features/chat/domain/conversation.dart';
+import 'package:subli_app/features/chat/domain/chat_message.dart';
+import 'package:subli_app/features/chat/domain/chat_repository.dart';
+import 'package:subli_app/features/chat/domain/club_member.dart';
+import 'package:subli_app/features/chat/domain/conversation.dart';
 
 /// Üres chat a hírfolyam tesztjeihez, Firebase nélkül.
 class FakeChatRepository implements ChatRepository {

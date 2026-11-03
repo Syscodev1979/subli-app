@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { deleteObject, getBytes, ref, uploadBytes, uploadString } from "firebase/storage";
 
-const projectId = "demo-gastroyal-rules";
+const projectId = "demo-subli-rules";
 const createdAt = Timestamp.fromDate(new Date("2026-01-15T10:00:00Z"));
 const birthDate = Timestamp.fromDate(new Date("2012-03-04T00:00:00Z"));
 const laterBirthDate = Timestamp.fromDate(new Date("2012-06-01T00:00:00Z"));
@@ -193,7 +193,7 @@ test("admin módosíthatja egy edző státuszát", async () => {
   });
 
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "info@sarosigyorgy.hu",
+    email: "admin-beallitando@invalid",
     email_verified: true,
   });
   await assertSucceeds(
@@ -546,7 +546,7 @@ test("a szerző és az admin törölheti az idegen pipát", async () => {
     createdAt,
   });
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "info@sarosigyorgy.hu",
+    email: "admin-beallitando@invalid",
     email_verified: true,
   });
   await assertSucceeds(
@@ -708,7 +708,7 @@ test("sportoló nem tölthet fel, edző igen, a szerző törölheti a fájlt", a
     }),
   );
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "info@sarosigyorgy.hu",
+    email: "admin-beallitando@invalid",
     email_verified: true,
   });
   await assertSucceeds(
@@ -766,7 +766,7 @@ test("edző csak a saját vagy még nem létező bejegyzéshez tölthet fel", as
   );
 
   const admin = testEnv.authenticatedContext("admin1", {
-    email: "info@sarosigyorgy.hu",
+    email: "admin-beallitando@invalid",
     email_verified: true,
   });
   await assertSucceeds(
@@ -1324,7 +1324,7 @@ test("célközönség nélküli régi bejegyzés minden aktív tagnak látszik",
   await assertSucceeds(getDoc(doc(parent.firestore(), "posts", "legacy")));
 });
 
-const adminToken = { email: "info@sarosigyorgy.hu", email_verified: true };
+const adminToken = { email: "admin-beallitando@invalid", email_verified: true };
 
 function groupDoc() {
   return {
@@ -1339,7 +1339,7 @@ test("senki nem állíthat be admin szerepet, az admin sem", async () => {
   await seed({
     admin1: userDoc({
       id: "admin1",
-      email: "info@sarosigyorgy.hu",
+      email: "admin-beallitando@invalid",
       role: "admin",
       status: "active",
     }),
@@ -1436,7 +1436,7 @@ test("adminLog-ot a kliens nem írhat, az admin olvashatja", async () => {
   await seed({
     admin1: userDoc({
       id: "admin1",
-      email: "info@sarosigyorgy.hu",
+      email: "admin-beallitando@invalid",
       role: "admin",
       status: "active",
     }),

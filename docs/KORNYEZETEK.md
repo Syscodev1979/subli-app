@@ -5,8 +5,8 @@ A fejlesztői és az éles app külön települ, külön Firebase-projekthez bes
 | | Fejlesztői | Éles |
 | --- | --- | --- |
 | Flavor | `dev` | `prod` |
-| Megjelenő név | Gastroyal DEV | Gastroyal |
-| Azonosító | `hu.gastroyalkarate.app.dev` | `hu.gastroyalkarate.app` |
+| Megjelenő név | Subli DEV | Subli |
+| Azonosító | `hu.subli.app.dev` | `hu.subli.app` |
 | Firebase-projekt | `subli-app-dev` | `subli-app` |
 | Régió | `europe-west3` | `europe-west3` |
 | Beállítások | `lib/firebase_options_dev.dart` | `lib/firebase_options_prod.dart` |
@@ -26,7 +26,7 @@ flutter run --flavor dev
 flutter run --flavor prod
 ```
 
-A Cursor / VS Code indítók: **Gastroyal DEV** és **Gastroyal ÉLES** (`.vscode/launch.json`).
+A Cursor / VS Code indítók: **Subli DEV** és **Subli ÉLES** (`.vscode/launch.json`).
 
 iOS-en a `dev` és a `prod` scheme a `Debug-dev` / `Release-prod` konfigurációkat használja. Az Archive mindig a `prod` scheme-mel készül.
 
@@ -43,8 +43,8 @@ flutterfire configure \
   --project=subli-app \
   --out=lib/firebase_options_prod.dart \
   --platforms=android,ios \
-  --ios-bundle-id=hu.gastroyalkarate.app \
-  --android-package-name=hu.gastroyalkarate.app \
+  --ios-bundle-id=hu.subli.app \
+  --android-package-name=hu.subli.app \
   --ios-out=ios/config/prod/GoogleService-Info.plist \
   --android-out=android/app/src/prod/google-services.json \
   --yes \
@@ -58,8 +58,8 @@ flutterfire configure \
   --project=subli-app-dev \
   --out=lib/firebase_options_dev.dart \
   --platforms=android,ios \
-  --ios-bundle-id=hu.gastroyalkarate.app.dev \
-  --android-package-name=hu.gastroyalkarate.app.dev \
+  --ios-bundle-id=hu.subli.app.dev \
+  --android-package-name=hu.subli.app.dev \
   --ios-out=ios/config/dev/GoogleService-Info.plist \
   --android-out=android/app/src/dev/google-services.json \
   --yes \

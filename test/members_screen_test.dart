@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
-import 'package:gastroyal_karate_app/features/members/domain/training_group.dart';
-import 'package:gastroyal_karate_app/features/members/presentation/member_admin_screen.dart';
-import 'package:gastroyal_karate_app/features/members/presentation/members_screen.dart';
+import 'package:subli_app/features/auth/domain/app_user.dart';
+import 'package:subli_app/features/auth/domain/user_role.dart';
+import 'package:subli_app/features/auth/domain/user_status.dart';
+import 'package:subli_app/features/members/domain/training_group.dart';
+import 'package:subli_app/features/members/presentation/member_admin_screen.dart';
+import 'package:subli_app/features/members/presentation/members_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
@@ -64,7 +64,7 @@ void main() {
             actor: _user(
               id: 'admin',
               name: 'Admin',
-              email: 'info@sarosigyorgy.hu',
+              email: 'admin-beallitando@invalid',
               role: UserRole.admin,
             ),
             groups: const [],

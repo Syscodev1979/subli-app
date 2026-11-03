@@ -15,10 +15,11 @@ service firebase.storage {
         && firestore.get(userPath()).data.status == 'active';
     }
 
+    // TODO_SUBLI: ugyanaz a helyettesítő cím, mint a ClubConfig.adminEmail.
     function isAdmin() {
       return activeUser()
         && firestore.get(userPath()).data.role == 'admin'
-        && request.auth.token.email == 'info@sarosigyorgy.hu';
+        && request.auth.token.email == 'admin-beallitando@invalid';
     }
 
     function isCoach() {

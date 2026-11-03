@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post.dart';
-import 'package:gastroyal_karate_app/features/feed/domain/post_access.dart';
+import 'package:subli_app/features/auth/domain/app_user.dart';
+import 'package:subli_app/features/auth/domain/user_role.dart';
+import 'package:subli_app/features/auth/domain/user_status.dart';
+import 'package:subli_app/features/feed/domain/post.dart';
+import 'package:subli_app/features/feed/domain/post_access.dart';
 
 void main() {
   final author = _user('coach-1', UserRole.coach);

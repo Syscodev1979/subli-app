@@ -2,7 +2,7 @@
 
 Az appban egyetlen admin lehet. A cím a tesztidőszakban is rögzített, és a szerver ellenőrzi: a szerep `admin`, és a bejelentkezett e-mail pontosan ez.
 
-A Gastroyal Karate SE admin címe: `info@sarosigyorgy.hu`.
+A Subli – lovas közösségi app admin címe: `admin-beallitando@invalid`.
 
 Más klubnál ezt a címet **mind a négy** helyen ki kell cserélni, ugyanarra a szövegre:
 

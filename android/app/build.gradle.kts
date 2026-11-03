@@ -22,7 +22,7 @@ if (hasGoogleServices) {
 }
 
 android {
-    namespace = "hu.gastroyalkarate.app"
+    namespace = "hu.subli.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -32,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "hu.gastroyalkarate.app"
+        applicationId = "hu.subli.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
@@ -55,11 +55,11 @@ android {
     productFlavors {
         create("dev") {
             dimension = "env"
-            applicationId = "hu.gastroyalkarate.app.dev"
+            applicationId = "hu.subli.app.dev"
         }
         create("prod") {
             dimension = "env"
-            applicationId = "hu.gastroyalkarate.app"
+            applicationId = "hu.subli.app"
         }
     }
 }

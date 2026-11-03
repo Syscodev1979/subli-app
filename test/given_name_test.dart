@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/core/utils/given_name.dart';
+import 'package:subli_app/core/utils/given_name.dart';
 
 void main() {
   test('a vezetéknév utáni első szó a keresztnév', () {

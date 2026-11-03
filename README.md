@@ -1,6 +1,6 @@
-# gastroyal_karate_app
+# Subli
 
-A new Flutter project.
+Subli – lovas közösségi app.
 
 ## Getting Started
 

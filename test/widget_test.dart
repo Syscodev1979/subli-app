@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:gastroyal_karate_app/features/auth/data/auth_providers.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/app_user.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/auth_session.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_role.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/user_status.dart';
-import 'package:gastroyal_karate_app/features/chat/data/chat_providers.dart';
-import 'package:gastroyal_karate_app/features/feed/data/feed_providers.dart';
-import 'package:gastroyal_karate_app/main.dart';
+import 'package:subli_app/features/auth/data/auth_providers.dart';
+import 'package:subli_app/features/auth/domain/app_user.dart';
+import 'package:subli_app/features/auth/domain/auth_session.dart';
+import 'package:subli_app/features/auth/domain/user_role.dart';
+import 'package:subli_app/features/auth/domain/user_status.dart';
+import 'package:subli_app/features/chat/data/chat_providers.dart';
+import 'package:subli_app/features/feed/data/feed_providers.dart';
+import 'package:subli_app/main.dart';
 
 import 'fake_chat_repository.dart';
 import 'fake_post_repository.dart';
@@ -18,7 +18,7 @@ void main() {
   testWidgets('A hírfolyam fejlécén megjelenik a klub neve', (tester) async {
     await _pumpApp(tester, AuthSignedIn(_activeAthlete()));
 
-    expect(find.text('Gastroyal Karate SE'), findsOneWidget);
+    expect(find.text('Subli – lovas közösségi app'), findsOneWidget);
     expect(find.byTooltip('Menü'), findsOneWidget);
     expect(find.text('Keresés a Hírfolyamban…'), findsOneWidget);
     expect(
@@ -86,7 +86,7 @@ Future<void> _pumpApp(WidgetTester tester, AuthSession session) async {
         postRepositoryProvider.overrideWithValue(const FakePostRepository()),
         chatRepositoryProvider.overrideWithValue(const FakeChatRepository()),
       ],
-      child: const GastroyalApp(),
+      child: const SubliApp(),
     ),
   );
   await tester.pumpAndSettle();

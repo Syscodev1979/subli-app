@@ -39,14 +39,14 @@ Future<void> main() async {
           () => ThemeController(initial: initial, preloaded: true),
         ),
       ],
-      child: const GastroyalApp(),
+      child: const SubliApp(),
     ),
   );
 }
 
 /// Az app gyökere: magyar lokalizáció, világos és sötét téma, go_router.
-class GastroyalApp extends ConsumerWidget {
-  const GastroyalApp({super.key});
+class SubliApp extends ConsumerWidget {
+  const SubliApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

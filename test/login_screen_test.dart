@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastroyal_karate_app/app/club_config.dart';
-import 'package:gastroyal_karate_app/app/theme.dart';
-import 'package:gastroyal_karate_app/features/auth/data/auth_providers.dart';
-import 'package:gastroyal_karate_app/features/auth/domain/auth_repository.dart';
-import 'package:gastroyal_karate_app/features/auth/presentation/login_screen.dart';
+import 'package:subli_app/app/club_config.dart';
+import 'package:subli_app/app/theme.dart';
+import 'package:subli_app/features/auth/data/auth_providers.dart';
+import 'package:subli_app/features/auth/domain/auth_repository.dart';
+import 'package:subli_app/features/auth/presentation/login_screen.dart';
 
 void main() {
   testWidgets('a logó és a klubnév megjelenik', (tester) async {
     await _surface(tester, const Size(390, 844));
     await _pump(tester, _FakeAuth());
-    expect(find.text('Gastroyal Karate SE'), findsOneWidget);
+    expect(find.text('Subli – lovas közösségi app'), findsOneWidget);
     expect(find.text('Regisztráció'), findsOneWidget);
     expect(find.bySemanticsLabel('Klublogó'), findsOneWidget);
     final image = tester.widget<Image>(
