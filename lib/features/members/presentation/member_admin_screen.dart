@@ -128,6 +128,16 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
         widget.member.role == UserRole.admin;
   }
 
+  /// A szülő csak akkor marad a listában, ha a tag már az, és a klub nem
+  /// engedi új szülő választását. Így a legördülő nem törik el.
+  List<UserRole> get _roleChoices {
+    final roles = [...UserRole.assignableRoles];
+    if (!roles.contains(_role) && UserRole.assignable.contains(_role)) {
+      roles.add(_role);
+    }
+    return roles;
+  }
+
   List<UserStatus> get _statuses {
     return [
       if (widget.member.status == UserStatus.pending) UserStatus.pending,
@@ -333,10 +343,10 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
           const SizedBox(height: 12),
           if (!_locked)
             DropdownButtonFormField<UserRole>(
-              initialValue: UserRole.assignable.contains(_role) ? _role : UserRole.athlete,
+              initialValue: _roleChoices.contains(_role) ? _role : UserRole.athlete,
               decoration: const InputDecoration(labelText: 'Szerepkör'),
               items: [
-                for (final role in UserRole.assignable)
+                for (final role in _roleChoices)
                   DropdownMenuItem(value: role, child: Text(role.labelHu)),
               ],
               onChanged: _saving
@@ -419,7 +429,7 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
                 ),
             ],
           ),
-          if (_role == UserRole.parent) ...[
+          if (!ClubConfig.enforceAdultsOnly && _role == UserRole.parent) ...[
             const SizedBox(height: 12),
             Text('Gyermekek', style: Theme.of(context).textTheme.titleMedium),
             for (final child in athletes)
@@ -439,7 +449,7 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
                       },
               ),
           ],
-          if (_role == UserRole.athlete) ...[
+          if (!ClubConfig.enforceAdultsOnly && _role == UserRole.athlete) ...[
             const SizedBox(height: 12),
             Text('Szülők', style: Theme.of(context).textTheme.titleMedium),
             for (final parent in parents)

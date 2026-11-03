@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/club_config.dart';
 import '../../../core/utils/hungarian_date.dart';
 import '../data/auth_providers.dart';
 import '../domain/age.dart';
 import '../domain/child_request.dart';
+import '../domain/registration_policy.dart';
 import '../domain/user_role.dart';
 import 'auth_error_message.dart';
 import 'auth_frame.dart';
@@ -14,7 +16,10 @@ import 'password_field.dart';
 
 /// Regisztráció sportolóként vagy szülőként. A fiók mindig jóváhagyásra vár.
 class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.debugBirthDate});
+
+  /// A widgetteszt ezzel állít be születési dátumot a dátumválasztó nélkül.
+  final DateTime? debugBirthDate;
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -51,6 +56,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   var _acceptedPrivacy = false;
   var _submitting = false;
   String? _error;
+
+  bool get _adultsOnly => ClubConfig.enforceAdultsOnly;
+
+  @override
+  void initState() {
+    super.initState();
+    _birthDate = widget.debugBirthDate;
+  }
 
   @override
   void dispose() {
@@ -97,6 +110,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _submitting = true;
       _error = null;
     });
+    final asParent = !_adultsOnly && _kind == _RegistrationKind.parent;
     try {
       await ref
           .read(accountRegistrarProvider)
@@ -104,12 +118,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             name: _nameController.text,
             email: _emailController.text,
             password: _passwordController.text,
-            role: _kind == _RegistrationKind.parent
-                ? UserRole.parent
-                : UserRole.athlete,
-            birthDate: _kind == _RegistrationKind.parent ? null : _birthDate,
+            role: asParent ? UserRole.parent : UserRole.athlete,
+            birthDate: asParent ? null : _birthDate,
             requestedRole: _kind == _RegistrationKind.coach ? 'coach' : null,
-            childRequests: _kind == _RegistrationKind.parent
+            childRequests: asParent
                 ? [
                     for (final child in _children)
                       ChildRequest(
@@ -127,13 +139,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String? _extraError() {
-    if (_kind != _RegistrationKind.parent && _birthDate == null) {
-      return 'A sportolónál a születési dátum kötelező.';
-    }
-    if (_kind == _RegistrationKind.parent) {
-      for (final child in _children) {
-        if (child.name.text.trim().isEmpty || child.birthDate == null) {
-          return 'Minden gyermeknél add meg a nevet és a születési dátumot.';
+    if (_adultsOnly) {
+      final ageError = adultsOnlyBirthDateError(_birthDate);
+      if (ageError != null) return ageError;
+    } else {
+      if (_kind != _RegistrationKind.parent && _birthDate == null) {
+        return 'A sportolónál a születési dátum kötelező.';
+      }
+      if (_kind == _RegistrationKind.parent) {
+        for (final child in _children) {
+          if (child.name.text.trim().isEmpty || child.birthDate == null) {
+            return 'Minden gyermeknél add meg a nevet és a születési dátumot.';
+          }
         }
       }
     }
@@ -249,19 +266,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         if (_submitting || kind == null) return;
                         setState(() => _kind = kind);
                       },
-                      child: const Column(
+                      child: Column(
                         children: [
-                          RadioListTile<_RegistrationKind>(
+                          const RadioListTile<_RegistrationKind>(
                             value: _RegistrationKind.athlete,
                             title: Text('Sportoló vagyok'),
                             contentPadding: EdgeInsets.zero,
                           ),
-                          RadioListTile<_RegistrationKind>(
-                            value: _RegistrationKind.parent,
-                            title: Text('Szülő vagyok'),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          RadioListTile<_RegistrationKind>(
+                          if (!_adultsOnly)
+                            const RadioListTile<_RegistrationKind>(
+                              value: _RegistrationKind.parent,
+                              title: Text('Szülő vagyok'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          const RadioListTile<_RegistrationKind>(
                             value: _RegistrationKind.coach,
                             title: Text('Edző vagyok'),
                             contentPadding: EdgeInsets.zero,
@@ -282,7 +300,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     setState(() => _birthDate = date),
                               ),
                       ),
-                      if (under18)
+                      if (!_adultsOnly && under18)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
@@ -293,7 +311,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                     ],
-                    if (_kind == _RegistrationKind.parent) ...[
+                    if (!_adultsOnly && _kind == _RegistrationKind.parent) ...[
                       const SizedBox(height: 8),
                       Text('Gyermekek', style: theme.textTheme.titleSmall),
                       const SizedBox(height: 8),

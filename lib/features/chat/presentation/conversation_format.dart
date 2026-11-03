@@ -1,3 +1,4 @@
+import '../../../app/club_config.dart';
 import '../../../core/utils/given_name.dart';
 import '../domain/club_member.dart';
 import '../domain/conversation.dart';
@@ -51,6 +52,7 @@ String? guardianNotice(
   String myId,
   Map<String, ClubMember> members,
 ) {
+  if (ClubConfig.enforceAdultsOnly) return null;
   final names = [
     for (final id in conversation.guardianIds)
       if (id != myId) members[id]?.name,

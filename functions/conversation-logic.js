@@ -23,7 +23,15 @@ function isMinor(user, today) {
  *
  * A parentIds listában már csak aktív szülők szerepeljenek.
  */
-function planConversation(caller, other, today = new Date()) {
+function planConversation(caller, other, today = new Date(), adultsOnly = false) {
+  if (adultsOnly) {
+    return {
+      memberIds: sorted([caller.id, other.id]),
+      guardianIds: [],
+      hasMinor: false,
+      type: "direct",
+    };
+  }
   const minors = [caller, other].filter((person) => isMinor(person, today));
   if (minors.length === 1) {
     const minor = minors[0];

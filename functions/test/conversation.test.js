@@ -26,6 +26,19 @@ test("a 18. születésnap előtt kiskorú, a napján már nem", () => {
   assert.equal(isMinor(user("a", "athlete", null), today), false);
 });
 
+test("18 év feletti klubban a szülők nem kerülnek a beszélgetésbe", () => {
+  const plan = planConversation(
+    user("coach", "coach", adultBirth),
+    user("child", "athlete", minorBirth, ["parent-1", "parent-2"]),
+    today,
+    true,
+  );
+  assert.deepEqual(plan.memberIds, ["child", "coach"]);
+  assert.deepEqual(plan.guardianIds, []);
+  assert.equal(plan.hasMinor, false);
+  assert.equal(plan.type, "direct");
+});
+
 test("felnőtt és kiskorú beszélgetésébe bekerülnek a szülők", () => {
   const plan = planConversation(
     user("coach", "coach", adultBirth),

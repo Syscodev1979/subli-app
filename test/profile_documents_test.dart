@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:subli_app/app/club_config.dart';
 import 'package:subli_app/features/auth/data/auth_providers.dart';
 import 'package:subli_app/features/auth/domain/app_user.dart';
 import 'package:subli_app/features/auth/domain/auth_session.dart';
@@ -92,6 +93,8 @@ void main() {
   });
 
   testWidgets('a regisztráción választható az Edző vagyok', (tester) async {
+    ClubConfig.debugAdultsOnlyOverride = false;
+    addTearDown(() => ClubConfig.debugAdultsOnlyOverride = null);
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: RegisterScreen())),
     );

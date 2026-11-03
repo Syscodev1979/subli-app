@@ -202,7 +202,9 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
           const _InfoCard(label: 'Edzéscsoport', value: 'Még nincs megadva')
         else
           AssignedGroups(groupIds: user.groupIds),
-        if (user.role == UserRole.parent && user.childIds.isNotEmpty) ...[
+        if (!ClubConfig.enforceAdultsOnly &&
+            user.role == UserRole.parent &&
+            user.childIds.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             'Gyermekeim',

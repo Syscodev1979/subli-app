@@ -47,7 +47,7 @@ class _AudienceSheetState extends State<_AudienceSheet> {
                     ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
-            for (final option in ClubConfig.audiences)
+            for (final option in ClubConfig.visibleAudiences)
               CheckboxListTile(
                 value: _selected.any((item) => item.value == option.key),
                 controlAffinity: ListTileControlAffinity.leading,

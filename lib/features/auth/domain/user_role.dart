@@ -1,3 +1,5 @@
+import '../../../app/club_config.dart';
+
 /// Szerepkör a `users` dokumentumban.
 enum UserRole {
   admin('admin'),
@@ -32,4 +34,10 @@ enum UserRole {
     UserRole.parent,
     UserRole.coach,
   ];
+
+  /// 18 év feletti klubban a szülő nem választható. A [assignable] lista
+  /// változatlan, ha [ClubConfig.enforceAdultsOnly] hamis.
+  static List<UserRole> get assignableRoles => ClubConfig.enforceAdultsOnly
+      ? const [UserRole.athlete, UserRole.coach]
+      : assignable;
 }

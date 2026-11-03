@@ -22,8 +22,9 @@ import { deleteObject, getBytes, ref, uploadBytes, uploadString } from "firebase
 
 const projectId = "demo-subli-rules";
 const createdAt = Timestamp.fromDate(new Date("2026-01-15T10:00:00Z"));
-const birthDate = Timestamp.fromDate(new Date("2012-03-04T00:00:00Z"));
-const laterBirthDate = Timestamp.fromDate(new Date("2012-06-01T00:00:00Z"));
+const birthDate = Timestamp.fromDate(new Date("1990-03-04T00:00:00Z"));
+const laterBirthDate = Timestamp.fromDate(new Date("1990-06-01T00:00:00Z"));
+const minorBirthDate = Timestamp.fromDate(new Date("2012-03-04T00:00:00Z"));
 
 function userDoc(overrides = {}) {
   return {
@@ -135,6 +136,11 @@ test("pending sportoló javíthatja a birthDate-et", async () => {
   await assertSucceeds(
     updateDoc(doc(athlete.firestore(), "users", "athlete1"), {
       birthDate: laterBirthDate,
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(athlete.firestore(), "users", "athlete1"), {
+      birthDate: minorBirthDate,
     }),
   );
 });
@@ -1070,6 +1076,51 @@ test("edző nem hagyhat jóvá edzőjelentkezést", async () => {
       status: "active",
       role: "coach",
     }),
+  );
+});
+
+test("18 év alatti regisztráció és a parent szerep elutasítva", async () => {
+  const minor = testEnv.authenticatedContext("minor-user", {
+    email: "minor@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(minor.firestore(), "users", "minor-user"),
+      userDoc({
+        id: "minor-user",
+        email: "minor@example.com",
+        birthDate: minorBirthDate,
+      }),
+    ),
+  );
+
+  const parent = testEnv.authenticatedContext("parent-user", {
+    email: "szulo@example.com",
+  });
+  await assertFails(
+    setDoc(
+      doc(parent.firestore(), "users", "parent-user"),
+      userDoc({
+        id: "parent-user",
+        email: "szulo@example.com",
+        role: "parent",
+        birthDate: null,
+      }),
+    ),
+  );
+
+  const adult = testEnv.authenticatedContext("adult-user", {
+    email: "felnott@example.com",
+  });
+  await assertSucceeds(
+    setDoc(
+      doc(adult.firestore(), "users", "adult-user"),
+      userDoc({
+        id: "adult-user",
+        email: "felnott@example.com",
+        birthDate,
+      }),
+    ),
   );
 });
 

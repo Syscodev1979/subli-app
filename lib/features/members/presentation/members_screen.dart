@@ -199,7 +199,7 @@ class _MembersDirectoryViewState extends State<MembersDirectoryView> {
                                     label: user.status.labelHu,
                                     color: statusColor(user.status.value),
                                   ),
-                                  if (minor)
+                                  if (!ClubConfig.enforceAdultsOnly && minor)
                                     const Chip(
                                       visualDensity: VisualDensity.compact,
                                       label: Text('Kiskorú'),

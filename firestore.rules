@@ -76,6 +76,24 @@ service cloud.firestore {
       ]);
     }
 
+    // Naptári 18. születésnap. A request.time a szabály kiértékelésének ideje.
+    function isAtLeast18(birthDate) {
+      return birthDate is timestamp
+        && (
+          request.time.year() - birthDate.year() > 18
+          || (
+            request.time.year() - birthDate.year() == 18
+            && (
+              request.time.month() > birthDate.month()
+              || (
+                request.time.month() == birthDate.month()
+                && request.time.day() >= birthDate.day()
+              )
+            )
+          )
+        );
+    }
+
     function validBeltRank(value) {
       return value == null || value in [
         'kyu10', 'kyu9', 'kyu8', 'kyu7', 'kyu6',
@@ -153,6 +171,10 @@ service cloud.firestore {
         && request.resource.data.get('groupIds', []).size() <= 20
         && validBeltRank(request.resource.data.get('beltRank', null))
         && (
+          unchanged('birthDate')
+          || isAtLeast18(request.resource.data.get('birthDate', null))
+        )
+        && (
           !sensitiveMemberChange()
           || request.resource.data.get('auditBy', null) == request.auth.uid
         );
@@ -186,18 +208,22 @@ service cloud.firestore {
         && request.resource.data.get('name', '').size() >= 2
         && request.resource.data.get('name', '').size() <= 120
         && (
-          resource.data.get('status', null) == 'pending'
-          || unchanged('birthDate')
+          unchanged('birthDate')
+          || (
+            resource.data.get('status', null) == 'pending'
+            && isAtLeast18(request.resource.data.get('birthDate', null))
+          )
         );
     }
 
-    // Új fiók csak a saját uid-re, pending sportoló vagy szülő lehet.
+    // Új fiók csak a saját uid-re, pending sportoló lehet, legalább 18 évesen.
+    // A szülő szerep és a 18 év alatti születési dátum elutasítva.
     function validCreate(userId) {
       let data = request.resource.data;
       return hasAllowedKeys()
         && data.get('id', null) == userId
         && data.get('status', null) == 'pending'
-        && data.get('role', null) in ['athlete', 'parent']
+        && data.get('role', null) == 'athlete'
         && data.get('childIds', null) is list
         && data.get('childIds', null).size() == 0
         && data.get('parentIds', null) is list
@@ -211,10 +237,7 @@ service cloud.firestore {
         && data.get('beltRank', null) == null
         && data.get('groupIds', []).size() == 0
         && validRequestedRole(data)
-        && (
-          data.get('role', null) == 'parent'
-          || data.get('birthDate', null) is timestamp
-        );
+        && isAtLeast18(data.get('birthDate', null));
     }
 
     function isActive() {

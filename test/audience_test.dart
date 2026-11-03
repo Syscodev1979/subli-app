@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:subli_app/app/club_config.dart';
 import 'package:subli_app/app/theme.dart';
 import 'package:subli_app/features/feed/domain/post.dart';
 import 'package:subli_app/features/feed/domain/post_audience.dart';
@@ -11,6 +12,9 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('hu');
   });
+
+  setUp(() => ClubConfig.debugAdultsOnlyOverride = false);
+  tearDown(() => ClubConfig.debugAdultsOnlyOverride = null);
 
   test('a minden tag kizárólagos, a többiből több is választható', () {
     final parents = PostAudience.toggle(
@@ -95,6 +99,33 @@ void main() {
       expect(_checked(tester, '🏃 Sportolók'), isFalse);
     },
   );
+
+  testWidgets('18 év feletti klubban a Szülők célközönség rejtve van', (
+    tester,
+  ) async {
+    ClubConfig.debugAdultsOnlyOverride = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () =>
+                    showAudienceSheet(context, PostAudience.everyone),
+                child: const Text('Nyisd'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Nyisd'));
+    await tester.pumpAndSettle();
+    expect(find.text('👨‍👩‍👧 Szülők'), findsNothing);
+    expect(find.text('🏃 Sportolók'), findsOneWidget);
+    expect(find.text('🌐 Minden tag'), findsOneWidget);
+  });
 
   testWidgets('nem mindenkinek szóló kártyán lakat és felirat van', (
     tester,

@@ -298,7 +298,7 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
             Text('${user.role.labelHu} · ${user.status.labelHu}'),
             if (user.birthDate != null)
               Text('Született: ${formatHungarianDate(user.birthDate!)}'),
-            if (under18)
+            if (!ClubConfig.enforceAdultsOnly && under18)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
@@ -308,7 +308,8 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
                   ),
                 ),
               ),
-            if (_resultingRole == UserRole.parent) ...[
+            if (!ClubConfig.enforceAdultsOnly &&
+                _resultingRole == UserRole.parent) ...[
               const SizedBox(height: 12),
               Text('Gyermekkérések', style: theme.textTheme.titleSmall),
               if (user.childRequests.isEmpty)

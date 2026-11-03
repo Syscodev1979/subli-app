@@ -66,6 +66,7 @@ class MemberProfileScreen extends ConsumerWidget {
             );
           }
           final canEditPhoto =
+              !ClubConfig.enforceAdultsOnly &&
               viewer != null &&
               viewer.role == UserRole.parent &&
               viewer.childIds.contains(person.id);

@@ -10,6 +10,7 @@ const {
   addParents,
   nameKeywords,
 } = require("./conversation-logic");
+const { ADULTS_ONLY } = require("./club-policy");
 const { authorPropagationPlan, chunk } = require("./profile-sync");
 const {
   DELETED_NAME,
@@ -150,6 +151,7 @@ exports.syncMember = onDocumentWritten("users/{uid}", async (event) => {
   const plan = authorPropagationPlan(before, after);
   if (plan) await propagateAuthor(uid, plan);
 
+  if (ADULTS_ONLY) return;
   if (!after || !isMinor(personFromUser(uid, after, today), today)) return;
   const previous = new Set(Array.isArray(before?.parentIds) ? before.parentIds : []);
   const added = (Array.isArray(after.parentIds) ? after.parentIds : []).filter(
@@ -190,7 +192,7 @@ exports.startConversation = onCall(async (request) => {
     throw new HttpsError("not-found", "A tag nem elérhető.");
   }
 
-  const plan = planConversation(caller, other, today);
+  const plan = planConversation(caller, other, today, ADULTS_ONLY);
   const key = memberKey(plan.memberIds);
   const existing = await db
     .collection("conversations")

@@ -22,6 +22,15 @@ abstract final class ClubConfig {
   static const String prodAppName = 'Subli';
   static const String devAppName = 'Subli DEV';
 
+  /// Csak 18. életévüket betöltött tagok. Ha false, a szülős klub viselkedése
+  /// marad: szülő szerep, gyermekkapcsolat és a kiskorú jelzések.
+  static const bool adultsOnly = true;
+
+  /// A tesztek ezzel kapcsolják vissza a szülős viselkedést.
+  static bool? debugAdultsOnlyOverride;
+
+  static bool get enforceAdultsOnly => debugAdultsOnlyOverride ?? adultsOnly;
+
   /// TODO_SUBLI: a visszajelző cím. Addig senki nem kap levelet.
   static const String feedbackEmail = 'visszajelzes-beallitando@invalid';
 
@@ -264,6 +273,14 @@ abstract final class ClubConfig {
       description: 'A sportolók és a vezetőség',
     ),
   ];
+
+  /// A szerkesztőben látható célközönségek. 18 év feletti klubban nincs „Szülők”.
+  static List<AudienceOption> get visibleAudiences => enforceAdultsOnly
+      ? [
+          for (final option in audiences)
+            if (option.key != 'parents') option,
+        ]
+      : audiences;
 
   static AudienceOption? audienceByKey(String key) {
     for (final option in audiences) {

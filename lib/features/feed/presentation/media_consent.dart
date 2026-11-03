@@ -1,11 +1,14 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../app/club_config.dart';
 
 const _consentKey = 'media_consent_ack';
 const _documentConsentKey = 'document_consent_ack';
 
 /// Egyszeri figyelmeztetés gyermekfotó feltöltése előtt.
 Future<bool> ensureMediaConsent(BuildContext context) async {
+  if (ClubConfig.enforceAdultsOnly) return true;
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_consentKey) == true) return true;
   if (!context.mounted) return false;
@@ -34,6 +37,7 @@ Future<bool> ensureMediaConsent(BuildContext context) async {
 
 /// Egyszeri figyelmeztetés, mielőtt gyermek dokumentuma felkerülne.
 Future<bool> ensureDocumentConsent(BuildContext context) async {
+  if (ClubConfig.enforceAdultsOnly) return true;
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_documentConsentKey) == true) return true;
   if (!context.mounted) return false;
