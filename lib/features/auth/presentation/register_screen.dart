@@ -9,6 +9,7 @@ import '../domain/age.dart';
 import '../domain/child_request.dart';
 import '../domain/registration_policy.dart';
 import '../domain/user_role.dart';
+import '../../../core/widgets/error_notice.dart';
 import 'auth_error_message.dart';
 import 'auth_frame.dart';
 import 'auth_validators.dart';
@@ -197,206 +198,193 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-                    TextFormField(
-                      controller: _nameController,
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                      autofillHints: const [AutofillHints.name],
-                      decoration: const InputDecoration(
-                        labelText: 'Teljes név',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: validateName,
-                      onFieldSubmitted: (_) => _emailFocus.requestFocus(),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _emailController,
-                      focusNode: _emailFocus,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.email],
-                      decoration: const InputDecoration(
-                        labelText: 'E-mail',
-                        prefixIcon: Icon(Icons.mail_outline),
-                      ),
-                      validator: validateEmail,
-                      onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
-                    ),
-                    const SizedBox(height: 12),
-                    PasswordField(
-                      controller: _passwordController,
-                      focusNode: _passwordFocus,
-                      label: 'Jelszó',
-                      textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.newPassword],
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      validator: validatePassword,
-                      onFieldSubmitted: (_) => _confirmFocus.requestFocus(),
-                    ),
-                    const SizedBox(height: 12),
-                    PasswordField(
-                      controller: _confirmController,
-                      focusNode: _confirmFocus,
-                      label: 'Jelszó újra',
-                      textInputAction: _kind == _RegistrationKind.parent
-                          ? TextInputAction.next
-                          : TextInputAction.done,
-                      autofillHints: const [AutofillHints.newPassword],
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      validator: (value) {
-                        if (value != _passwordController.text) {
-                          return 'A két jelszó nem egyezik.';
-                        }
-                        return validatePassword(value);
-                      },
-                      onFieldSubmitted: (_) {
-                        if (_kind == _RegistrationKind.parent) {
-                          _children.first.focus.requestFocus();
-                        } else {
-                          _submit();
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Ki vagy?', style: theme.textTheme.titleSmall),
-                    RadioGroup<_RegistrationKind>(
-                      groupValue: _kind,
-                      onChanged: (kind) {
-                        if (_submitting || kind == null) return;
-                        setState(() => _kind = kind);
-                      },
-                      child: Column(
-                        children: [
-                          const RadioListTile<_RegistrationKind>(
-                            value: _RegistrationKind.athlete,
-                            title: Text('Sportoló vagyok'),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          if (!_adultsOnly)
-                            const RadioListTile<_RegistrationKind>(
-                              value: _RegistrationKind.parent,
-                              title: Text('Szülő vagyok'),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          const RadioListTile<_RegistrationKind>(
-                            value: _RegistrationKind.coach,
-                            title: Text('Edző vagyok'),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_kind != _RegistrationKind.parent) ...[
-                      const SizedBox(height: 8),
-                      _DateField(
-                        label: 'Születési dátum',
-                        value: _birthDate,
-                        onTap: _submitting
-                            ? null
-                            : () => _pickDate(
-                                current: _birthDate,
-                                onPicked: (date) =>
-                                    setState(() => _birthDate = date),
-                              ),
-                      ),
-                      if (!_adultsOnly && under18)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            'Mivel még nem vagy 18 éves, a fiókot szülői jóváhagyás után aktiválja az edző.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                    ],
-                    if (!_adultsOnly && _kind == _RegistrationKind.parent) ...[
-                      const SizedBox(height: 8),
-                      Text('Gyermekek', style: theme.textTheme.titleSmall),
-                      const SizedBox(height: 8),
-                      for (var index = 0; index < _children.length; index++)
-                        _ChildFields(
-                          index: index,
-                          draft: _children[index],
-                          canRemove: _children.length > 1 && !_submitting,
-                          isLast: index == _children.length - 1,
-                          onSubmitted: () {
-                            if (index == _children.length - 1) {
-                              _submit();
-                            } else {
-                              _children[index + 1].focus.requestFocus();
-                            }
-                          },
-                          onRemove: () {
-                            setState(() {
-                              _children.removeAt(index).dispose();
-                            });
-                          },
-                          onPickDate: _submitting
-                              ? null
-                              : () => _pickDate(
-                                  current: _children[index].birthDate,
-                                  onPicked: (date) {
-                                    setState(
-                                      () => _children[index].birthDate = date,
-                                    );
-                                  },
-                                ),
-                        ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: _submitting
-                              ? null
-                              : () => setState(
-                                  () => _children.add(_ChildDraft()),
-                                ),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Gyermek hozzáadása'),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    CheckboxListTile(
-                      value: _acceptedPrivacy,
-                      onChanged: _submitting
-                          ? null
-                          : (value) => setState(
-                              () => _acceptedPrivacy = value ?? false,
-                            ),
+              TextFormField(
+                controller: _nameController,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.words,
+                autofillHints: const [AutofillHints.name],
+                decoration: const InputDecoration(
+                  labelText: 'Teljes név',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+                validator: validateName,
+                onFieldSubmitted: (_) => _emailFocus.requestFocus(),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _emailController,
+                focusNode: _emailFocus,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                decoration: const InputDecoration(
+                  labelText: 'E-mail',
+                  prefixIcon: Icon(Icons.mail_outline),
+                ),
+                validator: validateEmail,
+                onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
+              ),
+              const SizedBox(height: 12),
+              PasswordField(
+                controller: _passwordController,
+                focusNode: _passwordFocus,
+                label: 'Jelszó',
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.newPassword],
+                prefixIcon: const Icon(Icons.lock_outline),
+                validator: validatePassword,
+                onFieldSubmitted: (_) => _confirmFocus.requestFocus(),
+              ),
+              const SizedBox(height: 12),
+              PasswordField(
+                controller: _confirmController,
+                focusNode: _confirmFocus,
+                label: 'Jelszó újra',
+                textInputAction: _kind == _RegistrationKind.parent
+                    ? TextInputAction.next
+                    : TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                prefixIcon: const Icon(Icons.lock_outline),
+                validator: (value) {
+                  if (value != _passwordController.text) {
+                    return 'A két jelszó nem egyezik.';
+                  }
+                  return validatePassword(value);
+                },
+                onFieldSubmitted: (_) {
+                  if (_kind == _RegistrationKind.parent) {
+                    _children.first.focus.requestFocus();
+                  } else {
+                    _submit();
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              Text('Ki vagy?', style: theme.textTheme.titleSmall),
+              RadioGroup<_RegistrationKind>(
+                groupValue: _kind,
+                onChanged: (kind) {
+                  if (_submitting || kind == null) return;
+                  setState(() => _kind = kind);
+                },
+                child: Column(
+                  children: [
+                    const RadioListTile<_RegistrationKind>(
+                      value: _RegistrationKind.athlete,
+                      title: Text('Sportoló vagyok'),
                       contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: const Text(
-                        'Elfogadom az adatkezelési tájékoztatót.',
-                      ),
-                      subtitle: Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: _showPrivacyNotice,
-                          child: const Text('Tájékoztató megnyitása'),
-                        ),
-                      ),
                     ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.error,
-                        ),
+                    if (!_adultsOnly)
+                      const RadioListTile<_RegistrationKind>(
+                        value: _RegistrationKind.parent,
+                        title: Text('Szülő vagyok'),
+                        contentPadding: EdgeInsets.zero,
                       ),
-                    ],
-                    const SizedBox(height: 16),
-                    AuthPrimaryButton(
-                      label: 'Regisztráció',
-                      busy: _submitting,
-                      onPressed: _submit,
+                    const RadioListTile<_RegistrationKind>(
+                      value: _RegistrationKind.coach,
+                      title: Text('Edző vagyok'),
+                      contentPadding: EdgeInsets.zero,
                     ),
                   ],
                 ),
               ),
-            ),
+              if (_kind != _RegistrationKind.parent) ...[
+                const SizedBox(height: 8),
+                _DateField(
+                  label: 'Születési dátum',
+                  value: _birthDate,
+                  onTap: _submitting
+                      ? null
+                      : () => _pickDate(
+                          current: _birthDate,
+                          onPicked: (date) => setState(() => _birthDate = date),
+                        ),
+                ),
+                if (!_adultsOnly && under18)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Mivel még nem vagy 18 éves, a fiókot szülői jóváhagyás után aktiválja az edző.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+              ],
+              if (!_adultsOnly && _kind == _RegistrationKind.parent) ...[
+                const SizedBox(height: 8),
+                Text('Gyermekek', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 8),
+                for (var index = 0; index < _children.length; index++)
+                  _ChildFields(
+                    index: index,
+                    draft: _children[index],
+                    canRemove: _children.length > 1 && !_submitting,
+                    isLast: index == _children.length - 1,
+                    onSubmitted: () {
+                      if (index == _children.length - 1) {
+                        _submit();
+                      } else {
+                        _children[index + 1].focus.requestFocus();
+                      }
+                    },
+                    onRemove: () {
+                      setState(() {
+                        _children.removeAt(index).dispose();
+                      });
+                    },
+                    onPickDate: _submitting
+                        ? null
+                        : () => _pickDate(
+                            current: _children[index].birthDate,
+                            onPicked: (date) {
+                              setState(() => _children[index].birthDate = date);
+                            },
+                          ),
+                  ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: _submitting
+                        ? null
+                        : () => setState(() => _children.add(_ChildDraft())),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Gyermek hozzáadása'),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                value: _acceptedPrivacy,
+                onChanged: _submitting
+                    ? null
+                    : (value) =>
+                          setState(() => _acceptedPrivacy = value ?? false),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('Elfogadom az adatkezelési tájékoztatót.'),
+                subtitle: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: _showPrivacyNotice,
+                    child: const Text('Tájékoztató megnyitása'),
+                  ),
+                ),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                ErrorNotice(_error!),
+              ],
+              const SizedBox(height: 16),
+              AuthPrimaryButton(
+                label: 'Regisztráció',
+                busy: _submitting,
+                onPressed: _submit,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

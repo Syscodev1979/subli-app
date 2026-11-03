@@ -19,6 +19,7 @@ import 'chat_time.dart';
 import 'conversation_format.dart';
 import 'message_bubble.dart';
 import 'quick_replies.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// Egy beszélgetés üzenetei.
 class ConversationScreen extends ConsumerStatefulWidget {
@@ -144,9 +145,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Az üzenet törlése nem sikerült.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar('Az üzenet törlése nem sikerült.'));
     }
   }
 

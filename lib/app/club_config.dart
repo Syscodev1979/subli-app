@@ -4,8 +4,21 @@ import 'package:flutter/material.dart';
 ///
 /// A lovas szintek és a dokumentumtípusok itt cserélhetők, ha a klub mást használ.
 abstract final class ClubConfig {
-  /// TODO_SUBLI: ideiglenes piros kör S betűvel, amíg a végleges logó nincs meg.
-  static const String logoAsset = 'assets/images/logo.png';
+  /// A teljes Subli logó: piros blokk, „Subli”, „PAARDENVOEDERS”.
+  static const String logoAsset = 'assets/branding/subli_logo.png';
+
+  /// A logó pirosa. Nagy felületre és díszítésre való. Fehér szöveg alatt
+  /// nem használható, mert a kontraszt csak 3,9:1.
+  static const Color brandRed = Color(0xFFEF3D42);
+
+  /// Gombok, linkek, aktív ikonok. Fehér felirattal 5,0:1.
+  static const Color primary = Color(0xFFD7262B);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color primaryContainer = Color(0xFFFDE7E8);
+  static const Color onPrimaryContainer = Color(0xFF7A1418);
+
+  /// Borostyán, nem piros. Fehér felirattal 5,0:1.
+  static const Color error = Color(0xFFB45309);
 
   /// A fejléc teljes neve.
   static const String clubName = 'Subli – lovas közösségi app';

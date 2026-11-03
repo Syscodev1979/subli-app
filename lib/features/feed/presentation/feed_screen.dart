@@ -26,6 +26,7 @@ import 'feed_search_bar.dart';
 import 'feed_skeleton.dart';
 import 'post_card.dart';
 import 'scroll_to_top_button.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// A klub kezdőoldala: a hírfolyam.
 class FeedScreen extends ConsumerStatefulWidget {
@@ -127,9 +128,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       await ref.read(feedControllerProvider.notifier).loadMore();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(feedErrorMessage(error, saving: false))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(errorSnackBar(feedErrorMessage(error, saving: false)));
       }
     }
   }
@@ -139,9 +140,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       await ref.read(feedControllerProvider.notifier).refresh();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(feedErrorMessage(error, saving: false))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(errorSnackBar(feedErrorMessage(error, saving: false)));
       }
     }
   }
@@ -445,11 +446,7 @@ class _EmptyFeed extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
       child: Column(
         children: [
-          const Icon(
-            Icons.pets,
-            size: 56,
-            color: AppColors.burgundy,
-          ),
+          const Icon(Icons.pets, size: 56, color: AppColors.burgundy),
           const SizedBox(height: 16),
           Text(
             message ??
@@ -479,6 +476,8 @@ class _FeedMessage extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
       child: Column(
         children: [
+          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
+          const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,

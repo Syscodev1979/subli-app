@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/auth_providers.dart';
+import '../../../core/widgets/error_notice.dart';
 import 'auth_error_message.dart';
 import 'auth_frame.dart';
 import 'auth_validators.dart';
@@ -67,8 +68,7 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
   void _showSent() {
     setState(() {
       _messageIsError = false;
-      _message =
-          'Ha az e-mail-cím szerepel a rendszerben, elküldtük a visszaállító levelet.';
+      _message = 'Ha az e-mail-cím szerepel a rendszerben, elküldtük a visszaállító levelet.';
     });
   }
 
@@ -99,14 +99,15 @@ class _PasswordResetScreenState extends ConsumerState<PasswordResetScreen> {
             ),
             if (_message != null) ...[
               const SizedBox(height: 12),
-              Text(
-                _message!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: _messageIsError
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.onSurface,
+              if (_messageIsError)
+                ErrorNotice(_message!)
+              else
+                Text(
+                  _message!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
-              ),
             ],
             const SizedBox(height: 16),
             AuthPrimaryButton(

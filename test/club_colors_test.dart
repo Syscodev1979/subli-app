@@ -4,8 +4,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:subli_app/app/club_colors.dart';
 import 'package:subli_app/app/constants.dart';
+import 'package:subli_app/app/theme.dart';
 
 void main() {
+  test('a primary és a szöveg párok mindkét témában elérik a 4,5:1-et', () {
+    for (final theme in [AppTheme.light, AppTheme.dark]) {
+      final scheme = theme.colorScheme;
+      final pairs = <(Color, Color)>[
+        (scheme.onPrimary, scheme.primary),
+        (scheme.onSurface, scheme.surface),
+        (scheme.onPrimaryContainer, scheme.primaryContainer),
+        (scheme.onError, scheme.error),
+      ];
+      for (final (foreground, background) in pairs) {
+        expect(
+          contrastRatio(foreground, background),
+          greaterThanOrEqualTo(4.5),
+          reason: '${theme.brightness.name}: $foreground on $background',
+        );
+      }
+    }
+    expect(AppTheme.light.colorScheme.primary, AppColors.primary);
+    expect(AppTheme.dark.colorScheme.primary, AppColors.brandRed);
+    expect(AppTheme.light.colorScheme.error, AppColors.error);
+    expect(AppTheme.dark.colorScheme.error, AppColors.error);
+    expect(
+      contrastRatio(AppColors.errorOnDark, AppColors.darkSurface),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
   test('a sötét módbeli szövegek elérik a WCAG AA kontrasztot', () {
     const dark = ClubColors.dark;
     final pairs = <(Color, Color)>[

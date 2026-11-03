@@ -10,7 +10,7 @@ class AuthFrame extends StatelessWidget {
     this.title,
     this.subtitle,
     this.onBack,
-    this.logoSize = 120,
+    this.logoWidth = 200,
     this.screenKey,
     super.key,
   });
@@ -20,8 +20,8 @@ class AuthFrame extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onBack;
 
-  /// Nyugalmi logóméret. Szűk képernyőn és billentyűzetnél kisebb.
-  final double logoSize;
+  /// Nyugalmi logószélesség. Szűk képernyőn és billentyűzetnél kisebb.
+  final double logoWidth;
   final Key? screenKey;
 
   @override
@@ -29,10 +29,10 @@ class AuthFrame extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final media = MediaQuery.of(context);
     final compact = media.viewInsets.bottom > 0 || media.size.height < 700;
-    final size = compact ? (logoSize * 0.62).clamp(64.0, 88.0) : logoSize;
+    final width = compact ? (logoWidth * 0.7).clamp(140.0, 168.0) : logoWidth;
     return Scaffold(
       key: screenKey,
-      backgroundColor: dark ? AppColors.darkSurface : Colors.white,
+      backgroundColor: dark ? AppColors.darkSurface : AppColors.surface,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: LayoutBuilder(
@@ -60,11 +60,10 @@ class AuthFrame extends StatelessWidget {
                           ),
                         Image.asset(
                           ClubConfig.logoAsset,
-                          width: size,
-                          height: size,
+                          width: width,
                           fit: BoxFit.contain,
                           filterQuality: FilterQuality.high,
-                          semanticLabel: 'Klublogó',
+                          semanticLabel: 'Subli',
                         ),
                         if (title != null) ...[
                           const SizedBox(height: 16),
@@ -82,9 +81,7 @@ class AuthFrame extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
+                                  color: Theme.of(context).colorScheme.onSurface
                                       .withValues(alpha: 0.62),
                                 ),
                           ),

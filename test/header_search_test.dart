@@ -38,7 +38,7 @@ void main() {
             (widget.image as AssetImage).assetName == ClubConfig.logoAsset,
       ),
     );
-    expect(image.height, 36);
+    expect(image.height, 38);
     expect((image.image as AssetImage).assetName, ClubConfig.logoAsset);
     expect(image.filterQuality, FilterQuality.high);
   });

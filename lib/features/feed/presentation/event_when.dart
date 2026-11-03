@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/widgets/error_notice.dart';
 import '../domain/event_time.dart';
 import '../domain/post_category.dart';
 import 'category_style.dart';
@@ -220,16 +221,9 @@ class EventScheduleEditor extends StatelessWidget {
                 ),
               ),
             if (invalid)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  'A vége nem lehet a kezdés előtt.',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: ErrorNotice('A vége nem lehet a kezdés előtt.'),
               ),
           ],
         ),

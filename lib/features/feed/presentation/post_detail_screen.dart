@@ -15,6 +15,7 @@ import 'feed_palette.dart';
 import 'feed_skeleton.dart';
 import 'link_text.dart';
 import 'post_card.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// Egy bejegyzés teljes szövege és a hozzászólásai.
 class PostDetailScreen extends ConsumerStatefulWidget {
@@ -73,8 +74,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           Expanded(
             child: post.when(
               loading: () => const FeedSkeleton(),
-              error: (error, _) =>
-                  Center(child: Text(feedErrorMessage(error, saving: false))),
+              error: (error, _) => Center(
+                child: ErrorNotice(
+                  feedErrorMessage(error, saving: false),
+                  centered: true,
+                ),
+              ),
               data: (value) {
                 if (value == null) {
                   return const Center(
@@ -84,7 +89,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 return comments.when(
                   loading: () => const FeedSkeleton(cards: 1),
                   error: (error, _) => Center(
-                    child: Text(feedErrorMessage(error, saving: false)),
+                    child: ErrorNotice(
+                      feedErrorMessage(error, saving: false),
+                      centered: true,
+                    ),
                   ),
                   data: (items) => ListView(
                     controller: _scrollController,
@@ -215,9 +223,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ref.invalidate(recentCommentsProvider(widget.postId));
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -233,9 +240,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       ref.invalidate(recentCommentsProvider(widget.postId));
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
       }
     }
   }

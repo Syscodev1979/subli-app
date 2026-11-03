@@ -8,6 +8,7 @@ import '../../auth/presentation/auth_error_message.dart';
 import '../../feed/presentation/feed_error_message.dart';
 import '../data/group_repository.dart';
 import '../domain/training_group.dart';
+import '../../../core/widgets/error_notice.dart';
 
 class GroupsScreen extends ConsumerWidget {
   const GroupsScreen({super.key});
@@ -25,7 +26,10 @@ class GroupsScreen extends ConsumerWidget {
       body: groups.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
-          child: Text(feedErrorMessage(error, saving: false)),
+          child: ErrorNotice(
+            feedErrorMessage(error, saving: false),
+            centered: true,
+          ),
         ),
         data: (list) {
           return ListView(
@@ -42,11 +46,13 @@ class GroupsScreen extends ConsumerWidget {
                     for (final suggestion in suggestedGroups)
                       ActionChip(
                         label: Text(suggestion.name),
-                        onPressed: () => ref.read(groupRepositoryProvider).createGroup(
-                          name: suggestion.name,
-                          color: suggestion.color,
-                          description: suggestion.description,
-                        ),
+                        onPressed: () => ref
+                            .read(groupRepositoryProvider)
+                            .createGroup(
+                              name: suggestion.name,
+                              color: suggestion.color,
+                              description: suggestion.description,
+                            ),
                       ),
                   ],
                 ),
@@ -78,13 +84,18 @@ class GroupsScreen extends ConsumerWidget {
     return ClubAppBar(
       leading: IconButton(
         tooltip: 'Vissza',
-        onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.members),
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go(AppRoutes.members),
         icon: const Icon(Icons.arrow_back),
       ),
     );
   }
 
-  Future<void> _edit(BuildContext context, WidgetRef ref, TrainingGroup? group) async {
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref,
+    TrainingGroup? group,
+  ) async {
     final name = TextEditingController(text: group?.name ?? '');
     final description = TextEditingController(text: group?.description ?? '');
     var color = group?.color ?? '#6B1E2E';
@@ -94,7 +105,9 @@ class GroupsScreen extends ConsumerWidget {
         return StatefulBuilder(
           builder: (context, setLocal) {
             return AlertDialog(
-              title: Text(group == null ? 'Új csoport' : 'Csoport szerkesztése'),
+              title: Text(
+                group == null ? 'Új csoport' : 'Csoport szerkesztése',
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -169,14 +182,17 @@ class GroupsScreen extends ConsumerWidget {
       }
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     }
   }
 
-  Future<void> _delete(BuildContext context, WidgetRef ref, TrainingGroup group) async {
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    TrainingGroup group,
+  ) async {
     final accepted = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -199,9 +215,8 @@ class GroupsScreen extends ConsumerWidget {
       await ref.read(groupRepositoryProvider).deleteGroup(group.id);
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     }
   }

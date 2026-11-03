@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
 import '../data/auth_providers.dart';
+import '../../../core/widgets/error_notice.dart';
 import 'auth_error_message.dart';
 import 'auth_frame.dart';
 import 'auth_validators.dart';
@@ -56,7 +57,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return AuthFrame(
       screenKey: const Key('login-screen'),
       title: AppInfo.clubName,
@@ -92,12 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               if (_message != null) ...[
                 const SizedBox(height: 12),
-                Text(
-                  _message!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.error,
-                  ),
-                ),
+                ErrorNotice(_message!),
               ],
               const SizedBox(height: 16),
               AuthPrimaryButton(

@@ -24,6 +24,7 @@ import 'avatar_flow.dart';
 import '../../members/presentation/member_chips.dart';
 import 'belt_badge.dart';
 import 'profile_footer.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// A bejelentkezett tag saját profilja.
 class ProfileScreen extends ConsumerWidget {
@@ -84,7 +85,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
     }
   }
 
@@ -96,8 +97,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     if (saved == null || !mounted) return;
     final error = validateName(saved);
     if (error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackBar(error));
       return;
     }
     try {
@@ -110,7 +110,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
     }
   }
 
@@ -136,7 +136,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
     }
   }
 

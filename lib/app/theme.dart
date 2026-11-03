@@ -6,8 +6,9 @@ import 'constants.dart';
 
 /// Material 3 téma világos és sötét móddal.
 ///
-/// A gombok és kiemelések bordók maradnak, a másodlagos szín a zöld pipáé.
-/// Az AppBar világos módban fehér, sötét módban a sötét felület.
+/// A színeket kézzel adjuk meg, nem [ColorScheme.fromSeed]-ből. A gombok a
+/// [AppColors.primary] színt kapják, a sötét téma a [AppColors.brandRed]ot.
+/// Az AppBar világos módban fehér, sötét módban a #121212 felület.
 abstract final class AppTheme {
   static ThemeData get light =>
       _build(_lightScheme, _lightAppBar, ClubColors.light);
@@ -15,39 +16,38 @@ abstract final class AppTheme {
   static ThemeData get dark =>
       _build(_darkScheme, _darkAppBar, ClubColors.dark);
 
-  static final ColorScheme _lightScheme =
-      ColorScheme.fromSeed(
-        seedColor: AppColors.burgundy,
-        brightness: Brightness.light,
-      ).copyWith(
-        primary: AppColors.burgundy,
-        onPrimary: AppColors.onPrimary,
-        primaryContainer: AppColors.burgundyLight,
-        onPrimaryContainer: AppColors.burgundyDark,
-        secondary: AppColors.accentGreen,
-        onSecondary: AppColors.onPrimary,
-        surface: AppColors.background,
-        onSurface: AppColors.text,
-      );
+  static const ColorScheme _lightScheme = ColorScheme(
+    brightness: Brightness.light,
+    primary: AppColors.primary,
+    onPrimary: AppColors.onPrimary,
+    primaryContainer: AppColors.primaryContainer,
+    onPrimaryContainer: AppColors.onPrimaryContainer,
+    secondary: AppColors.accentGreen,
+    onSecondary: AppColors.onPrimary,
+    error: AppColors.error,
+    onError: AppColors.onPrimary,
+    surface: AppColors.surface,
+    onSurface: AppColors.text,
+  );
 
-  static final ColorScheme _darkScheme =
-      ColorScheme.fromSeed(
-        seedColor: AppColors.burgundyDarkMode,
-        brightness: Brightness.dark,
-      ).copyWith(
-        primary: AppColors.burgundyDarkMode,
-        onPrimary: AppColors.onPrimary,
-        primaryContainer: AppColors.burgundyDark,
-        onPrimaryContainer: AppColors.burgundyLight,
-        secondary: AppColors.accentGreen,
-        onSecondary: AppColors.onPrimary,
-        surface: AppColors.darkSurface,
-      );
+  static const ColorScheme _darkScheme = ColorScheme(
+    brightness: Brightness.dark,
+    primary: AppColors.brandRed,
+    onPrimary: AppColors.darkOnPrimary,
+    primaryContainer: AppColors.onPrimaryContainer,
+    onPrimaryContainer: AppColors.primaryContainer,
+    secondary: AppColors.accentGreen,
+    onSecondary: AppColors.onPrimary,
+    error: AppColors.error,
+    onError: AppColors.onPrimary,
+    surface: AppColors.darkSurface,
+    onSurface: AppColors.darkOnSurface,
+  );
 
-  /// Fehér fejléc, sötét bordó felirat és ikonok, alul egy halványszürke vonal.
+  /// Fehér fejléc, piros felirat és ikonok, alul egy halványszürke vonal.
   static const AppBarTheme _lightAppBar = AppBarTheme(
     backgroundColor: Color(0xFFFFFFFF),
-    foregroundColor: AppColors.burgundy,
+    foregroundColor: AppColors.primary,
     elevation: 0,
     scrolledUnderElevation: 0,
     surfaceTintColor: Colors.transparent,
@@ -58,20 +58,20 @@ abstract final class AppTheme {
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
     ),
-    iconTheme: IconThemeData(color: AppColors.burgundy),
-    actionsIconTheme: IconThemeData(color: AppColors.burgundy),
+    iconTheme: IconThemeData(color: AppColors.primary),
+    actionsIconTheme: IconThemeData(color: AppColors.primary),
     titleTextStyle: TextStyle(
-      color: AppColors.burgundy,
+      color: AppColors.primary,
       fontSize: 18,
       fontWeight: FontWeight.w700,
     ),
     shape: Border(bottom: BorderSide(color: AppColors.appBarDivider, width: 1)),
   );
 
-  /// Sötét felület, rózsaszínes bordó felirat és ikonok.
+  /// Sötét felület, a logó pirosával rajzolt felirat és ikonok.
   static const AppBarTheme _darkAppBar = AppBarTheme(
     backgroundColor: AppColors.darkSurface,
-    foregroundColor: AppColors.burgundyDarkMode,
+    foregroundColor: AppColors.brandRed,
     elevation: 0,
     scrolledUnderElevation: 0,
     surfaceTintColor: Colors.transparent,
@@ -82,10 +82,10 @@ abstract final class AppTheme {
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
     ),
-    iconTheme: IconThemeData(color: AppColors.burgundyDarkMode),
-    actionsIconTheme: IconThemeData(color: AppColors.burgundyDarkMode),
+    iconTheme: IconThemeData(color: AppColors.brandRed),
+    actionsIconTheme: IconThemeData(color: AppColors.brandRed),
     titleTextStyle: TextStyle(
-      color: AppColors.burgundyDarkMode,
+      color: AppColors.brandRed,
       fontSize: 18,
       fontWeight: FontWeight.w700,
     ),

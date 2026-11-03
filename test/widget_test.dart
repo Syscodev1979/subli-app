@@ -38,7 +38,7 @@ void main() {
     final appBarTheme = Theme.of(tester.element(find.byType(AppBar)))
         .appBarTheme;
     expect(appBarTheme.backgroundColor, const Color(0xFFFFFFFF));
-    expect(appBarTheme.foregroundColor, const Color(0xFF6B1E2E));
+    expect(appBarTheme.foregroundColor, const Color(0xFFD7262B));
     expect(appBarTheme.elevation, 0);
   });
 

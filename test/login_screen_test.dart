@@ -15,7 +15,7 @@ void main() {
     await _pump(tester, _FakeAuth());
     expect(find.text('Subli – lovas közösségi app'), findsOneWidget);
     expect(find.text('Regisztráció'), findsOneWidget);
-    expect(find.bySemanticsLabel('Klublogó'), findsOneWidget);
+    expect(find.bySemanticsLabel('Subli'), findsOneWidget);
     final image = tester.widget<Image>(
       find.byWidgetPredicate(
         (widget) =>

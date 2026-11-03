@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../domain/post.dart';
 import 'document_card.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// PDF-et az appban nyit, minden mást a telefon alkalmazásával.
 Future<void> openPostDocument(BuildContext context, PostMedia media) async {
@@ -63,9 +64,8 @@ Future<void> openPostDocument(BuildContext context, PostMedia media) async {
   } catch (error) {
     if (context.mounted) {
       Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A dokumentum letöltése nem sikerült.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar('A dokumentum letöltése nem sikerült.'));
     }
   } finally {
     progress.dispose();

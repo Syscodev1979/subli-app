@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
 import '../../../core/widgets/club_app_bar.dart';
+import '../../../core/widgets/error_notice.dart';
 import '../../auth/domain/age.dart';
 import '../../auth/domain/app_user.dart';
 import '../../auth/domain/user_role.dart';
@@ -34,7 +35,10 @@ class MembersScreen extends ConsumerWidget {
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(feedErrorMessage(error, saving: false)),
+            child: ErrorNotice(
+              feedErrorMessage(error, saving: false),
+              centered: true,
+            ),
           ),
         ),
         data: (members) => MembersDirectoryView(
@@ -166,7 +170,8 @@ class _MembersDirectoryViewState extends State<MembersDirectoryView> {
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final user = visible[index];
-              final minor = user.birthDate != null && isUnder18(user.birthDate!);
+              final minor =
+                  user.birthDate != null && isUnder18(user.birthDate!);
               return Card(
                 child: InkWell(
                   onTap: () => widget.onOpen(user),
@@ -175,10 +180,7 @@ class _MembersDirectoryViewState extends State<MembersDirectoryView> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AuthorAvatar(
-                          name: user.name,
-                          photoUrl: user.photoUrl,
-                        ),
+                        AuthorAvatar(name: user.name, photoUrl: user.photoUrl),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(

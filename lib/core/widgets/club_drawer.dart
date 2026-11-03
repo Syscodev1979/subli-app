@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/club_config.dart';
 import '../../app/constants.dart';
 import '../../features/auth/data/auth_providers.dart';
 import 'appearance_section.dart';
@@ -29,17 +30,17 @@ class ClubDrawer extends ConsumerWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.burgundy),
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+            ),
             child: Align(
               alignment: Alignment.bottomLeft,
-              child: Text(
-                AppInfo.clubName,
-                style: TextStyle(
-                  color: AppColors.onPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Image.asset(
+                ClubConfig.logoAsset,
+                height: 56,
+                fit: BoxFit.contain,
+                semanticLabel: 'Subli',
               ),
             ),
           ),

@@ -2,24 +2,29 @@ import 'package:flutter/material.dart';
 
 import 'club_config.dart';
 
-/// TODO_SUBLI: a színek helyettesítők, a végleges paletta később jön.
+/// A Subli márkaszínei. A kanonikus értékek a [ClubConfig]-ban vannak.
 ///
-/// A Subli márkaszínei.
-///
-/// Világos módban a fő szín a [burgundy], sötét módban a [burgundyDarkMode].
-/// A [accentGreen] később a lájk helyetti pipa színe lesz.
+/// A [brandRed] nagy felület és díszítés. A gombok és az aktív ikonok a
+/// [primary] színt használják, mert a fehér felirat azon éri el az 5,0:1-et.
 abstract final class AppColors {
-  /// Fő bordó.
-  static const Color burgundy = Color(0xFF6B1E2E);
+  static const Color brandRed = ClubConfig.brandRed;
+  static const Color primary = ClubConfig.primary;
+  static const Color onPrimary = ClubConfig.onPrimary;
+  static const Color primaryContainer = ClubConfig.primaryContainer;
+  static const Color onPrimaryContainer = ClubConfig.onPrimaryContainer;
+  static const Color error = ClubConfig.error;
 
-  /// Sötétebb bordó, kiemeléshez és sötét felületekhez.
-  static const Color burgundyDark = Color(0xFF4A121E);
+  /// Meglévő kiemelések a gombpirosra mutatnak.
+  static const Color burgundy = primary;
 
-  /// Világos bordó felület, például a logó helye mögött.
-  static const Color burgundyLight = Color(0xFFF3E6E9);
+  /// Sötét piros felirat a halvány rózsaszín felületen.
+  static const Color burgundyDark = onPrimaryContainer;
 
-  /// Fő szín sötét módban.
-  static const Color burgundyDarkMode = Color(0xFFC4566B);
+  /// Halvány rózsaszín felület.
+  static const Color burgundyLight = primaryContainer;
+
+  /// Sötét felületen a logó pirosa. A #121212-n a kontraszt 4,8:1.
+  static const Color burgundyDarkMode = brandRed;
 
   /// Kiegészítő zöld.
   static const Color accentGreen = Color(0xFF2E7D32);
@@ -43,10 +48,10 @@ abstract final class AppColors {
   /// Halvány arany felület sötét módban.
   static const Color goldDarkSurface = Color(0xFF3A3118);
 
-  /// A közzététel gomb átmenetének színei, balról jobbra.
-  static const Color gradientStart = Color(0xFF8E2438);
-  static const Color gradientMid = burgundy;
-  static const Color gradientEnd = burgundyDark;
+  /// A közzététel gomb átmenete. Mindegyiken a fehér felirat eléri a 4,5:1-et.
+  static const Color gradientStart = Color(0xFFA31B22);
+  static const Color gradientMid = primary;
+  static const Color gradientEnd = onPrimaryContainer;
 
   /// Médiagombok: erős ikon és halvány háttér.
   static const Color mediaPhoto = Color(0xFF2E7D32);
@@ -70,8 +75,9 @@ abstract final class AppColors {
   static const Color publishDisabledDark = Color(0xFF3A3638);
   static const Color onPublishDisabledDark = Color(0xFFF2EEEF);
 
-  /// Világos mód háttere a belépő képernyőkön.
-  static const Color background = Color(0xFFFAFAFA);
+  /// Világos mód alapja.
+  static const Color background = Color(0xFFFFFFFF);
+  static const Color surface = Color(0xFFFFFFFF);
 
   /// A hírfolyam oldala, a kártyák közötti rés.
   static const Color feedBackground = Color(0xFFF0F1F3);
@@ -94,17 +100,23 @@ abstract final class AppColors {
   /// Mező és buborék sötét módban.
   static const Color feedDarkField = Color(0xFF2C2A2B);
 
-  /// Világos mód szövegszíne, egyben a sötét felület színe.
+  /// Világos mód szövegszíne.
   static const Color text = Color(0xFF1C1B1F);
 
   /// Sötét mód felülete és AppBar háttere.
-  static const Color darkSurface = Color(0xFF1C1B1F);
+  static const Color darkSurface = Color(0xFF121212);
+
+  /// Sötét mód szövege a #121212 felületen.
+  static const Color darkOnSurface = Color(0xFFF2EEEF);
+
+  /// Hibaszöveg sötét felületen. A [error] ott csak 3,7:1 lenne.
+  static const Color errorOnDark = Color(0xFFD97706);
+
+  /// Sötét módban a gomb felirata. A fehér a [brandRed]on csak 3,9:1 lenne.
+  static const Color darkOnPrimary = Color(0xFF000000);
 
   /// Világos AppBar alatti elválasztó vonal.
   static const Color appBarDivider = Color(0xFFE6E0E2);
-
-  /// Szöveg és ikon a bordó felületeken.
-  static const Color onPrimary = Color(0xFFFFFFFF);
 }
 
 /// Az app útvonalai.

@@ -18,6 +18,7 @@ import '../../chat/data/chat_providers.dart';
 import '../../feed/data/feed_providers.dart';
 import '../../feed/presentation/feed_error_message.dart';
 import 'admin_providers.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// Jóváhagyásra váró fiókok. Admin és edző éri el.
 class AdminScreen extends ConsumerWidget {
@@ -45,7 +46,9 @@ class AdminScreen extends ConsumerWidget {
           Expanded(
             child: pending.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _Message(authErrorMessage(error)),
+              error: (error, _) => Center(
+                child: ErrorNotice(authErrorMessage(error), centered: true),
+              ),
               data: (users) {
                 if (users.isEmpty) {
                   return const _Message(
@@ -101,9 +104,8 @@ class _BackfillCardState extends ConsumerState<_BackfillCard> {
           .showSnackBar(SnackBar(content: Text('$count bejegyzés frissítve.')));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
     } finally {
       if (mounted) setState(() => _runningPosts = false);
     }
@@ -119,9 +121,8 @@ class _BackfillCardState extends ConsumerState<_BackfillCard> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
     } finally {
       if (mounted) setState(() => _runningMembers = false);
     }
@@ -233,7 +234,7 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -247,7 +248,7 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -386,7 +387,7 @@ class _PendingUserCardState extends ConsumerState<_PendingUserCard> {
                         } catch (error) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(authErrorMessage(error))),
+                              errorSnackBar(authErrorMessage(error)),
                             );
                           }
                         }

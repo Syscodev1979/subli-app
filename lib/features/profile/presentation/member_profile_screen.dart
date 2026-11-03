@@ -21,6 +21,7 @@ import '../data/avatar_storage.dart';
 import '../data/member_repository.dart';
 import 'avatar_flow.dart';
 import 'belt_badge.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// Másik tag profilja a `members` gyűjteményből. E-mail és születési dátum nincs.
 class MemberProfileScreen extends ConsumerWidget {
@@ -148,7 +149,7 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
     }
   }
 
@@ -162,9 +163,8 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
       context.push(AppRoutes.conversation(id));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
     } finally {
       if (mounted) setState(() => _messaging = false);
     }
@@ -183,7 +183,7 @@ class _MemberBodyState extends ConsumerState<_MemberBody> {
       if (!mounted) return;
       setState(() => _beltOverride = null);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+          .showSnackBar(errorSnackBar(authErrorMessage(error)));
     }
   }
 

@@ -22,6 +22,7 @@ import 'feed_error_message.dart';
 import 'feed_palette.dart';
 import 'link_text.dart';
 import 'post_media_gallery.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// Törlés előtt megerősítés. Igaz, ha a felhasználó a törlést választotta.
 Future<bool> confirmDelete(
@@ -68,9 +69,8 @@ Future<bool> deletePostFlow(
     return true;
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
     }
     return false;
   }
@@ -897,9 +897,8 @@ class _PostTileState extends ConsumerState<PostTile> {
           _reactionOverride = null;
           _countOverride = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(feedErrorMessage(error, saving: true))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(feedErrorMessage(error, saving: true)));
       }
     } finally {
       if (mounted) setState(() => _pending = false);

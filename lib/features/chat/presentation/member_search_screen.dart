@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/constants.dart';
+import '../../../core/widgets/error_notice.dart';
 import '../../auth/data/auth_providers.dart';
 import '../../auth/domain/auth_session.dart';
 import '../../auth/domain/user_role.dart';
@@ -59,8 +60,7 @@ class _MemberSearchScreenState extends ConsumerState<MemberSearchScreen> {
           error is FirebaseFunctionsException && error.message != null
           ? error.message!
           : 'Nem sikerült megnyitni a beszélgetést.';
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackBar(message));
     }
   }
 

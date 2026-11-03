@@ -19,6 +19,7 @@ import '../../feed/presentation/feed_error_message.dart';
 import '../data/group_repository.dart';
 import '../data/member_admin_actions.dart';
 import '../domain/training_group.dart';
+import '../../../core/widgets/error_notice.dart';
 
 /// Admin adatlap egy tagról.
 class MemberAdminScreen extends ConsumerWidget {
@@ -33,11 +34,15 @@ class MemberAdminScreen extends ConsumerWidget {
     final groups = ref.watch(groupsProvider);
     final actor = session is AuthSignedIn ? session.user : null;
     return users.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
-        body: Center(child: Text(feedErrorMessage(error, saving: false))),
+        body: Center(
+          child: ErrorNotice(
+            feedErrorMessage(error, saving: false),
+            centered: true,
+          ),
+        ),
       ),
       data: (list) {
         AppUser? member;
@@ -109,7 +114,9 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
     _name = TextEditingController(text: member.name);
     _role = member.role;
     _status = member.status;
-    _belt = ClubConfig.beltByKey(member.beltRank) == null ? null : member.beltRank;
+    _belt = ClubConfig.beltByKey(member.beltRank) == null
+        ? null
+        : member.beltRank;
     _birthDate = member.birthDate;
     _groupIds = {...member.groupIds};
     _childIds = {...member.childIds};
@@ -188,28 +195,28 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
     }
     setState(() => _saving = true);
     try {
-      await ref.read(userRepositoryProvider).saveMember(
-        actorId: widget.actor.id,
-        before: widget.member,
-        name: _name.text,
-        role: _locked ? widget.member.role : _role,
-        status: _locked ? widget.member.status : _status,
-        beltRank: _belt,
-        groupIds: _groupIds.toList(),
-        birthDate: _birthDate,
-        childIds: _childIds.toList(),
-        parentIds: _parentIds.toList(),
-      );
+      await ref
+          .read(userRepositoryProvider)
+          .saveMember(
+            actorId: widget.actor.id,
+            before: widget.member,
+            name: _name.text,
+            role: _locked ? widget.member.role : _role,
+            status: _locked ? widget.member.status : _status,
+            beltRank: _belt,
+            groupIds: _groupIds.toList(),
+            birthDate: _birthDate,
+            childIds: _childIds.toList(),
+            parentIds: _parentIds.toList(),
+          );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mentve.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Mentve.')));
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -224,9 +231,8 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
       if (mounted) context.push(AppRoutes.conversation(id));
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     }
   }
@@ -242,7 +248,9 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Tag végleges törlése'),
-        content: Text('$name fiókja és profilja törlődik. A bejegyzései megmaradnak.'),
+        content: Text(
+          '$name fiókja és profilja törlődik. A bejegyzései megmaradnak.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -279,7 +287,9 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
                 ),
                 FilledButton(
                   key: const Key('confirm-delete-member'),
-                  onPressed: matches ? () => Navigator.pop(context, true) : null,
+                  onPressed: matches
+                      ? () => Navigator.pop(context, true)
+                      : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.burgundy,
                   ),
@@ -298,16 +308,17 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
       if (custom != null) {
         await custom();
       } else {
-        await ref.read(memberAdminActionsProvider).deleteMember(widget.member.id);
+        await ref
+            .read(memberAdminActionsProvider)
+            .deleteMember(widget.member.id);
       }
       if (mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authErrorMessage(error))),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(errorSnackBar(authErrorMessage(error)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -318,16 +329,19 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
   Widget build(BuildContext context) {
     final groups = widget.groups;
     final athletes = widget.candidates.where(
-      (user) => user.role == UserRole.athlete && user.status == UserStatus.active,
+      (user) =>
+          user.role == UserRole.athlete && user.status == UserStatus.active,
     );
     final parents = widget.candidates.where(
-      (user) => user.role == UserRole.parent && user.status == UserStatus.active,
+      (user) =>
+          user.role == UserRole.parent && user.status == UserStatus.active,
     );
     return Scaffold(
       appBar: ClubAppBar(
         leading: IconButton(
           tooltip: 'Vissza a tagokhoz',
-          onPressed: () => context.canPop() ? context.pop() : context.go(AppRoutes.members),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go(AppRoutes.members),
           icon: const Icon(Icons.arrow_back),
         ),
       ),
@@ -336,162 +350,179 @@ class _MemberAdminViewState extends ConsumerState<MemberAdminView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          TextField(
-            controller: _name,
-            decoration: const InputDecoration(labelText: 'Név'),
-          ),
-          const SizedBox(height: 12),
-          if (!_locked)
-            DropdownButtonFormField<UserRole>(
-              initialValue: _roleChoices.contains(_role) ? _role : UserRole.athlete,
-              decoration: const InputDecoration(labelText: 'Szerepkör'),
-              items: [
-                for (final role in _roleChoices)
-                  DropdownMenuItem(value: role, child: Text(role.labelHu)),
-              ],
-              onChanged: _saving
-                  ? null
-                  : (role) {
-                      if (role != null) setState(() => _role = role);
-                    },
+            TextField(
+              controller: _name,
+              decoration: const InputDecoration(labelText: 'Név'),
             ),
-          const SizedBox(height: 12),
-          if (!_locked)
-            DropdownButtonFormField<UserStatus>(
-              initialValue: _status,
-              decoration: const InputDecoration(labelText: 'Státusz'),
-              items: [
-                for (final status in _statuses)
-                  DropdownMenuItem(value: status, child: Text(status.labelHu)),
-              ],
-              onChanged: _saving
-                  ? null
-                  : (status) {
-                      if (status != null) setState(() => _status = status);
-                    },
-            ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String?>(
-            initialValue: _belt,
-            decoration: const InputDecoration(labelText: 'Lovas szint'),
-            items: [
-              const DropdownMenuItem<String?>(
-                value: null,
-                child: Text('Nincs megadva'),
+            const SizedBox(height: 12),
+            if (!_locked)
+              DropdownButtonFormField<UserRole>(
+                initialValue: _roleChoices.contains(_role)
+                    ? _role
+                    : UserRole.athlete,
+                decoration: const InputDecoration(labelText: 'Szerepkör'),
+                items: [
+                  for (final role in _roleChoices)
+                    DropdownMenuItem(value: role, child: Text(role.labelHu)),
+                ],
+                onChanged: _saving
+                    ? null
+                    : (role) {
+                        if (role != null) setState(() => _role = role);
+                      },
               ),
-              for (final grade in ClubConfig.belts)
-                DropdownMenuItem(value: grade.key, child: Text(grade.caption)),
-            ],
-            onChanged: _saving ? null : (value) => setState(() => _belt = value),
-          ),
-          const SizedBox(height: 12),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Születési dátum'),
-            subtitle: Text(
-              _birthDate == null ? 'Nincs megadva' : formatHungarianDate(_birthDate!),
-            ),
-            trailing: TextButton(
-              onPressed: _saving
+            const SizedBox(height: 12),
+            if (!_locked)
+              DropdownButtonFormField<UserStatus>(
+                initialValue: _status,
+                decoration: const InputDecoration(labelText: 'Státusz'),
+                items: [
+                  for (final status in _statuses)
+                    DropdownMenuItem(
+                      value: status,
+                      child: Text(status.labelHu),
+                    ),
+                ],
+                onChanged: _saving
+                    ? null
+                    : (status) {
+                        if (status != null) setState(() => _status = status);
+                      },
+              ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String?>(
+              initialValue: _belt,
+              decoration: const InputDecoration(labelText: 'Lovas szint'),
+              items: [
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Nincs megadva'),
+                ),
+                for (final grade in ClubConfig.belts)
+                  DropdownMenuItem(
+                    value: grade.key,
+                    child: Text(grade.caption),
+                  ),
+              ],
+              onChanged: _saving
                   ? null
-                  : () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _birthDate ?? DateTime(2012),
-                        firstDate: DateTime(1930),
-                        lastDate: DateTime.now(),
-                      );
-                      if (picked != null) setState(() => _birthDate = picked);
-                    },
-              child: const Text('Módosítás'),
+                  : (value) => setState(() => _belt = value),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text('Csoportok', style: Theme.of(context).textTheme.titleMedium),
-          Wrap(
-            spacing: 6,
-            children: [
-              for (final group in groups)
-                FilterChip(
-                  label: Text(group.name),
-                  selected: _groupIds.contains(group.id),
-                  onSelected: _saving
+            const SizedBox(height: 12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Születési dátum'),
+              subtitle: Text(
+                _birthDate == null
+                    ? 'Nincs megadva'
+                    : formatHungarianDate(_birthDate!),
+              ),
+              trailing: TextButton(
+                onPressed: _saving
+                    ? null
+                    : () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _birthDate ?? DateTime(2012),
+                          firstDate: DateTime(1930),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) setState(() => _birthDate = picked);
+                      },
+                child: const Text('Módosítás'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text('Csoportok', style: Theme.of(context).textTheme.titleMedium),
+            Wrap(
+              spacing: 6,
+              children: [
+                for (final group in groups)
+                  FilterChip(
+                    label: Text(group.name),
+                    selected: _groupIds.contains(group.id),
+                    onSelected: _saving
+                        ? null
+                        : (selected) {
+                            setState(() {
+                              if (selected) {
+                                _groupIds.add(group.id);
+                              } else {
+                                _groupIds.remove(group.id);
+                              }
+                            });
+                          },
+                  ),
+              ],
+            ),
+            if (!ClubConfig.enforceAdultsOnly && _role == UserRole.parent) ...[
+              const SizedBox(height: 12),
+              Text('Gyermekek', style: Theme.of(context).textTheme.titleMedium),
+              for (final child in athletes)
+                CheckboxListTile(
+                  value: _childIds.contains(child.id),
+                  title: Text(child.name),
+                  onChanged: _saving
                       ? null
-                      : (selected) {
+                      : (checked) {
                           setState(() {
-                            if (selected) {
-                              _groupIds.add(group.id);
+                            if (checked == true) {
+                              _childIds.add(child.id);
                             } else {
-                              _groupIds.remove(group.id);
+                              _childIds.remove(child.id);
                             }
                           });
                         },
                 ),
             ],
-          ),
-          if (!ClubConfig.enforceAdultsOnly && _role == UserRole.parent) ...[
-            const SizedBox(height: 12),
-            Text('Gyermekek', style: Theme.of(context).textTheme.titleMedium),
-            for (final child in athletes)
-              CheckboxListTile(
-                value: _childIds.contains(child.id),
-                title: Text(child.name),
-                onChanged: _saving
-                    ? null
-                    : (checked) {
-                        setState(() {
-                          if (checked == true) {
-                            _childIds.add(child.id);
-                          } else {
-                            _childIds.remove(child.id);
-                          }
-                        });
-                      },
-              ),
-          ],
-          if (!ClubConfig.enforceAdultsOnly && _role == UserRole.athlete) ...[
-            const SizedBox(height: 12),
-            Text('Szülők', style: Theme.of(context).textTheme.titleMedium),
-            for (final parent in parents)
-              CheckboxListTile(
-                value: _parentIds.contains(parent.id),
-                title: Text(parent.name),
-                onChanged: _saving
-                    ? null
-                    : (checked) {
-                        setState(() {
-                          if (checked == true) {
-                            _parentIds.add(parent.id);
-                          } else {
-                            _parentIds.remove(parent.id);
-                          }
-                        });
-                      },
-              ),
-          ],
-          const SizedBox(height: 16),
-          FilledButton(onPressed: _saving ? null : _save, child: const Text('Mentés')),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _saving ? null : _message,
-            icon: const Icon(Icons.chat_bubble_outline),
-            label: const Text('Üzenet küldése'),
-          ),
-          if (!_locked) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _saving ? null : _suspend,
-              child: const Text('Felfüggesztés'),
-            ),
-            const SizedBox(height: 8),
+            if (!ClubConfig.enforceAdultsOnly && _role == UserRole.athlete) ...[
+              const SizedBox(height: 12),
+              Text('Szülők', style: Theme.of(context).textTheme.titleMedium),
+              for (final parent in parents)
+                CheckboxListTile(
+                  value: _parentIds.contains(parent.id),
+                  title: Text(parent.name),
+                  onChanged: _saving
+                      ? null
+                      : (checked) {
+                          setState(() {
+                            if (checked == true) {
+                              _parentIds.add(parent.id);
+                            } else {
+                              _parentIds.remove(parent.id);
+                            }
+                          });
+                        },
+                ),
+            ],
+            const SizedBox(height: 16),
             FilledButton(
-              key: const Key('delete-member'),
-              onPressed: _saving ? null : _delete,
-              style: FilledButton.styleFrom(backgroundColor: AppColors.burgundy),
-              child: const Text('Tag végleges törlése'),
+              onPressed: _saving ? null : _save,
+              child: const Text('Mentés'),
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _saving ? null : _message,
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text('Üzenet küldése'),
+            ),
+            if (!_locked) ...[
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: _saving ? null : _suspend,
+                child: const Text('Felfüggesztés'),
+              ),
+              const SizedBox(height: 8),
+              FilledButton(
+                key: const Key('delete-member'),
+                onPressed: _saving ? null : _delete,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.burgundy,
+                ),
+                child: const Text('Tag végleges törlése'),
+              ),
+            ],
           ],
-        ],
         ),
       ),
     );

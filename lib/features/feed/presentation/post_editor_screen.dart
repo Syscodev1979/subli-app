@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/widgets/error_notice.dart';
 import '../../../app/club_colors.dart';
 import '../../../app/club_config.dart';
 import '../../../app/constants.dart';
@@ -447,7 +448,6 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
 
   Widget? _footer() {
     if (_error == null && !_preparing && _uploadProgress == null) return null;
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Column(
@@ -465,8 +465,7 @@ class _PostEditorScreenState extends ConsumerState<PostEditorScreen> {
                 Text('Tömörítés...'),
               ],
             ),
-          if (_error != null)
-            Text(_error!, style: TextStyle(color: scheme.error)),
+          if (_error != null) ErrorNotice(_error!),
           if (_uploadProgress != null)
             Align(
               alignment: Alignment.centerLeft,
